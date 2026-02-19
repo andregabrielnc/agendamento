@@ -33,9 +33,9 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: 20px;
-    font-weight: 500;
-    color: var(--text-primary);
+    font-size: 22px;
+    font-weight: 400;
+    color: var(--text-secondary);
     margin-left: 8px;
 }
 
@@ -51,65 +51,54 @@
 }
 
 .iconBtn:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: var(--bg-hover);
     color: var(--text-primary);
 }
 
 .todayBtn {
     border: 1px solid var(--border-color);
-    padding: 8px 16px;
+    padding: 6px 16px;
     border-radius: 4px;
     font-weight: 500;
+    font-size: 14px;
     color: var(--text-primary);
-    transition: background 0.2s;
+    transition: background 0.2s, box-shadow 0.2s;
 }
 
 .todayBtn:hover {
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: var(--bg-hover);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .dateTitle {
-    font-size: 20px;
+    font-size: 22px;
     font-weight: 400;
     margin-left: 12px;
     color: var(--text-primary);
     min-width: 180px;
-    /* Prevent jump on change */
+    text-transform: capitalize;
 }
 
 .right {
-    gap: 16px;
-}
-
-.viewSelect {
-    background: transparent;
-    border: 1px solid var(--border-color);
-    color: var(--text-primary);
-    padding: 8px 12px;
-    border-radius: 4px;
-    outline: none;
-    cursor: pointer;
-}
-
-.viewSelect option {
-    background-color: var(--bg-surface);
-    color: var(--text-primary);
+    gap: 8px;
 }
 
 .searchWrapper {
     position: relative;
     display: flex;
     align-items: center;
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: var(--bg-hover);
     border-radius: 8px;
-    padding: 8px 12px;
+    padding: 6px 12px;
     width: 200px;
-    transition: width 0.3s;
+    transition: width 0.3s, background-color 0.2s;
 }
 
 .searchWrapper:focus-within {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: var(--bg-surface);
     width: 240px;
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.15);
+    border: 1px solid var(--border-color);
 }
 
 .searchIcon {
@@ -126,6 +115,10 @@
     font-size: 14px;
 }
 
+.searchInput::placeholder {
+    color: var(--text-muted);
+}
+
 .avatarBtn {
     width: 32px;
     height: 32px;
@@ -135,14 +128,14 @@
     align-items: center;
     justify-content: center;
     color: white;
-    border: 2px solid var(--bg-surface);
+    cursor: pointer;
 }
 
 .viewSwitcher {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 8px 12px;
+    padding: 6px 12px;
     border: 1px solid var(--border-color);
     border-radius: 4px;
     cursor: pointer;
@@ -150,6 +143,7 @@
     color: var(--text-primary);
     background: transparent;
     user-select: none;
+    font-size: 14px;
 }
 
 .viewSwitcher:hover {
@@ -159,39 +153,118 @@
 .viewMenu {
     position: absolute;
     top: 100%;
-    left: 0;
-    width: 100%;
+    right: 0;
+    min-width: 180px;
     background-color: var(--bg-surface);
     border: 1px solid var(--border-color);
-    border-radius: 4px;
+    border-radius: 8px;
     margin-top: 4px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
     z-index: 50;
     overflow: hidden;
+    padding: 4px 0;
 }
 
 .viewMenu div {
-    padding: 8px 12px;
+    padding: 8px 16px;
     cursor: pointer;
-    transition: background-color 0.2s;
+    transition: background-color 0.15s;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
 }
 
 .viewMenu div:hover {
     background-color: var(--bg-hover);
 }
 
-.themeToggle {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    color: var(--text-secondary);
-    transition: background 0.2s, color 0.2s;
+.viewMenu kbd {
+    font-size: 12px;
+    color: var(--text-muted);
+    background: none;
+    border: none;
+    padding: 0;
 }
 
-.themeToggle:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    color: var(--text-primary);
+.viewMenuActive {
+    background-color: var(--primary-light, rgba(26, 115, 232, 0.08));
+    color: var(--primary);
+    font-weight: 500;
+}
+
+.menuSeparator {
+    height: 1px;
+    background-color: var(--border-color);
+    margin: 4px 0;
+    padding: 0 !important;
+    cursor: default !important;
+}
+
+.menuSeparator:hover {
+    background-color: var(--border-color) !important;
+}
+
+/* ===== Responsive ===== */
+
+@media (max-width: 1024px) {
+    .logo span {
+        display: none;
+    }
+    .searchWrapper {
+        width: 160px;
+    }
+    .dateTitle {
+        font-size: 18px;
+        min-width: 140px;
+    }
+}
+
+@media (max-width: 768px) {
+    .header {
+        padding: 0 8px;
+        gap: 4px;
+    }
+    .left {
+        gap: 4px;
+    }
+    .middle {
+        gap: 4px;
+    }
+    .right {
+        gap: 4px;
+    }
+    .logo {
+        display: none;
+    }
+    .searchWrapper {
+        display: none;
+    }
+    .dateTitle {
+        font-size: 16px;
+        min-width: auto;
+        margin-left: 4px;
+    }
+    .todayBtn {
+        padding: 4px 10px;
+        font-size: 13px;
+    }
+    .iconBtn {
+        width: 36px;
+        height: 36px;
+    }
+    .avatarBtn {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .dateTitle {
+        font-size: 14px;
+    }
+    .viewSwitcher {
+        padding: 4px 8px;
+        font-size: 13px;
+    }
 }

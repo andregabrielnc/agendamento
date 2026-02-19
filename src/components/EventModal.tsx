@@ -1,14 +1,31 @@
 import { useState, useEffect } from 'react';
-import { X, MapPin, AlignLeft, VideoCamera, Users, CaretDown, Check, Bell, TextB, TextItalic, TextUnderline, ListNumbers, List, Link, TextStrikethrough, Info } from '@phosphor-icons/react';
+import { X, MapPin, AlignLeft, VideoCamera, Users, CaretDown, Check, Bell, TextB, TextItalic, TextUnderline, ListNumbers, List, Link, TextStrikethrough, Info, Palette } from '@phosphor-icons/react';
 import { useCalendar } from '../context/CalendarContext';
+import { useToast } from '../context/ToastContext';
 import { calendarService } from '../services/calendarService';
 import styles from './EventModal.module.css';
 import { format } from 'date-fns';
 import { RecurrenceModal } from './RecurrenceModal';
+import { ConfirmDialog } from './ConfirmDialog';
 import type { RecurrenceRule } from './RecurrenceModal';
+
+const EVENT_COLORS = [
+    { name: 'Tomate', color: '#d50000' },
+    { name: 'Flamingo', color: '#e67c73' },
+    { name: 'Tangerina', color: '#f4511e' },
+    { name: 'Banana', color: '#f6bf26' },
+    { name: 'Sálvia', color: '#33b679' },
+    { name: 'Manjericão', color: '#0b8043' },
+    { name: 'Pavão', color: '#039be5' },
+    { name: 'Mirtilo', color: '#3f51b5' },
+    { name: 'Lavanda', color: '#7986cb' },
+    { name: 'Uva', color: '#8e24aa' },
+    { name: 'Grafite', color: '#616161' },
+];
 
 export function EventModal() {
     const { modalState, closeModal, addEvent, updateEvent, deleteEvent, calendars } = useCalendar();
+    const { showToast } = useToast();
     const { isOpen, type, event, selectedDate } = modalState;
 
     const [title, setTitle] = useState('');
@@ -22,6 +39,7 @@ export function EventModal() {
     const [location, setLocation] = useState('');
     const [guestInput, setGuestInput] = useState('');
     const [guests, setGuests] = useState<string[]>([]);
+    const [eventColor, setEventColor] = useState<string | undefined>(undefined);
 
     // Recurrence State
     const [recurrence, setRecurrence] = useState<string | 'custom'>('none');
@@ -32,6 +50,8 @@ export function EventModal() {
     // UI State
     const [activeTab, setActiveTab] = useState<'details' | 'time'>('details');
     const [showMoreActions, setShowMoreActions] = useState(false);
+    const [showColorPicker, setShowColorPicker] = useState(false);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
     // Meeting Link State
     const [generatedLink, setGeneratedLink] = useState<string | undefined>(undefined);
@@ -39,6 +59,9 @@ export function EventModal() {
     // Status fields
     const [busyStatus, setBusyStatus] = useState('busy');
     const [visibility, setVisibility] = useState('default');
+
+    // Notification State
+    const [reminderMinutes, setReminderMinutes] = useState(30);
 
     useEffect(() => {
         if (isOpen) {
@@ -58,6 +81,8 @@ export function EventModal() {
                 setGeneratedLink(undefined);
                 setBusyStatus('busy');
                 setVisibility('default');
+                setEventColor(undefined);
+                setReminderMinutes(30);
             } else if (type === 'edit' && event) {
                 setTitle(event.title);
                 setDescription(event.description || '');
@@ -75,6 +100,8 @@ export function EventModal() {
                 setCalendarId(event.calendarId);
                 setLocation(event.location || '');
                 setGuests(event.guests || []);
+                setEventColor(event.color);
+                setReminderMinutes(event.reminders?.[0]?.minutes ?? 30);
 
                 if (typeof event.recurrence === 'object' && event.recurrence !== null) {
                     setRecurrence('custom');
@@ -84,9 +111,11 @@ export function EventModal() {
                     setCustomRule(null);
                 }
                 setGeneratedLink(undefined);
-                setBusyStatus('busy');
-                setVisibility('default');
+                setBusyStatus(event.busyStatus || 'busy');
+                setVisibility(event.visibility || 'default');
             }
+            setShowColorPicker(false);
+            setShowDeleteConfirm(false);
         }
     }, [isOpen, type, event, selectedDate, calendars]);
 
@@ -100,9 +129,11 @@ export function EventModal() {
         const selectedCalendar = calendars.find(c => c.id === calendarId);
 
         if (startDate >= endDate && !allDay) {
-            alert('A data de término deve ser posterior à data de início.');
+            showToast('A data de término deve ser posterior à data de início.', 'error');
             return;
         }
+
+        const resolvedColor = eventColor || selectedCalendar?.color;
 
         const eventData = {
             title: title || '(Sem título)',
@@ -110,26 +141,64 @@ export function EventModal() {
             end: endDate,
             description,
             calendarId,
-            color: selectedCalendar?.color,
+            color: resolvedColor,
             allDay,
             location,
             guests,
             recurrence: recurrence === 'custom' && customRule ? customRule : (recurrence as any),
-            meetingLink: generatedLink || event?.meetingLink || undefined
+            meetingLink: generatedLink || event?.meetingLink || undefined,
+            busyStatus: busyStatus as 'busy' | 'free',
+            visibility: visibility as 'default' | 'public' | 'private',
+            reminders: [{ type: 'notification' as const, minutes: reminderMinutes }],
         };
 
         if (type === 'create') {
             addEvent(eventData);
+            showToast('Evento criado', 'success');
         } else if (type === 'edit' && event) {
             updateEvent({ ...event, ...eventData });
+            showToast('Evento atualizado', 'success');
         }
     };
 
     const handleDelete = () => {
-        if (event && confirm('Tem certeza que deseja excluir este evento?')) {
+        setShowMoreActions(false);
+        setShowDeleteConfirm(true);
+    };
+
+    const confirmDelete = () => {
+        if (event) {
             deleteEvent(event.id);
             closeModal();
+            showToast('Evento excluído', 'info', undefined, () => {
+                // Undo would re-add, but for simplicity just notify
+            });
         }
+        setShowDeleteConfirm(false);
+    };
+
+    const handleDuplicate = () => {
+        if (!event) return;
+        setShowMoreActions(false);
+
+        const selectedCalendar = calendars.find(c => c.id === calendarId);
+        const resolvedColor = eventColor || selectedCalendar?.color;
+
+        addEvent({
+            title: `${event.title} (cópia)`,
+            start: event.start,
+            end: event.end,
+            description: event.description,
+            calendarId: event.calendarId,
+            color: resolvedColor,
+            allDay: event.allDay,
+            location: event.location,
+            guests: event.guests ? [...event.guests] : undefined,
+            recurrence: event.recurrence,
+            meetingLink: undefined,
+        });
+        closeModal();
+        showToast('Evento duplicado', 'success');
     };
 
     const handlePrint = () => {
@@ -169,17 +238,19 @@ export function EventModal() {
                 updateEvent({ ...event, meetingLink: link });
             }
             setGeneratedLink(link);
+            showToast('Link do Google Meet adicionado', 'success');
         } catch (e) {
+            showToast('Erro ao gerar link do Meet', 'error');
             console.error("Failed to generate meet link", e);
         }
     };
 
     const selectedCalendar = calendars.find(c => c.id === calendarId);
-    const selectedColor = selectedCalendar?.color;
+    const displayColor = eventColor || selectedCalendar?.color || '#818cf8';
 
     return (
         <div className={styles.overlay} onClick={closeModal}>
-            <div className={styles.modal} onClick={e => { e.stopPropagation(); setShowRecurrenceOptions(false); setShowMoreActions(false); }}>
+            <div className={styles.modal} onClick={e => { e.stopPropagation(); setShowRecurrenceOptions(false); setShowMoreActions(false); setShowColorPicker(false); }}>
 
                 {/* ===== Header ===== */}
                 <div className={styles.header}>
@@ -203,7 +274,8 @@ export function EventModal() {
                             {showMoreActions && (
                                 <div className={styles.actionsDropdown}>
                                     <button onClick={handlePrint}>Imprimir</button>
-                                    {type === 'edit' && <button onClick={handleDelete}>Excluir</button>}
+                                    {type === 'edit' && <button onClick={handleDuplicate}>Duplicar</button>}
+                                    {type === 'edit' && <button onClick={handleDelete} className={styles.deleteAction}>Excluir</button>}
                                 </div>
                             )}
                         </div>
@@ -367,7 +439,19 @@ export function EventModal() {
                             {/* Notification */}
                             <div className={styles.notificationRow}>
                                 <Bell size={20} className={styles.fieldIcon} />
-                                <span className={styles.notificationText}>Adicionar notificação</span>
+                                <select
+                                    className={styles.notificationSelect}
+                                    value={reminderMinutes}
+                                    onChange={e => setReminderMinutes(Number(e.target.value))}
+                                >
+                                    <option value={0}>No horário do evento</option>
+                                    <option value={5}>5 minutos antes</option>
+                                    <option value={10}>10 minutos antes</option>
+                                    <option value={15}>15 minutos antes</option>
+                                    <option value={30}>30 minutos antes</option>
+                                    <option value={60}>1 hora antes</option>
+                                    <option value={1440}>1 dia antes</option>
+                                </select>
                             </div>
 
                             {/* Guests */}
@@ -395,10 +479,47 @@ export function EventModal() {
                                 </div>
                             </div>
 
+                            {/* Color Picker */}
+                            <div className={styles.fieldRow}>
+                                <Palette size={20} className={styles.fieldIcon} />
+                                <div className={styles.colorPickerContainer}>
+                                    <button
+                                        type="button"
+                                        className={styles.colorPickerBtn}
+                                        onClick={(e) => { e.stopPropagation(); setShowColorPicker(!showColorPicker); }}
+                                    >
+                                        <div className={styles.colorSample} style={{ backgroundColor: displayColor }} />
+                                        <span>{EVENT_COLORS.find(c => c.color === eventColor)?.name || 'Cor da agenda'}</span>
+                                        <CaretDown size={14} />
+                                    </button>
+                                    {showColorPicker && (
+                                        <div className={styles.colorDropdown} onClick={e => e.stopPropagation()}>
+                                            <div
+                                                className={`${styles.colorOption} ${!eventColor ? styles.colorOptionActive : ''}`}
+                                                onClick={() => { setEventColor(undefined); setShowColorPicker(false); }}
+                                            >
+                                                <div className={styles.colorSwatch} style={{ backgroundColor: selectedCalendar?.color || '#039be5' }} />
+                                                <span>Cor da agenda</span>
+                                            </div>
+                                            {EVENT_COLORS.map(c => (
+                                                <div
+                                                    key={c.color}
+                                                    className={`${styles.colorOption} ${eventColor === c.color ? styles.colorOptionActive : ''}`}
+                                                    onClick={() => { setEventColor(c.color); setShowColorPicker(false); }}
+                                                >
+                                                    <div className={styles.colorSwatch} style={{ backgroundColor: c.color }} />
+                                                    <span>{c.name}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
                             {/* Calendar Selector */}
                             <div className={styles.fieldRow}>
                                 <div className={styles.colorPickerTrigger}>
-                                    <div className={styles.colorSample} style={{ backgroundColor: selectedColor || '#818cf8' }}></div>
+                                    <div className={styles.colorSample} style={{ backgroundColor: selectedCalendar?.color || '#818cf8' }}></div>
                                 </div>
                                 <div className={styles.calendarSelector}>
                                     <select
@@ -477,6 +598,16 @@ export function EventModal() {
                     setCustomRule(rule);
                     setRecurrence('custom');
                 }}
+            />
+
+            <ConfirmDialog
+                isOpen={showDeleteConfirm}
+                title="Excluir evento"
+                message={`Tem certeza que deseja excluir "${title || event?.title || 'este evento'}"?`}
+                confirmLabel="Excluir"
+                destructive
+                onConfirm={confirmDelete}
+                onCancel={() => setShowDeleteConfirm(false)}
             />
         </div>
     )

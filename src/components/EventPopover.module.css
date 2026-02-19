@@ -5,14 +5,13 @@
     right: 0;
     bottom: 0;
     z-index: 900;
-    /* Transparent overlay to catch outside clicks */
 }
 
 .popover {
     position: absolute;
     background-color: var(--bg-surface);
-    border: 1px solid var(--glass-border);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.16);
     border-radius: 8px;
     width: 400px;
     max-width: 90vw;
@@ -25,7 +24,6 @@
     display: flex;
     justify-content: space-between;
     padding: 8px 12px;
-    background-color: rgba(255, 255, 255, 0.02);
 }
 
 .actionGroup {
@@ -45,12 +43,12 @@
     justify-content: center;
     color: var(--text-secondary);
     cursor: pointer;
-    transition: background 0.2s;
+    transition: background 0.15s;
 }
 
 .iconBtn:hover,
 .closeBtn:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: var(--bg-hover);
     color: var(--text-primary);
 }
 
@@ -60,7 +58,7 @@
 }
 
 .content {
-    padding: 16px 20px 20px;
+    padding: 4px 20px 20px;
     display: flex;
     flex-direction: column;
     gap: 16px;
@@ -107,7 +105,6 @@
 .icon {
     color: var(--text-secondary);
     width: 20px;
-    /* fixed width for alignment */
     flex-shrink: 0;
 }
 
@@ -117,7 +114,7 @@
 }
 
 .link {
-    color: #8ab4f8;
+    color: var(--primary);
     text-decoration: none;
 }
 

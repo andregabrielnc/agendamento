@@ -12,32 +12,56 @@ import {
 import styles from './Header.module.css'
 import { useCalendar } from '../context/CalendarContext'
 import { ptBR } from 'date-fns/locale';
-import { format, addMonths, subMonths, addWeeks, subWeeks, addDays, subDays, startOfWeek, endOfWeek } from 'date-fns';
-import { useState } from 'react';
+import { format, addMonths, subMonths, addWeeks, subWeeks, addDays, subDays, addYears, subYears, startOfWeek, endOfWeek } from 'date-fns';
+import { useState, useRef, useEffect } from 'react';
 import { SettingsModal } from './SettingsModal';
 
+const VIEW_LABELS: Record<string, string> = {
+    day: 'Dia',
+    week: 'Semana',
+    month: 'Mês',
+    year: 'Ano',
+    agenda: 'Agenda',
+    '4day': '4 dias',
+};
+
 export function Header() {
-    const { currentDate, setCurrentDate, view, setView, searchQuery, setSearchQuery, theme, toggleTheme } = useCalendar();
+    const { currentDate, setCurrentDate, view, setView, searchQuery, setSearchQuery, theme, toggleTheme, toggleSidebar } = useCalendar();
     const [showViewMenu, setShowViewMenu] = useState(false);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+    const viewMenuRef = useRef<HTMLDivElement>(null);
+
+    // Close view menu when clicking outside
+    useEffect(() => {
+        if (!showViewMenu) return;
+        const handleClickOutside = (e: MouseEvent) => {
+            if (viewMenuRef.current && !viewMenuRef.current.contains(e.target as Node)) {
+                setShowViewMenu(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [showViewMenu]);
 
     const handlePrev = () => {
-        if (view === 'month') {
-            setCurrentDate(subMonths(currentDate, 1));
-        } else if (view === 'week') {
-            setCurrentDate(subWeeks(currentDate, 1));
-        } else if (view === 'day') {
-            setCurrentDate(subDays(currentDate, 1));
+        switch (view) {
+            case 'month': setCurrentDate(subMonths(currentDate, 1)); break;
+            case 'week': setCurrentDate(subWeeks(currentDate, 1)); break;
+            case 'day': setCurrentDate(subDays(currentDate, 1)); break;
+            case 'year': setCurrentDate(subYears(currentDate, 1)); break;
+            case '4day': setCurrentDate(subDays(currentDate, 4)); break;
+            case 'agenda': setCurrentDate(subDays(currentDate, 30)); break;
         }
     };
 
     const handleNext = () => {
-        if (view === 'month') {
-            setCurrentDate(addMonths(currentDate, 1));
-        } else if (view === 'week') {
-            setCurrentDate(addWeeks(currentDate, 1));
-        } else if (view === 'day') {
-            setCurrentDate(addDays(currentDate, 1));
+        switch (view) {
+            case 'month': setCurrentDate(addMonths(currentDate, 1)); break;
+            case 'week': setCurrentDate(addWeeks(currentDate, 1)); break;
+            case 'day': setCurrentDate(addDays(currentDate, 1)); break;
+            case 'year': setCurrentDate(addYears(currentDate, 1)); break;
+            case '4day': setCurrentDate(addDays(currentDate, 4)); break;
+            case 'agenda': setCurrentDate(addDays(currentDate, 30)); break;
         }
     };
 
@@ -45,14 +69,43 @@ export function Header() {
         setCurrentDate(new Date());
     };
 
+    const getDateTitle = (): string => {
+        switch (view) {
+            case 'month':
+                return format(currentDate, 'MMMM yyyy', { locale: ptBR });
+            case 'week': {
+                const ws = startOfWeek(currentDate, { weekStartsOn: 0 });
+                const we = endOfWeek(currentDate, { weekStartsOn: 0 });
+                return `${format(ws, 'MMM d', { locale: ptBR })} – ${format(we, 'MMM d, yyyy', { locale: ptBR })}`;
+            }
+            case 'day':
+                return format(currentDate, "EEEE, d 'de' MMMM", { locale: ptBR });
+            case 'year':
+                return format(currentDate, 'yyyy');
+            case '4day': {
+                const end4 = addDays(currentDate, 3);
+                return `${format(currentDate, 'MMM d', { locale: ptBR })} – ${format(end4, 'MMM d, yyyy', { locale: ptBR })}`;
+            }
+            case 'agenda':
+                return format(currentDate, "MMMM 'de' yyyy", { locale: ptBR });
+            default:
+                return format(currentDate, 'MMMM yyyy', { locale: ptBR });
+        }
+    };
+
+    const selectView = (v: string) => {
+        setView(v as any);
+        setShowViewMenu(false);
+    };
+
     return (
         <header className={styles.header}>
             <div className={styles.left}>
-                <button className={styles.iconBtn}>
+                <button className={styles.iconBtn} onClick={toggleSidebar} title="Menu">
                     <List size={24} weight="bold" />
                 </button>
                 <div className={styles.logo}>
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Google_Calendar_icon_%282020%29.svg" alt="Logo" width={40} />
+                    <img src="/calendar-icon.svg" alt="Logo" width={40} height={40} />
                     <span>Calendar</span>
                 </div>
             </div>
@@ -60,35 +113,41 @@ export function Header() {
             <div className={styles.middle}>
                 <button className={styles.todayBtn} onClick={handleToday}>Hoje</button>
                 <div className={styles.navigation}>
-                    <button className={styles.iconBtn} onClick={handlePrev}>
+                    <button className={styles.iconBtn} onClick={handlePrev} title="Anterior">
                         <CaretLeft size={20} weight="bold" />
                     </button>
-                    <button className={styles.iconBtn} onClick={handleNext}>
+                    <button className={styles.iconBtn} onClick={handleNext} title="Próximo">
                         <CaretRight size={20} weight="bold" />
                     </button>
                 </div>
-                <h2 className={styles.dateTitle}>
-                    {view === 'month' && format(currentDate, 'MMMM yyyy', { locale: ptBR })}
-                    {view === 'week' && (
-                        `${format(startOfWeek(currentDate, { weekStartsOn: 0 }), 'MMM d', { locale: ptBR })} - ${format(endOfWeek(currentDate, { weekStartsOn: 0 }), 'MMM d yyyy', { locale: ptBR })}`
-                    )}
-                    {view === 'day' && format(currentDate, "EEEE, d 'de' MMMM", { locale: ptBR })}
-                </h2>
+                <h2 className={styles.dateTitle}>{getDateTitle()}</h2>
             </div>
 
             <div className={styles.right}>
-                <div className={styles.viewSwitcher} onClick={() => setShowViewMenu(!showViewMenu)}>
-                    <span>
-                        {view === 'month' && 'Mês'}
-                        {view === 'week' && 'Semana'}
-                        {view === 'day' && 'Dia'}
-                    </span>
+                <div className={styles.viewSwitcher} ref={viewMenuRef} onClick={() => setShowViewMenu(!showViewMenu)}>
+                    <span>{VIEW_LABELS[view] || view}</span>
                     <CaretDown size={14} />
                     {showViewMenu && (
-                        <div className={styles.viewMenu}>
-                            <div onClick={() => { setView('month'); setShowViewMenu(false); }}>Mês</div>
-                            <div onClick={() => { setView('week'); setShowViewMenu(false); }}>Semana</div>
-                            <div onClick={() => { setView('day'); setShowViewMenu(false); }}>Dia</div>
+                        <div className={styles.viewMenu} onClick={e => e.stopPropagation()}>
+                            <div className={view === 'day' ? styles.viewMenuActive : ''} onClick={() => selectView('day')}>
+                                <span>Dia</span><kbd>D</kbd>
+                            </div>
+                            <div className={view === 'week' ? styles.viewMenuActive : ''} onClick={() => selectView('week')}>
+                                <span>Semana</span><kbd>W</kbd>
+                            </div>
+                            <div className={view === 'month' ? styles.viewMenuActive : ''} onClick={() => selectView('month')}>
+                                <span>Mês</span><kbd>M</kbd>
+                            </div>
+                            <div className={view === 'year' ? styles.viewMenuActive : ''} onClick={() => selectView('year')}>
+                                <span>Ano</span><kbd>Y</kbd>
+                            </div>
+                            <div className={styles.menuSeparator} />
+                            <div className={view === 'agenda' ? styles.viewMenuActive : ''} onClick={() => selectView('agenda')}>
+                                <span>Agenda</span><kbd>A</kbd>
+                            </div>
+                            <div className={view === '4day' ? styles.viewMenuActive : ''} onClick={() => selectView('4day')}>
+                                <span>4 dias</span>
+                            </div>
                         </div>
                     )}
                 </div>
@@ -101,6 +160,7 @@ export function Header() {
                         className={styles.searchInput}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
+                        data-search-input
                     />
                 </div>
 

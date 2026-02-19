@@ -4,37 +4,233 @@ import { v4 as uuidv4 } from 'uuid';
 const EVENTS_STORAGE_KEY = 'calendar_events';
 const CALENDARS_STORAGE_KEY = 'calendar_calendars';
 
-// Mock simulation delay
-const SIMULATE_DELAY = 300; // ms
+const SIMULATE_DELAY = 300;
 
 const initialCalendars: Calendar[] = [
-    { id: '1', name: 'Andre Gabriel', color: '#818cf8', visible: true },
-    { id: '2', name: 'Personal', color: '#34d399', visible: true },
-    { id: '3', name: 'Family', color: '#fbbf24', visible: true },
+    { id: '1', name: 'Andre Gabriel', color: '#039be5', visible: true },
+    { id: '2', name: 'Pessoal', color: '#33b679', visible: true },
+    { id: '3', name: 'Familia', color: '#f6bf26', visible: true },
+    { id: '4', name: 'Trabalho', color: '#d50000', visible: true },
+    { id: '5', name: 'Feriados', color: '#8e24aa', visible: true },
 ];
 
-const initialEvents: CalendarEvent[] = [
-    {
-        id: '1',
-        title: 'Project Kickoff',
-        start: new Date(new Date().setHours(10, 0, 0, 0)),
-        end: new Date(new Date().setHours(11, 30, 0, 0)),
-        calendarId: '1',
-        color: '#818cf8',
-        location: 'Conference Room A',
-        description: 'Initial planning meeting for the Q1 roadmap.'
-    },
-    {
-        id: '2',
-        title: 'Lunch with Team',
-        start: new Date(new Date().setHours(13, 0, 0, 0)),
-        end: new Date(new Date().setHours(14, 0, 0, 0)),
-        calendarId: '2',
-        color: '#34d399'
-    }
-];
+function buildInitialEvents(): CalendarEvent[] {
+    const today = new Date();
+    const y = today.getFullYear();
+    const m = today.getMonth();
+    const d = today.getDate();
 
-// Helper to simulate async network request
+    const makeDate = (dayOffset: number, hour: number, minute = 0): Date => {
+        const dt = new Date(y, m, d + dayOffset);
+        dt.setHours(hour, minute, 0, 0);
+        return dt;
+    };
+
+    return [
+        {
+            id: 'evt-1',
+            title: 'Reunião de Planejamento Q1',
+            start: makeDate(0, 9, 0),
+            end: makeDate(0, 10, 30),
+            calendarId: '1',
+            color: '#039be5',
+            location: 'Sala de Conferência A',
+            description: 'Reunião inicial de planejamento para o roadmap do primeiro trimestre.',
+            guests: ['maria@empresa.com', 'joao@empresa.com'],
+            busyStatus: 'busy',
+            visibility: 'default',
+            reminders: [{ type: 'notification', minutes: 30 }],
+        },
+        {
+            id: 'evt-2',
+            title: 'Almoço com Equipe',
+            start: makeDate(0, 12, 0),
+            end: makeDate(0, 13, 0),
+            calendarId: '2',
+            color: '#33b679',
+            location: 'Restaurante Sabor & Arte',
+        },
+        {
+            id: 'evt-3',
+            title: 'Code Review - Frontend',
+            start: makeDate(0, 14, 0),
+            end: makeDate(0, 15, 0),
+            calendarId: '4',
+            color: '#d50000',
+            description: 'Revisão de código dos componentes React do painel de controle.',
+            meetingLink: 'https://meet.google.com/abc-defg-hij',
+        },
+        {
+            id: 'evt-4',
+            title: 'Aniversário da Maria',
+            start: makeDate(1, 0, 0),
+            end: makeDate(1, 23, 59),
+            calendarId: '3',
+            color: '#f6bf26',
+            allDay: true,
+            description: 'Não esquecer o presente!',
+        },
+        {
+            id: 'evt-5',
+            title: 'Sprint Review',
+            start: makeDate(1, 10, 0),
+            end: makeDate(1, 11, 0),
+            calendarId: '4',
+            color: '#d50000',
+            guests: ['time-dev@empresa.com', 'pm@empresa.com'],
+            meetingLink: 'https://meet.google.com/xyz-abcd-efg',
+            recurrence: 'weekly',
+        },
+        {
+            id: 'evt-6',
+            title: 'Yoga',
+            start: makeDate(1, 7, 0),
+            end: makeDate(1, 8, 0),
+            calendarId: '2',
+            color: '#33b679',
+            location: 'Studio Zen',
+            recurrence: 'weekly',
+        },
+        {
+            id: 'evt-7',
+            title: 'Dentista',
+            start: makeDate(2, 14, 30),
+            end: makeDate(2, 15, 30),
+            calendarId: '2',
+            color: '#33b679',
+            location: 'Clínica Sorrir, Sala 203',
+            reminders: [{ type: 'notification', minutes: 60 }],
+        },
+        {
+            id: 'evt-8',
+            title: 'Deploy para Produção',
+            start: makeDate(2, 16, 0),
+            end: makeDate(2, 17, 0),
+            calendarId: '4',
+            color: '#d50000',
+            description: 'Deploy v2.4.0 - nova funcionalidade de relatórios.',
+            guests: ['devops@empresa.com'],
+        },
+        {
+            id: 'evt-9',
+            title: 'Jantar em Família',
+            start: makeDate(3, 19, 0),
+            end: makeDate(3, 21, 0),
+            calendarId: '3',
+            color: '#f6bf26',
+            location: 'Casa da Mamãe',
+            guests: ['mae@familia.com', 'pai@familia.com', 'irmao@familia.com'],
+        },
+        {
+            id: 'evt-10',
+            title: 'Estudo - TypeScript Avançado',
+            start: makeDate(0, 18, 0),
+            end: makeDate(0, 19, 30),
+            calendarId: '2',
+            color: '#33b679',
+            description: 'Capítulos 8-10 do livro de TypeScript.',
+        },
+        {
+            id: 'evt-11',
+            title: '1:1 com Gerente',
+            start: makeDate(3, 10, 0),
+            end: makeDate(3, 10, 30),
+            calendarId: '4',
+            color: '#d50000',
+            recurrence: 'weekly',
+            meetingLink: 'https://meet.google.com/one-on-one',
+        },
+        {
+            id: 'evt-12',
+            title: 'Treino na Academia',
+            start: makeDate(0, 6, 30),
+            end: makeDate(0, 7, 30),
+            calendarId: '2',
+            color: '#33b679',
+            location: 'SmartFit Centro',
+            recurrence: 'daily',
+        },
+        {
+            id: 'evt-13',
+            title: 'Conferência Tech Summit 2026',
+            start: makeDate(5, 0, 0),
+            end: makeDate(6, 23, 59),
+            calendarId: '4',
+            color: '#d50000',
+            allDay: true,
+            location: 'Centro de Convenções',
+            description: 'Evento de 2 dias sobre tendências de tecnologia.',
+        },
+        {
+            id: 'evt-14',
+            title: 'Reunião de Pais - Escola',
+            start: makeDate(4, 18, 30),
+            end: makeDate(4, 19, 30),
+            calendarId: '3',
+            color: '#f6bf26',
+            location: 'Escola Municipal',
+        },
+        {
+            id: 'evt-15',
+            title: 'Carnaval',
+            start: makeDate(7, 0, 0),
+            end: makeDate(7, 23, 59),
+            calendarId: '5',
+            color: '#8e24aa',
+            allDay: true,
+        },
+        {
+            id: 'evt-16',
+            title: 'Retrospectiva do Sprint',
+            start: makeDate(4, 15, 0),
+            end: makeDate(4, 16, 0),
+            calendarId: '4',
+            color: '#d50000',
+            meetingLink: 'https://meet.google.com/retro-sprint',
+            guests: ['time-dev@empresa.com'],
+        },
+        {
+            id: 'evt-17',
+            title: 'Happy Hour',
+            start: makeDate(4, 18, 0),
+            end: makeDate(4, 20, 0),
+            calendarId: '1',
+            color: '#039be5',
+            location: 'Bar do Zé',
+            guests: ['amigo1@gmail.com', 'amigo2@gmail.com'],
+        },
+        {
+            id: 'evt-18',
+            title: 'Consulta Médica',
+            start: makeDate(-1, 9, 0),
+            end: makeDate(-1, 9, 45),
+            calendarId: '2',
+            color: '#33b679',
+            location: 'Hospital Santa Cruz',
+        },
+        {
+            id: 'evt-19',
+            title: 'Daily Standup',
+            start: makeDate(0, 9, 30),
+            end: makeDate(0, 9, 45),
+            calendarId: '4',
+            color: '#d50000',
+            recurrence: 'daily',
+            meetingLink: 'https://meet.google.com/daily-standup',
+        },
+        {
+            id: 'evt-20',
+            title: 'Entregar Relatório Mensal',
+            start: makeDate(6, 0, 0),
+            end: makeDate(6, 23, 59),
+            calendarId: '4',
+            color: '#d50000',
+            allDay: true,
+            description: 'Prazo final para envio do relatório mensal de progresso.',
+        },
+    ];
+}
+
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 class CalendarService {
@@ -42,12 +238,11 @@ class CalendarService {
         const saved = localStorage.getItem(EVENTS_STORAGE_KEY);
         if (saved) {
             return JSON.parse(saved, (key, value) => {
-                // Revive dates
                 if (key === 'start' || key === 'end' || key === 'endDate') return new Date(value);
                 return value;
             });
         }
-        return initialEvents;
+        return buildInitialEvents();
     }
 
     private saveEvents(events: CalendarEvent[]): void {
@@ -106,7 +301,7 @@ class CalendarService {
     }
 
     async updateCalendar(calendar: Calendar): Promise<Calendar> {
-        await delay(SIMULATE_DELAY); // Fast
+        await delay(SIMULATE_DELAY);
         const calendars = this.getStoredCalendars();
         const index = calendars.findIndex(c => c.id === calendar.id);
         if (index !== -1) {
@@ -132,7 +327,6 @@ class CalendarService {
         const filtered = calendars.filter(c => c.id !== id);
         this.saveCalendars(filtered);
 
-        // Also delete associated events
         const events = this.getStoredEvents();
         const filteredEvents = events.filter(e => e.calendarId !== id);
         this.saveEvents(filteredEvents);
@@ -141,8 +335,16 @@ class CalendarService {
     // --- Utils ---
 
     async generateMeetingLink(): Promise<string> {
-        await delay(500); // Simulate API call to Google Meet
+        await delay(500);
         return `https://meet.google.com/${uuidv4().substring(0, 3)}-${uuidv4().substring(0, 4)}-${uuidv4().substring(0, 3)}`;
+    }
+
+    /**
+     * Clears stored data and reloads with fresh initial data.
+     */
+    resetToDefaults(): void {
+        localStorage.removeItem(EVENTS_STORAGE_KEY);
+        localStorage.removeItem(CALENDARS_STORAGE_KEY);
     }
 }
 

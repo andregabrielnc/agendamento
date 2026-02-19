@@ -27,6 +27,13 @@ export function getWeekViewDays(currentDate: Date) {
     return eachDayOfInterval({ start, end });
 }
 
+export function getNDayViewDays(currentDate: Date, count: number): Date[] {
+    const start = currentDate;
+    const end = new Date(currentDate);
+    end.setDate(end.getDate() + count - 1);
+    return eachDayOfInterval({ start, end });
+}
+
 export const formatDate = (date: Date, formatStr: string) => format(date, formatStr);
 
 export const isToday = (date: Date) => isSameDay(date, new Date());

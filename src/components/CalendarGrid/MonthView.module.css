@@ -4,137 +4,52 @@
     height: 100%;
 }
 
-.headerRow {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    border-bottom: 1px solid var(--border-color);
-    background-color: var(--bg-surface);
-}
-
-.headerCell {
-    padding: 8px;
-    text-align: center;
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    color: var(--text-muted);
-}
-
 .grid {
     flex: 1;
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     grid-auto-rows: 1fr;
-    /* Equal height rows */
+}
+
+.dayHeader {
+    padding: 8px 0;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border-color);
 }
 
 .dayCell {
     border-right: 1px solid var(--border-color);
     border-bottom: 1px solid var(--border-color);
     background-color: var(--bg-app);
-    padding: 8px;
+    padding: 4px 8px;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 2px;
     min-height: 0;
-    /* Important for overflow */
-    transition: background-color 0.2s;
+    transition: background-color 0.15s;
     cursor: pointer;
 }
 
 .dayCell:hover {
-    background-color: rgba(255, 255, 255, 0.02);
+    background-color: var(--bg-hover);
 }
 
-/* 7th column needs no right border */
 .dayCell:nth-child(7n) {
     border-right: none;
-}
-
-.offsetDay {
-    background-color: rgba(0, 0, 0, 0.2);
-    color: var(--text-muted);
 }
 
 .dayNumber {
     font-size: 12px;
     font-weight: 500;
     text-align: center;
-    margin-bottom: 4px;
+    margin-bottom: 2px;
     display: flex;
     justify-content: center;
-}
-
-.todayCircle {
-    background-color: var(--primary);
-    color: white;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.eventsList {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    overflow-y: auto;
-    flex: 1;
-}
-
-/* Hide scrollbar in events list but allow scroll */
-.eventsList::-webkit-scrollbar {
-    width: 4px;
-}
-
-.eventCard {
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 11px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    color: white;
-    cursor: pointer;
-    /* Initial cursor */
-    transition: transform 0.1s, opacity 0.2s;
-    user-select: none;
-}
-
-.eventCard:hover {
-    opacity: 0.9;
-    transform: scale(1.02);
-}
-
-.eventCard[draggable="true"] {
-    cursor: grab;
-}
-
-.eventCard[draggable="true"]:active {
-    cursor: grabbing;
-}
-
-.dayHeader {
-    padding: 8px;
-    text-align: center;
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    color: var(--text-muted);
-}
-
-.eventsStack {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    overflow-y: auto;
-    flex: 1;
-}
-
-.eventsStack::-webkit-scrollbar {
-    width: 4px;
+    color: var(--text-primary);
 }
 
 .today {
@@ -146,18 +61,101 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    font-weight: 500;
 }
 
 .dimmed {
-    opacity: 0.4;
+    opacity: 0.5;
+}
+
+.dimmed .dayNumber {
+    color: var(--text-muted);
+}
+
+.eventsStack {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.eventsStack::-webkit-scrollbar {
+    width: 3px;
+}
+
+.eventCard {
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: white;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    user-select: none;
+    line-height: 1.6;
+}
+
+.eventCard:hover {
+    opacity: 0.85;
+}
+
+.eventCard[draggable="true"] {
+    cursor: grab;
+}
+
+.eventCard[draggable="true"]:active {
+    cursor: grabbing;
 }
 
 .eventTime {
     font-size: 11px;
     margin-right: 4px;
+    font-weight: 400;
 }
 
 .eventTitle {
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 500;
+}
+
+/* ===== Responsive ===== */
+
+@media (max-width: 768px) {
+    .dayCell {
+        padding: 2px 4px;
+    }
+
+    .dayNumber {
+        font-size: 11px;
+    }
+
+    .eventCard {
+        font-size: 10px;
+        padding: 0 4px;
+        line-height: 1.4;
+    }
+
+    .eventTime {
+        display: none;
+    }
+
+    .dayHeader {
+        font-size: 10px;
+        padding: 4px 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .eventCard {
+        font-size: 9px;
+    }
+
+    .today {
+        width: 20px;
+        height: 20px;
+        font-size: 11px;
+    }
 }

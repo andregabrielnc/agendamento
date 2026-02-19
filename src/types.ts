@@ -1,4 +1,4 @@
-export type ViewType = 'day' | 'week' | 'month' | 'year';
+export type ViewType = 'day' | 'week' | 'month' | 'year' | 'agenda' | '4day';
 
 export interface RecurrenceRule {
     frequency: 'daily' | 'weekly' | 'monthly' | 'yearly';
@@ -7,6 +7,13 @@ export interface RecurrenceRule {
     endDate?: Date;
     occurrenceCount?: number;
     endType: 'never' | 'date' | 'count';
+}
+
+export type RecurrenceType = 'none' | 'daily' | 'weekly' | 'monthly' | 'custom';
+
+export interface EventReminder {
+    type: 'notification' | 'email';
+    minutes: number;
 }
 
 export interface CalendarEvent {
@@ -19,10 +26,12 @@ export interface CalendarEvent {
     location?: string;
     guests?: string[];
     meetingLink?: string;
-    // Allows simplified string 'daily' etc. OR a complex rule object
-    recurrence?: 'daily' | 'weekly' | 'monthly' | 'none' | RecurrenceRule;
+    recurrence?: RecurrenceType | RecurrenceRule;
     color?: string;
     calendarId: string;
+    reminders?: EventReminder[];
+    busyStatus?: 'busy' | 'free';
+    visibility?: 'default' | 'public' | 'private';
 }
 
 export interface Calendar {
@@ -31,4 +40,11 @@ export interface Calendar {
     color: string;
     visible: boolean;
     description?: string;
+}
+
+export interface ToastMessage {
+    id: string;
+    message: string;
+    type: 'success' | 'error' | 'info';
+    duration?: number;
 }

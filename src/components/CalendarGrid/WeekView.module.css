@@ -13,18 +13,18 @@
 }
 
 .timeGutterHeader {
-    width: 60px;
+    width: 56px;
     flex-shrink: 0;
     border-right: 1px solid var(--border-color);
 }
 
 .headerCell {
     flex: 1;
-    padding: 8px;
+    padding: 8px 4px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
+    gap: 2px;
     border-right: 1px solid var(--border-color);
 }
 
@@ -33,16 +33,19 @@
     font-weight: 500;
     text-transform: uppercase;
     color: var(--text-muted);
+    letter-spacing: 0.5px;
 }
 
 .dayNumber {
-    font-size: 24px;
-    width: 40px;
-    height: 40px;
+    font-size: 26px;
+    font-weight: 400;
+    width: 46px;
+    height: 46px;
     display: flex;
     align-items: center;
     justify-content: center;
     border-radius: 50%;
+    color: var(--text-primary);
 }
 
 .todayNumber {
@@ -58,7 +61,6 @@
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
-    /* vertical scroll only */
     scroll-behavior: smooth;
 }
 
@@ -66,11 +68,10 @@
     display: flex;
     position: relative;
     min-height: 1440px;
-    /* 24 * 60px */
 }
 
 .timeGutter {
-    width: 60px;
+    width: 56px;
     flex-shrink: 0;
     border-right: 1px solid var(--border-color);
     background-color: var(--bg-surface);
@@ -78,14 +79,12 @@
 
 .timeLabel {
     height: 60px;
-    /* 1 hour height */
-    font-size: 11px;
+    font-size: 10px;
     color: var(--text-muted);
     text-align: right;
     padding-right: 8px;
     position: relative;
     top: -6px;
-    /* Align with line */
 }
 
 .dayColumn {
@@ -97,8 +96,6 @@
 .hourCell {
     height: 60px;
     border-bottom: 1px solid var(--border-color);
-    border-bottom-style: dotted;
-    /* Grid lines */
 }
 
 .hourCell:last-child {
@@ -110,15 +107,19 @@
     left: 2px;
     right: 2px;
     border-radius: 4px;
-    padding: 4px 4px 10px 4px;
+    padding: 4px 8px 10px 8px;
     overflow: visible;
     color: white;
-    font-size: 11px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    font-size: 12px;
     cursor: pointer;
     z-index: 1;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    border-left: 3px solid rgba(255, 255, 255, 0.3);
     user-select: none;
+    transition: box-shadow 0.15s;
+}
+
+.eventCard:hover {
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
 .draftEvent {
@@ -132,12 +133,15 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    font-size: 12px;
 }
 
 .eventTime {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    font-size: 11px;
+    opacity: 0.9;
 }
 
 .resizeHandle {
@@ -177,4 +181,64 @@
     position: absolute;
     left: -6px;
     top: -5px;
+}
+
+/* ===== Responsive ===== */
+
+@media (max-width: 768px) {
+    .timeGutterHeader {
+        width: 40px;
+    }
+
+    .timeGutter {
+        width: 40px;
+    }
+
+    .timeLabel {
+        font-size: 9px;
+        padding-right: 4px;
+    }
+
+    .dayName {
+        font-size: 10px;
+    }
+
+    .dayNumber {
+        font-size: 20px;
+        width: 36px;
+        height: 36px;
+    }
+
+    .headerCell {
+        padding: 4px 2px;
+    }
+
+    .eventCard {
+        padding: 2px 4px 8px 4px;
+        font-size: 10px;
+    }
+
+    .eventTitle {
+        font-size: 10px;
+    }
+
+    .eventTime {
+        font-size: 9px;
+    }
+}
+
+@media (max-width: 480px) {
+    .timeGutterHeader {
+        width: 32px;
+    }
+
+    .timeGutter {
+        width: 32px;
+    }
+
+    .dayNumber {
+        font-size: 16px;
+        width: 28px;
+        height: 28px;
+    }
 }

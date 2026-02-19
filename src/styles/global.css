@@ -1,26 +1,20 @@
 :root {
-  /* Light Theme (Default) */
+  /* Light Theme (Default) - Google Calendar Style */
   --bg-app: #ffffff;
-  --bg-sidebar: #f4f4f5;
-  /* Zinc 100 */
+  --bg-sidebar: #ffffff;
   --bg-surface: #ffffff;
-  --bg-hover: #f4f4f5;
+  --bg-hover: #f1f3f4;
 
-  --text-primary: #18181b;
-  /* Zinc 900 */
-  --text-secondary: #52525b;
-  /* Zinc 600 */
-  --text-muted: #71717a;
-  /* Zinc 500 */
+  --text-primary: #3c4043;
+  --text-secondary: #5f6368;
+  --text-muted: #70757a;
   --text-inverse: #ffffff;
 
-  --primary: #4f46e5;
-  /* Indigo 600 */
-  --primary-hover: #4338ca;
-  /* Indigo 700 */
+  --primary: #1a73e8;
+  --primary-hover: #1557b0;
+  --primary-light: #e8f0fe;
 
-  --border-color: #e4e4e7;
-  /* Zinc 200 */
+  --border-color: #dadce0;
   --input-bg: #ffffff;
 
   /* Glassmorphism - Light */
@@ -32,7 +26,7 @@
   --header-height: 64px;
   --sidebar-width: 256px;
 
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: 'Google Sans', Roboto, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
@@ -48,32 +42,25 @@
 
 [data-theme='dark'] {
   /* Dark Theme Overrides */
-  --bg-app: #18181b;
-  /* Zinc 900 */
-  --bg-sidebar: #27272a;
-  /* Zinc 800 */
-  --bg-surface: #27272a;
-  --bg-hover: #3f3f46;
+  --bg-app: #202124;
+  --bg-sidebar: #292a2d;
+  --bg-surface: #292a2d;
+  --bg-hover: #3c4043;
 
-  --text-primary: #f4f4f5;
-  /* Zinc 100 */
-  --text-secondary: #a1a1aa;
-  /* Zinc 400 */
-  --text-muted: #71717a;
-  /* Zinc 500 */
-  --text-inverse: #18181b;
+  --text-primary: #e8eaed;
+  --text-secondary: #9aa0a6;
+  --text-muted: #80868b;
+  --text-inverse: #202124;
 
-  --primary: #818cf8;
-  /* Indigo 400 */
-  --primary-hover: #6366f1;
-  /* Indigo 500 */
+  --primary: #8ab4f8;
+  --primary-hover: #aecbfa;
+  --primary-light: #174ea6;
 
-  --border-color: #3f3f46;
-  /* Zinc 700 */
-  --input-bg: #27272a;
+  --border-color: #5f6368;
+  --input-bg: #292a2d;
 
   /* Glassmorphism - Dark */
-  --glass-bg: rgba(39, 39, 42, 0.6);
+  --glass-bg: rgba(41, 42, 45, 0.6);
   --glass-border: rgba(255, 255, 255, 0.1);
 
   color-scheme: dark;

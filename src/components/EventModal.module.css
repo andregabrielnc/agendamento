@@ -632,6 +632,93 @@
     font-size: 14px;
 }
 
+.notificationSelect {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 6px 12px;
+    color: var(--text-primary);
+    font-size: 14px;
+    font-family: inherit;
+    cursor: pointer;
+    outline: none;
+}
+
+.notificationSelect:hover {
+    background: var(--bg-hover);
+}
+
+/* ===== Color Picker ===== */
+
+.colorPickerContainer {
+    flex: 1;
+    position: relative;
+}
+
+.colorPickerBtn {
+    background: transparent;
+    border: none;
+    padding: 4px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    color: var(--text-primary);
+    font-size: 14px;
+    font-family: inherit;
+}
+
+.colorPickerBtn:hover {
+    opacity: 0.8;
+}
+
+.colorDropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 20;
+    min-width: 200px;
+    padding: 4px 0;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.colorOption {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 16px;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--text-primary);
+    transition: background-color 0.15s;
+}
+
+.colorOption:hover {
+    background: var(--bg-hover);
+}
+
+.colorOptionActive {
+    background: rgba(26, 115, 232, 0.08);
+}
+
+.colorSwatch {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+/* ===== Delete Action ===== */
+
+.deleteAction {
+    color: #d50000 !important;
+}
+
 /* ===== Animation ===== */
 
 @keyframes scaleUp {
@@ -643,5 +730,65 @@
     to {
         transform: scale(1);
         opacity: 1;
+    }
+}
+
+/* ===== Responsive ===== */
+
+@media (max-width: 768px) {
+    .overlay {
+        padding-top: 0;
+        align-items: stretch;
+    }
+
+    .modal {
+        width: 100%;
+        max-width: 100%;
+        max-height: 100vh;
+        border-radius: 0;
+        height: 100vh;
+    }
+
+    .titleSection {
+        padding: 12px 16px 0 16px;
+    }
+
+    .dateTimeSection {
+        padding: 12px 16px;
+    }
+
+    .dateTimeRow {
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+
+    .fieldRow {
+        padding: 10px 16px;
+    }
+
+    .meetRow {
+        padding: 10px 16px;
+    }
+
+    .notificationRow {
+        padding: 10px 16px;
+    }
+
+    .statusRow {
+        padding: 10px 16px 10px 52px;
+        flex-wrap: wrap;
+    }
+
+    .tabs {
+        padding: 0 16px;
+    }
+
+    .formattingToolbar {
+        padding: 8px 16px;
+    }
+
+    .moreActionsBtn {
+        font-size: 13px;
+        padding: 6px 8px;
     }
 }

@@ -1,14 +1,18 @@
 import { useRef, useEffect, useState, useMemo } from 'react';
 import { useCalendar } from '../../context/CalendarContext'
-import { getWeekViewDays, isToday } from '../../utils/dateUtils'
+import { getWeekViewDays, getNDayViewDays, isToday } from '../../utils/dateUtils'
 import { format, isSameDay, addMinutes, startOfDay, roundToNearestMinutes, differenceInMinutes, endOfDay } from 'date-fns'
 import styles from './WeekView.module.css'
 import { ptBR } from 'date-fns/locale';
 import { getRecurrenceInstances } from '../../utils/recurrenceUtils';
 
-export function WeekView() {
+interface WeekViewProps {
+    dayCount?: number;
+}
+
+export function WeekView({ dayCount }: WeekViewProps) {
     const { currentDate, filteredEvents: events, openPopover, openCreateModal, updateEvent } = useCalendar();
-    const days = getWeekViewDays(currentDate);
+    const days = dayCount ? getNDayViewDays(currentDate, dayCount) : getWeekViewDays(currentDate);
     const hours = Array.from({ length: 24 }, (_, i) => i);
     const scrollRef = useRef<HTMLDivElement>(null);
     const gridRef = useRef<HTMLDivElement>(null);

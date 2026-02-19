@@ -1,14 +1,13 @@
 .container {
-    padding: 0 0 16px 0;
+    padding: 0 0 8px 0;
     width: 224px;
-    /* 7 * 32px */
 }
 
 .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
     padding-left: 8px;
 }
 
@@ -16,6 +15,7 @@
     font-size: 14px;
     font-weight: 500;
     color: var(--text-primary);
+    text-transform: capitalize;
 }
 
 .nav {
@@ -27,8 +27,8 @@
     border: none;
     color: var(--text-secondary);
     cursor: pointer;
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -36,14 +36,14 @@
 }
 
 .navBtn:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: var(--bg-hover);
     color: var(--text-primary);
 }
 
 .grid {
     display: grid;
     grid-template-columns: repeat(7, 32px);
-    row-gap: 2px;
+    row-gap: 1px;
 }
 
 .dayHeader {
@@ -66,10 +66,11 @@
     font-size: 12px;
     color: var(--text-primary);
     position: relative;
+    transition: background-color 0.15s;
 }
 
 .dayCell:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: var(--bg-hover);
 }
 
 .dimmed {
@@ -79,25 +80,23 @@
 .today {
     color: var(--primary);
     font-weight: 600;
-    position: relative;
 }
 
-/* Today dot or circle? Google Calendar uses a small colored text for current day in mini cal, 
-   but specific styling for selected. 
-   Actually, today has a circle IF selected. If not, just colored text.
-*/
+.today.selected {
+    background-color: var(--primary) !important;
+    color: white !important;
+}
 
 .selected {
-    background-color: #4285f4 !important;
-    /* Specific blue */
+    background-color: var(--primary) !important;
     color: white !important;
 }
 
 .selected.dimmed {
-    background-color: #6a9bf5 !important;
+    background-color: var(--primary) !important;
+    opacity: 0.7;
 }
 
 .current {
-    /* Visual cue for currently viewed date if not selected */
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: var(--bg-hover);
 }
