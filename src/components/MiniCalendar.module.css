@@ -1,0 +1,103 @@
+.container {
+    padding: 0 0 16px 0;
+    width: 224px;
+    /* 7 * 32px */
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-left: 8px;
+}
+
+.monthLabel {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.nav {
+    display: flex;
+}
+
+.navBtn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+.navBtn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(7, 32px);
+    row-gap: 2px;
+}
+
+.dayHeader {
+    font-size: 10px;
+    color: var(--text-muted);
+    text-align: center;
+    height: 24px;
+    line-height: 24px;
+    font-weight: 500;
+}
+
+.dayCell {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: 50%;
+    font-size: 12px;
+    color: var(--text-primary);
+    position: relative;
+}
+
+.dayCell:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.dimmed {
+    color: var(--text-muted);
+}
+
+.today {
+    color: var(--primary);
+    font-weight: 600;
+    position: relative;
+}
+
+/* Today dot or circle? Google Calendar uses a small colored text for current day in mini cal, 
+   but specific styling for selected. 
+   Actually, today has a circle IF selected. If not, just colored text.
+*/
+
+.selected {
+    background-color: #4285f4 !important;
+    /* Specific blue */
+    color: white !important;
+}
+
+.selected.dimmed {
+    background-color: #6a9bf5 !important;
+}
+
+.current {
+    /* Visual cue for currently viewed date if not selected */
+    background-color: rgba(255, 255, 255, 0.1);
+}

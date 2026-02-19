@@ -1,0 +1,194 @@
+/* ===== RecurrenceModal - Google Calendar Style ===== */
+
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.3);
+    z-index: 1200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal {
+    background-color: var(--bg-surface);
+    border-radius: 8px;
+    width: 420px;
+    max-width: 90vw;
+    padding: 24px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.title {
+    font-size: 18px;
+    font-weight: 400;
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    color: var(--text-primary);
+    font-size: 14px;
+}
+
+.intervalGroup {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.numberInput {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    padding: 8px;
+    border-radius: 4px;
+    width: 50px;
+    color: var(--text-primary);
+    text-align: center;
+    font-family: inherit;
+    outline: none;
+}
+
+.numberInput:focus {
+    border-color: #1a73e8;
+}
+
+.select {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    padding: 8px 12px;
+    border-radius: 4px;
+    color: var(--text-primary);
+    font-family: inherit;
+    outline: none;
+    cursor: pointer;
+}
+
+.select:focus {
+    border-color: #1a73e8;
+}
+
+.section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    color: var(--text-primary);
+    font-size: 14px;
+}
+
+.weekDays {
+    display: flex;
+    gap: 8px;
+}
+
+.dayBtn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--border-color);
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+}
+
+.dayBtn:hover {
+    background: var(--bg-hover);
+}
+
+.selectedDay {
+    background-color: #1a73e8;
+    border-color: #1a73e8;
+    color: white;
+}
+
+.selectedDay:hover {
+    background-color: #1557b0;
+}
+
+.radioGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.radioRow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--text-primary);
+}
+
+.radioRow input[type="radio"] {
+    accent-color: #1a73e8;
+    width: 18px;
+    height: 18px;
+}
+
+.dateInput {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    padding: 6px 10px;
+    border-radius: 4px;
+    color: var(--text-primary);
+    font-family: inherit;
+    outline: none;
+}
+
+.dateInput:focus {
+    border-color: #1a73e8;
+}
+
+.footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.cancelBtn {
+    background: transparent;
+    border: none;
+    color: #1a73e8;
+    padding: 8px 16px;
+    cursor: pointer;
+    border-radius: 4px;
+    font-weight: 500;
+    font-size: 14px;
+    transition: background-color 0.15s;
+}
+
+.cancelBtn:hover {
+    background: rgba(26, 115, 232, 0.04);
+}
+
+.saveBtn {
+    background-color: #1a73e8;
+    color: white;
+    border: none;
+    padding: 8px 24px;
+    border-radius: 20px;
+    font-weight: 500;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.15s;
+}
+
+.saveBtn:hover {
+    background-color: #1557b0;
+}

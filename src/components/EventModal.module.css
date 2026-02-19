@@ -1,0 +1,647 @@
+/* ===== EventModal - Google Calendar Style ===== */
+
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.3);
+    z-index: 1100;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 5vh;
+}
+
+.modal {
+    background-color: var(--bg-surface);
+    border-radius: 8px;
+    width: 620px;
+    max-width: 95vw;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 24px 38px 3px rgba(0, 0, 0, 0.14), 0 9px 46px 8px rgba(0, 0, 0, 0.12);
+    overflow: hidden;
+    animation: scaleUp 0.2s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+/* ===== Header ===== */
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 8px 8px 16px;
+    border-bottom: 1px solid var(--border-color);
+    min-height: 48px;
+}
+
+.headerLeft {
+    display: flex;
+    align-items: center;
+}
+
+.headerRight {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.iconBtn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: background-color 0.15s;
+}
+
+.iconBtn:hover {
+    background-color: var(--bg-hover);
+}
+
+.saveBtn {
+    background-color: #1a73e8;
+    color: white;
+    border: none;
+    padding: 8px 24px;
+    border-radius: 20px;
+    font-weight: 500;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.15s, box-shadow 0.15s;
+}
+
+.saveBtn:hover {
+    background-color: #1557b0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.moreActionsBtn {
+    background: transparent;
+    border: none;
+    color: #1a73e8;
+    padding: 8px 12px;
+    font-size: 14px;
+    cursor: pointer;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    border-radius: 4px;
+    position: relative;
+}
+
+.moreActionsBtn:hover {
+    background: rgba(26, 115, 232, 0.04);
+}
+
+.actionsDropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    z-index: 10;
+    min-width: 140px;
+    padding: 4px 0;
+    margin-top: 4px;
+}
+
+.actionsDropdown button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 8px 16px;
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.actionsDropdown button:hover {
+    background: var(--bg-hover);
+}
+
+/* ===== Body ===== */
+
+.body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ===== Title Section ===== */
+
+.titleSection {
+    padding: 16px 24px 0 24px;
+}
+
+.titleInput {
+    font-size: 22px;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid var(--border-color);
+    width: 100%;
+    padding: 8px 0;
+    color: var(--text-primary);
+    outline: none;
+    font-family: inherit;
+    font-weight: 400;
+    transition: border-color 0.2s;
+}
+
+.titleInput:focus {
+    border-bottom-color: #1a73e8;
+}
+
+.titleInput::placeholder {
+    color: var(--text-muted);
+}
+
+/* ===== Date/Time Section ===== */
+
+.dateTimeSection {
+    padding: 16px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.dateTimeRow {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    flex-wrap: wrap;
+}
+
+.dateChip,
+.timeChip {
+    background: transparent;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 14px;
+    cursor: pointer;
+    outline: none;
+    transition: background-color 0.15s;
+}
+
+.dateChip:hover,
+.timeChip:hover {
+    background: var(--bg-hover);
+}
+
+.dateChip:focus,
+.timeChip:focus {
+    background: rgba(26, 115, 232, 0.08);
+}
+
+.timeSeparator {
+    color: var(--text-secondary);
+    font-size: 14px;
+    padding: 0 4px;
+}
+
+.optionsRow {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.allDayGroup {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: var(--text-primary);
+}
+
+.allDayGroup input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #1a73e8;
+    cursor: pointer;
+}
+
+.allDayGroup label {
+    cursor: pointer;
+}
+
+/* Recurrence */
+.recurrenceWrapper {
+    position: relative;
+}
+
+.recurrenceBtn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px;
+    border-radius: 4px;
+    transition: background-color 0.15s;
+}
+
+.recurrenceBtn:hover {
+    background: var(--bg-hover);
+}
+
+.recurrenceDropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    z-index: 10;
+    width: 220px;
+    padding: 4px 0;
+}
+
+.recurrenceOption {
+    padding: 8px 16px;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--text-primary);
+}
+
+.recurrenceOption:hover {
+    background: var(--bg-hover);
+}
+
+.separator {
+    height: 1px;
+    background: var(--border-color);
+    margin: 4px 0;
+}
+
+/* ===== Tabs ===== */
+
+.tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border-color);
+    padding: 0 24px;
+}
+
+.tab {
+    background: transparent;
+    border: none;
+    padding: 12px 16px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    font-size: 14px;
+    font-weight: 500;
+    transition: color 0.15s;
+    margin-bottom: -1px;
+}
+
+.tab:hover {
+    color: var(--text-primary);
+}
+
+.activeTab {
+    color: #1a73e8;
+    border-bottom-color: #1a73e8;
+}
+
+/* ===== Content Fields ===== */
+
+.formFields {
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+}
+
+.fieldRow {
+    display: flex;
+    align-items: flex-start;
+    padding: 12px 24px;
+    gap: 16px;
+    transition: background-color 0.15s;
+}
+
+.fieldRow:hover {
+    background: var(--bg-hover);
+}
+
+.fieldIcon {
+    color: var(--text-secondary);
+    flex-shrink: 0;
+    margin-top: 4px;
+    width: 20px;
+    height: 20px;
+}
+
+.input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid transparent;
+    padding: 4px 0;
+    color: var(--text-primary);
+    font-size: 14px;
+    outline: none;
+    font-family: inherit;
+    transition: border-bottom-color 0.2s;
+}
+
+.input:focus {
+    border-bottom-color: var(--text-secondary);
+}
+
+.input::placeholder {
+    color: var(--text-muted);
+}
+
+.textarea {
+    flex: 1;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid transparent;
+    padding: 4px 0;
+    color: var(--text-primary);
+    font-size: 14px;
+    outline: none;
+    font-family: inherit;
+    min-height: 60px;
+    resize: vertical;
+    transition: border-bottom-color 0.2s;
+}
+
+.textarea:focus {
+    border-bottom-color: var(--text-secondary);
+}
+
+.textarea::placeholder {
+    color: var(--text-muted);
+}
+
+/* ===== Meet Button ===== */
+
+.meetRow {
+    display: flex;
+    align-items: center;
+    padding: 12px 24px;
+    gap: 16px;
+}
+
+.meetBtn {
+    background: transparent;
+    border: none;
+    color: #1a73e8;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 0;
+    font-weight: 400;
+}
+
+.meetBtn:hover {
+    text-decoration: underline;
+}
+
+.meetLink {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #1a73e8;
+    font-size: 14px;
+}
+
+.meetLink a {
+    color: #1a73e8;
+    text-decoration: none;
+}
+
+.meetLink a:hover {
+    text-decoration: underline;
+}
+
+.removeMeet {
+    cursor: pointer;
+    color: var(--text-secondary);
+    opacity: 0.6;
+}
+
+.removeMeet:hover {
+    opacity: 1;
+}
+
+/* ===== Calendar Selector ===== */
+
+.calendarSelector {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+}
+
+.select {
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    padding: 4px 8px;
+    font-size: 14px;
+    outline: none;
+    cursor: pointer;
+    font-family: inherit;
+    border-bottom: 1px solid transparent;
+}
+
+.select:hover {
+    border-bottom-color: var(--text-secondary);
+}
+
+.colorSample {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.colorPickerTrigger {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+}
+
+.colorPickerTrigger:hover {
+    background: var(--bg-hover);
+}
+
+/* ===== Status Row ===== */
+
+.statusRow {
+    display: flex;
+    align-items: center;
+    padding: 12px 24px 12px 60px;
+    gap: 12px;
+}
+
+.statusSelect {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 13px;
+    outline: none;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.statusSelect:hover {
+    background: var(--bg-hover);
+}
+
+.infoIcon {
+    color: var(--text-muted);
+    cursor: help;
+    display: flex;
+}
+
+/* ===== Guests ===== */
+
+.guestsWrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.guestList {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.guestChip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg-hover);
+    padding: 4px 10px;
+    border-radius: 16px;
+    font-size: 13px;
+    width: fit-content;
+    color: var(--text-primary);
+}
+
+.removeGuest {
+    cursor: pointer;
+    opacity: 0.5;
+    display: flex;
+}
+
+.removeGuest:hover {
+    opacity: 1;
+}
+
+/* ===== Formatting Toolbar ===== */
+
+.formattingToolbar {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 8px 24px;
+    border-top: 1px solid var(--border-color);
+    background: var(--bg-surface);
+}
+
+.toolbarBtn {
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    border: none;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: background-color 0.15s;
+}
+
+.toolbarBtn:hover {
+    background: var(--bg-hover);
+}
+
+.toolbarSeparator {
+    width: 1px;
+    height: 20px;
+    background: var(--border-color);
+    margin: 0 4px;
+}
+
+/* ===== Find Time Placeholder ===== */
+
+.findTimePlaceholder {
+    padding: 24px;
+    color: var(--text-secondary);
+    font-size: 14px;
+    text-align: center;
+}
+
+/* ===== Notification Row ===== */
+
+.notificationRow {
+    display: flex;
+    align-items: center;
+    padding: 12px 24px;
+    gap: 16px;
+    cursor: pointer;
+    transition: background-color 0.15s;
+}
+
+.notificationRow:hover {
+    background: var(--bg-hover);
+}
+
+.notificationText {
+    color: #1a73e8;
+    font-size: 14px;
+}
+
+/* ===== Animation ===== */
+
+@keyframes scaleUp {
+    from {
+        transform: scale(0.95);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}

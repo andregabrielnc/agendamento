@@ -1,0 +1,12 @@
+
+> temp@0.0.0 build
+> tsc -b && vite build
+
+src/components/CalendarGrid/WeekView.tsx(4,53): error TS6133: 'differenceInMinutes' is declared but its value is never read.
+src/components/CalendarGrid/WeekView.tsx(6,1): error TS6133: 'CalendarEvent' is declared but its value is never read.
+src/components/CalendarGrid/WeekView.tsx(63,11): error TS6133: 'handleGridMouseMove' is declared but its value is never read.
+src/components/CalendarGrid/WeekView.tsx(69,19): error TS6133: 'rect' is declared but its value is never read.
+src/components/EventModal.tsx(2,13): error TS6133: 'Clock' is declared but its value is never read.
+src/components/EventModal.tsx(2,39): error TS6133: 'Trash' is declared but its value is never read.
+src/components/EventModal.tsx(8,60): error TS6133: 'deleteEvent' is declared but its value is never read.
+src/components/MiniCalendar.tsx(8,26): error TS6133: 'setCurrentDate' is declared but its value is never read.

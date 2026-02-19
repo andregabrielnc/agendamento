@@ -1,0 +1,163 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.headerRow {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    border-bottom: 1px solid var(--border-color);
+    background-color: var(--bg-surface);
+}
+
+.headerCell {
+    padding: 8px;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.grid {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-auto-rows: 1fr;
+    /* Equal height rows */
+}
+
+.dayCell {
+    border-right: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+    background-color: var(--bg-app);
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-height: 0;
+    /* Important for overflow */
+    transition: background-color 0.2s;
+    cursor: pointer;
+}
+
+.dayCell:hover {
+    background-color: rgba(255, 255, 255, 0.02);
+}
+
+/* 7th column needs no right border */
+.dayCell:nth-child(7n) {
+    border-right: none;
+}
+
+.offsetDay {
+    background-color: rgba(0, 0, 0, 0.2);
+    color: var(--text-muted);
+}
+
+.dayNumber {
+    font-size: 12px;
+    font-weight: 500;
+    text-align: center;
+    margin-bottom: 4px;
+    display: flex;
+    justify-content: center;
+}
+
+.todayCircle {
+    background-color: var(--primary);
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.eventsList {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+/* Hide scrollbar in events list but allow scroll */
+.eventsList::-webkit-scrollbar {
+    width: 4px;
+}
+
+.eventCard {
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: white;
+    cursor: pointer;
+    /* Initial cursor */
+    transition: transform 0.1s, opacity 0.2s;
+    user-select: none;
+}
+
+.eventCard:hover {
+    opacity: 0.9;
+    transform: scale(1.02);
+}
+
+.eventCard[draggable="true"] {
+    cursor: grab;
+}
+
+.eventCard[draggable="true"]:active {
+    cursor: grabbing;
+}
+
+.dayHeader {
+    padding: 8px;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.eventsStack {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.eventsStack::-webkit-scrollbar {
+    width: 4px;
+}
+
+.today {
+    background-color: var(--primary);
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dimmed {
+    opacity: 0.4;
+}
+
+.eventTime {
+    font-size: 11px;
+    margin-right: 4px;
+}
+
+.eventTitle {
+    font-size: 11px;
+    font-weight: 500;
+}

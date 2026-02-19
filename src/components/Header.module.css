@@ -1,0 +1,197 @@
+.header {
+    height: var(--header-height);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    background-color: var(--bg-surface);
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-primary);
+}
+
+.left,
+.middle,
+.right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.middle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.navigation {
+    display: flex;
+    align-items: center;
+    gap: 0;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-left: 8px;
+}
+
+.iconBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    color: var(--text-secondary);
+    transition: background 0.2s;
+}
+
+.iconBtn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+}
+
+.todayBtn {
+    border: 1px solid var(--border-color);
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-weight: 500;
+    color: var(--text-primary);
+    transition: background 0.2s;
+}
+
+.todayBtn:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.dateTitle {
+    font-size: 20px;
+    font-weight: 400;
+    margin-left: 12px;
+    color: var(--text-primary);
+    min-width: 180px;
+    /* Prevent jump on change */
+}
+
+.right {
+    gap: 16px;
+}
+
+.viewSelect {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 8px 12px;
+    border-radius: 4px;
+    outline: none;
+    cursor: pointer;
+}
+
+.viewSelect option {
+    background-color: var(--bg-surface);
+    color: var(--text-primary);
+}
+
+.searchWrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 8px 12px;
+    width: 200px;
+    transition: width 0.3s;
+}
+
+.searchWrapper:focus-within {
+    background-color: rgba(255, 255, 255, 0.1);
+    width: 240px;
+}
+
+.searchIcon {
+    color: var(--text-secondary);
+    margin-right: 8px;
+}
+
+.searchInput {
+    border: none;
+    background: transparent;
+    outline: none;
+    color: var(--text-primary);
+    width: 100%;
+    font-size: 14px;
+}
+
+.avatarBtn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    border: 2px solid var(--bg-surface);
+}
+
+.viewSwitcher {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    cursor: pointer;
+    position: relative;
+    color: var(--text-primary);
+    background: transparent;
+    user-select: none;
+}
+
+.viewSwitcher:hover {
+    background-color: var(--bg-hover);
+}
+
+.viewMenu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    margin-top: 4px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    z-index: 50;
+    overflow: hidden;
+}
+
+.viewMenu div {
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.viewMenu div:hover {
+    background-color: var(--bg-hover);
+}
+
+.themeToggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    color: var(--text-secondary);
+    transition: background 0.2s, color 0.2s;
+}
+
+.themeToggle:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+}

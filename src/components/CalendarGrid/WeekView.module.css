@@ -1,0 +1,180 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+
+.headerRow {
+    display: flex;
+    border-bottom: 1px solid var(--border-color);
+    background-color: var(--bg-surface);
+    flex-shrink: 0;
+}
+
+.timeGutterHeader {
+    width: 60px;
+    flex-shrink: 0;
+    border-right: 1px solid var(--border-color);
+}
+
+.headerCell {
+    flex: 1;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    border-right: 1px solid var(--border-color);
+}
+
+.dayName {
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.dayNumber {
+    font-size: 24px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+.todayNumber {
+    background-color: var(--primary);
+    color: white;
+}
+
+.todayHeader .dayName {
+    color: var(--primary);
+}
+
+.scrollArea {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    /* vertical scroll only */
+    scroll-behavior: smooth;
+}
+
+.grid {
+    display: flex;
+    position: relative;
+    min-height: 1440px;
+    /* 24 * 60px */
+}
+
+.timeGutter {
+    width: 60px;
+    flex-shrink: 0;
+    border-right: 1px solid var(--border-color);
+    background-color: var(--bg-surface);
+}
+
+.timeLabel {
+    height: 60px;
+    /* 1 hour height */
+    font-size: 11px;
+    color: var(--text-muted);
+    text-align: right;
+    padding-right: 8px;
+    position: relative;
+    top: -6px;
+    /* Align with line */
+}
+
+.dayColumn {
+    flex: 1;
+    position: relative;
+    border-right: 1px solid var(--border-color);
+}
+
+.hourCell {
+    height: 60px;
+    border-bottom: 1px solid var(--border-color);
+    border-bottom-style: dotted;
+    /* Grid lines */
+}
+
+.hourCell:last-child {
+    border-bottom: none;
+}
+
+.eventCard {
+    position: absolute;
+    left: 2px;
+    right: 2px;
+    border-radius: 4px;
+    padding: 4px 4px 10px 4px;
+    overflow: visible;
+    color: white;
+    font-size: 11px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    cursor: pointer;
+    z-index: 1;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    user-select: none;
+}
+
+.draftEvent {
+    background-color: var(--primary);
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.eventTitle {
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.eventTime {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.resizeHandle {
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 12px;
+    cursor: ns-resize;
+    z-index: 5;
+    border-radius: 0 0 4px 4px;
+}
+
+.resizeHandle:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.nowIndicator {
+    position: absolute;
+    left: 0;
+    right: 0;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.nowLine {
+    height: 2px;
+    background-color: #ea4335;
+    width: 100%;
+}
+
+.nowDot {
+    width: 12px;
+    height: 12px;
+    background-color: #ea4335;
+    border-radius: 50%;
+    position: absolute;
+    left: -6px;
+    top: -5px;
+}
