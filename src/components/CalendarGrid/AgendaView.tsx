@@ -104,9 +104,6 @@ export function AgendaView() {
                                     </div>
                                     <div className={styles.eventDetails}>
                                         <div className={styles.eventTitle}>{event.title}</div>
-                                        {event.location && (
-                                            <div className={styles.eventLocation}>{event.location}</div>
-                                        )}
                                     </div>
                                 </div>
                             ))}

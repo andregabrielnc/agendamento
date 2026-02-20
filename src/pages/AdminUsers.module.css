@@ -81,117 +81,6 @@
     color: var(--text-muted);
 }
 
-.addBtn {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 16px;
-    background: var(--primary);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: background 0.15s;
-}
-
-.addBtn:hover {
-    background: var(--primary-hover);
-}
-
-/* Form Card */
-
-.formCard {
-    margin: 16px 24px;
-    padding: 20px;
-    background: var(--primary-light);
-    border: 1px solid var(--border-color);
-    border-radius: 10px;
-}
-
-.formTitle {
-    font-size: 15px;
-    font-weight: 600;
-    margin-bottom: 16px;
-}
-
-.formGrid {
-    display: grid;
-    grid-template-columns: 1fr 1fr 140px;
-    gap: 12px;
-    margin-bottom: 16px;
-}
-
-.formGroup {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.formGroup label {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text-secondary);
-}
-
-.formInput,
-.formSelect {
-    padding: 8px 12px;
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-    background: var(--bg-surface);
-    color: var(--text-primary);
-    font-size: 14px;
-    font-family: inherit;
-}
-
-.formInput:focus,
-.formSelect:focus {
-    outline: none;
-    border-color: var(--primary);
-}
-
-.formInput:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-.formActions {
-    display: flex;
-    gap: 8px;
-}
-
-.saveBtn {
-    padding: 8px 20px;
-    background: var(--primary);
-    color: white;
-    border: none;
-    border-radius: 6px;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-}
-
-.saveBtn:hover {
-    background: var(--primary-hover);
-}
-
-.cancelBtn {
-    padding: 8px 16px;
-    background: none;
-    border: 1px solid var(--border-color);
-    color: var(--text-primary);
-    border-radius: 6px;
-    font-size: 13px;
-    cursor: pointer;
-}
-
-.cancelBtn:hover {
-    background: var(--bg-hover);
-}
-
 /* Table */
 
 .tableWrapper {
@@ -315,11 +204,6 @@
     color: var(--text-primary);
 }
 
-.deleteAction:hover {
-    background: #fef2f2;
-    color: #dc2626;
-}
-
 .empty {
     text-align: center;
     padding: 40px 20px;
@@ -344,18 +228,9 @@
         border-radius: 0;
     }
 
-    .formGrid {
-        grid-template-columns: 1fr;
-    }
-
     .toolbar {
         flex-direction: column;
         gap: 8px;
-    }
-
-    .addBtn {
-        width: 100%;
-        justify-content: center;
     }
 
     .table th:nth-child(4),

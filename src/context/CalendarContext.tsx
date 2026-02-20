@@ -51,7 +51,7 @@ interface CalendarContextType {
     addEvent: (event: Omit<CalendarEvent, 'id'>) => Promise<{ success: boolean; error?: string }>;
     updateEvent: (event: CalendarEvent) => Promise<{ success: boolean; error?: string }>;
     deleteEvent: (id: string) => Promise<{ success: boolean; error?: string }>;
-    addCalendar: (calendar: Omit<Calendar, 'id'>) => Promise<{ success: boolean; error?: string }>;
+    addCalendar: (calendar: Omit<Calendar, 'id'>) => Promise<{ success: boolean; error?: string; data?: any }>;
     updateCalendar: (calendar: Calendar) => Promise<{ success: boolean; error?: string }>;
     deleteCalendar: (id: string) => Promise<{ success: boolean; error?: string }>;
     toggleCalendar: (id: string) => Promise<{ success: boolean; error?: string }>;

@@ -1,11 +1,10 @@
 import { useState } from 'react';
-import { X, Plus, PencilSimple, Trash, ShieldCheck, UserCircle, MagnifyingGlass } from '@phosphor-icons/react';
+import { X, ShieldCheck, UserCircle, MagnifyingGlass } from '@phosphor-icons/react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import styles from './AdminUsers.module.css';
-import type { User, UserRole } from '../types';
 
 interface AdminUsersProps {
     isOpen: boolean;
@@ -13,17 +12,10 @@ interface AdminUsersProps {
 }
 
 export function AdminUsers({ isOpen, onClose }: AdminUsersProps) {
-    const { users, addUser, updateUser, deleteUser, user: currentUser } = useAuth();
+    const { users, updateUser, user: currentUser } = useAuth();
     const { showToast } = useToast();
 
     const [search, setSearch] = useState('');
-    const [showForm, setShowForm] = useState(false);
-    const [editingUser, setEditingUser] = useState<User | null>(null);
-
-    // Form state
-    const [formName, setFormName] = useState('');
-    const [formEmail, setFormEmail] = useState('');
-    const [formRole, setFormRole] = useState<UserRole>('user');
 
     if (!isOpen) return null;
 
@@ -33,66 +25,19 @@ export function AdminUsers({ isOpen, onClose }: AdminUsersProps) {
         return u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
     });
 
-    const openAddForm = () => {
-        setEditingUser(null);
-        setFormName('');
-        setFormEmail('');
-        setFormRole('user');
-        setShowForm(true);
-    };
-
-    const openEditForm = (user: User) => {
-        setEditingUser(user);
-        setFormName(user.name);
-        setFormEmail(user.email);
-        setFormRole(user.role);
-        setShowForm(true);
-    };
-
-    const handleSave = () => {
-        if (!formName.trim()) {
-            showToast('Nome é obrigatório', 'error');
-            return;
-        }
-        if (!formEmail.trim()) {
-            showToast('E-mail é obrigatório', 'error');
-            return;
-        }
-
-        if (editingUser) {
-            const result = updateUser({
-                ...editingUser,
-                name: formName.trim(),
-                email: formEmail.trim().toLowerCase(),
-                role: formRole,
-            });
-            if (result.success) {
-                showToast('Usuário atualizado', 'success');
-                setShowForm(false);
-            } else {
-                showToast(result.error || 'Erro ao atualizar', 'error');
-            }
-        } else {
-            const result = addUser({
-                name: formName.trim(),
-                email: formEmail.trim(),
-                role: formRole,
-            });
-            if (result.success) {
-                showToast('Usuário cadastrado', 'success');
-                setShowForm(false);
-            } else {
-                showToast(result.error || 'Erro ao cadastrar', 'error');
-            }
-        }
-    };
-
-    const handleDelete = (user: User) => {
-        const result = deleteUser(user.id);
+    const handleToggleRole = (u: typeof users[0]) => {
+        if (u.id === currentUser?.id) return;
+        const newRole = u.role === 'admin' ? 'user' : 'admin';
+        const result = updateUser({ ...u, role: newRole });
         if (result.success) {
-            showToast(`${user.name} removido`, 'info');
+            showToast(
+                newRole === 'admin'
+                    ? `${u.name} promovido a administrador`
+                    : `${u.name} removido do grupo de administradores`,
+                'success'
+            );
         } else {
-            showToast(result.error || 'Erro ao remover', 'error');
+            showToast(result.error || 'Erro ao alterar perfil', 'error');
         }
     };
 
@@ -100,7 +45,7 @@ export function AdminUsers({ isOpen, onClose }: AdminUsersProps) {
         <div className={styles.overlay} onClick={onClose}>
             <div className={styles.modal} onClick={e => e.stopPropagation()}>
                 <div className={styles.header}>
-                    <h2 className={styles.title}>Gerenciar Usuários</h2>
+                    <h2 className={styles.title}>Gerenciar Administradores</h2>
                     <button className={styles.closeBtn} onClick={onClose}>
                         <X size={20} />
                     </button>
@@ -117,61 +62,7 @@ export function AdminUsers({ isOpen, onClose }: AdminUsersProps) {
                             className={styles.searchInput}
                         />
                     </div>
-                    <button className={styles.addBtn} onClick={openAddForm}>
-                        <Plus size={16} weight="bold" />
-                        Novo Usuário
-                    </button>
                 </div>
-
-                {showForm && (
-                    <div className={styles.formCard}>
-                        <h3 className={styles.formTitle}>
-                            {editingUser ? 'Editar Usuário' : 'Novo Usuário'}
-                        </h3>
-                        <div className={styles.formGrid}>
-                            <div className={styles.formGroup}>
-                                <label>Nome completo</label>
-                                <input
-                                    type="text"
-                                    className={styles.formInput}
-                                    value={formName}
-                                    onChange={e => setFormName(e.target.value)}
-                                    placeholder="Nome do usuário"
-                                />
-                            </div>
-                            <div className={styles.formGroup}>
-                                <label>E-mail</label>
-                                <input
-                                    type="text"
-                                    className={styles.formInput}
-                                    value={formEmail}
-                                    onChange={e => setFormEmail(e.target.value)}
-                                    placeholder="usuario@ebserh.gov.br"
-                                    disabled={!!editingUser}
-                                />
-                            </div>
-                            <div className={styles.formGroup}>
-                                <label>Perfil</label>
-                                <select
-                                    className={styles.formSelect}
-                                    value={formRole}
-                                    onChange={e => setFormRole(e.target.value as UserRole)}
-                                >
-                                    <option value="user">Usuário</option>
-                                    <option value="admin">Administrador</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div className={styles.formActions}>
-                            <button className={styles.saveBtn} onClick={handleSave}>
-                                {editingUser ? 'Salvar Alterações' : 'Cadastrar'}
-                            </button>
-                            <button className={styles.cancelBtn} onClick={() => setShowForm(false)}>
-                                Cancelar
-                            </button>
-                        </div>
-                    </div>
-                )}
 
                 <div className={styles.tableWrapper}>
                     <table className={styles.table}>
@@ -210,20 +101,13 @@ export function AdminUsers({ isOpen, onClose }: AdminUsersProps) {
                                     </td>
                                     <td>
                                         <div className={styles.actions}>
-                                            <button
-                                                className={styles.actionBtn}
-                                                onClick={() => openEditForm(u)}
-                                                title="Editar"
-                                            >
-                                                <PencilSimple size={16} />
-                                            </button>
                                             {u.id !== currentUser?.id && (
                                                 <button
-                                                    className={`${styles.actionBtn} ${styles.deleteAction}`}
-                                                    onClick={() => handleDelete(u)}
-                                                    title="Remover"
+                                                    className={styles.actionBtn}
+                                                    onClick={() => handleToggleRole(u)}
+                                                    title={u.role === 'admin' ? 'Remover admin' : 'Tornar admin'}
                                                 >
-                                                    <Trash size={16} />
+                                                    {u.role === 'admin' ? <UserCircle size={16} /> : <ShieldCheck size={16} />}
                                                 </button>
                                             )}
                                         </div>

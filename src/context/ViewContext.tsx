@@ -18,7 +18,7 @@ const ViewContext = createContext<ViewContextType | undefined>(undefined);
 
 export function ViewProvider({ children }: { children: ReactNode }) {
     const [currentDate, setCurrentDate] = useState<Date>(startOfToday);
-    const [view, setView] = useState<ViewType>('month');
+    const [view, setView] = useState<ViewType>('week');
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
     const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
 

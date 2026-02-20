@@ -400,57 +400,14 @@
     color: var(--text-muted);
 }
 
-/* ===== Meet Button ===== */
+/* ===== Character Count ===== */
 
-.meetRow {
-    display: flex;
-    align-items: center;
-    padding: 12px 24px;
-    gap: 16px;
-}
-
-.meetBtn {
-    background: transparent;
-    border: none;
-    color: #1a73e8;
-    font-size: 14px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 8px 0;
-    font-weight: 400;
-}
-
-.meetBtn:hover {
-    text-decoration: underline;
-}
-
-.meetLink {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: #1a73e8;
-    font-size: 14px;
-}
-
-.meetLink a {
-    color: #1a73e8;
-    text-decoration: none;
-}
-
-.meetLink a:hover {
-    text-decoration: underline;
-}
-
-.removeMeet {
-    cursor: pointer;
-    color: var(--text-secondary);
-    opacity: 0.6;
-}
-
-.removeMeet:hover {
-    opacity: 1;
+.charCount {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-align: right;
+    padding: 2px 0 0 0;
+    display: block;
 }
 
 /* ===== Calendar Selector ===== */
@@ -497,74 +454,6 @@
     background: var(--bg-hover);
 }
 
-/* ===== Status Row ===== */
-
-.statusRow {
-    display: flex;
-    align-items: center;
-    padding: 12px 24px 12px 60px;
-    gap: 12px;
-}
-
-.statusSelect {
-    background: transparent;
-    border: 1px solid var(--border-color);
-    color: var(--text-primary);
-    padding: 6px 12px;
-    border-radius: 4px;
-    font-size: 13px;
-    outline: none;
-    cursor: pointer;
-    font-family: inherit;
-}
-
-.statusSelect:hover {
-    background: var(--bg-hover);
-}
-
-.infoIcon {
-    color: var(--text-muted);
-    cursor: help;
-    display: flex;
-}
-
-/* ===== Guests ===== */
-
-.guestsWrapper {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.guestList {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.guestChip {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: var(--bg-hover);
-    padding: 4px 10px;
-    border-radius: 16px;
-    font-size: 13px;
-    width: fit-content;
-    color: var(--text-primary);
-}
-
-.removeGuest {
-    cursor: pointer;
-    opacity: 0.5;
-    display: flex;
-}
-
-.removeGuest:hover {
-    opacity: 1;
-}
-
 /* ===== Formatting Toolbar ===== */
 
 .formattingToolbar {
@@ -601,116 +490,6 @@
     height: 20px;
     background: var(--border-color);
     margin: 0 4px;
-}
-
-/* ===== Find Time Placeholder ===== */
-
-.findTimePlaceholder {
-    padding: 24px;
-    color: var(--text-secondary);
-    font-size: 14px;
-    text-align: center;
-}
-
-/* ===== Notification Row ===== */
-
-.notificationRow {
-    display: flex;
-    align-items: center;
-    padding: 12px 24px;
-    gap: 16px;
-    cursor: pointer;
-    transition: background-color 0.15s;
-}
-
-.notificationRow:hover {
-    background: var(--bg-hover);
-}
-
-.notificationText {
-    color: #1a73e8;
-    font-size: 14px;
-}
-
-.notificationSelect {
-    background: transparent;
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-    padding: 6px 12px;
-    color: var(--text-primary);
-    font-size: 14px;
-    font-family: inherit;
-    cursor: pointer;
-    outline: none;
-}
-
-.notificationSelect:hover {
-    background: var(--bg-hover);
-}
-
-/* ===== Color Picker ===== */
-
-.colorPickerContainer {
-    flex: 1;
-    position: relative;
-}
-
-.colorPickerBtn {
-    background: transparent;
-    border: none;
-    padding: 4px 0;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    color: var(--text-primary);
-    font-size: 14px;
-    font-family: inherit;
-}
-
-.colorPickerBtn:hover {
-    opacity: 0.8;
-}
-
-.colorDropdown {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    background: var(--bg-surface);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    z-index: 20;
-    min-width: 200px;
-    padding: 4px 0;
-    max-height: 300px;
-    overflow-y: auto;
-}
-
-.colorOption {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 16px;
-    cursor: pointer;
-    font-size: 14px;
-    color: var(--text-primary);
-    transition: background-color 0.15s;
-}
-
-.colorOption:hover {
-    background: var(--bg-hover);
-}
-
-.colorOptionActive {
-    background: rgba(26, 115, 232, 0.08);
-}
-
-.colorSwatch {
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    flex-shrink: 0;
 }
 
 /* ===== Delete Action ===== */

@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState } from 'react';
-import { X, Trash, PencilSimple, MapPin, VideoCamera, Users, EnvelopeSimple, CopySimple } from '@phosphor-icons/react';
+import { X, Trash, PencilSimple, EnvelopeSimple, CopySimple } from '@phosphor-icons/react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import type { CalendarEvent } from '../types';
@@ -77,8 +77,6 @@ export function EventPopover({ event, anchorEl, onClose }: EventPopoverProps) {
             calendarId: event.calendarId,
             color: event.color,
             allDay: event.allDay,
-            location: event.location,
-            guests: event.guests ? [...event.guests] : undefined,
         });
         onClose();
         showToast('Evento duplicado', 'success');
@@ -129,33 +127,6 @@ export function EventPopover({ event, anchorEl, onClose }: EventPopoverProps) {
                                 <div className={styles.time}>{timeDisplay}</div>
                             </div>
                         </div>
-
-                        {event.location && (
-                            <div className={styles.detailRow}>
-                                <MapPin size={20} className={styles.icon} />
-                                <span>{event.location}</span>
-                            </div>
-                        )}
-
-                        {event.meetingLink && (
-                            <div className={styles.detailRow}>
-                                <VideoCamera size={20} className={styles.icon} />
-                                <a href={event.meetingLink} target="_blank" rel="noreferrer" className={styles.link}>
-                                    Entrar com Google Meet
-                                </a>
-                            </div>
-                        )}
-
-                        {event.guests && event.guests.length > 0 && (
-                            <div className={styles.detailRow}>
-                                <Users size={20} className={styles.icon} />
-                                <div className={styles.guestList}>
-                                    {event.guests.map((guest, i) => (
-                                        <div key={i} className={styles.guest}>{guest}</div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
 
                         {event.description && (
                             <div className={styles.detailRow}>

@@ -34,12 +34,7 @@ function buildInitialEvents(): CalendarEvent[] {
             end: makeDate(0, 10, 30),
             calendarId: '1',
             color: '#039be5',
-            location: 'Sala de Conferência A',
             description: 'Reunião inicial de planejamento para o roadmap do primeiro trimestre.',
-            guests: ['maria@empresa.com', 'joao@empresa.com'],
-            busyStatus: 'busy',
-            visibility: 'default',
-            reminders: [{ type: 'notification', minutes: 30 }],
             createdBy: 'admin-001',
         },
         {
@@ -49,7 +44,6 @@ function buildInitialEvents(): CalendarEvent[] {
             end: makeDate(0, 13, 0),
             calendarId: '2',
             color: '#33b679',
-            location: 'Restaurante Sabor & Arte',
             createdBy: 'admin-001',
         },
         {
@@ -60,7 +54,6 @@ function buildInitialEvents(): CalendarEvent[] {
             calendarId: '4',
             color: '#d50000',
             description: 'Revisão de código dos componentes React do painel de controle.',
-            meetingLink: 'https://meet.google.com/abc-defg-hij',
             createdBy: 'admin-001',
         },
         {
@@ -81,8 +74,6 @@ function buildInitialEvents(): CalendarEvent[] {
             end: makeDate(1, 11, 0),
             calendarId: '4',
             color: '#d50000',
-            guests: ['time-dev@empresa.com', 'pm@empresa.com'],
-            meetingLink: 'https://meet.google.com/xyz-abcd-efg',
             recurrence: 'weekly',
             createdBy: 'admin-001',
         },
@@ -93,7 +84,6 @@ function buildInitialEvents(): CalendarEvent[] {
             end: makeDate(1, 8, 0),
             calendarId: '2',
             color: '#33b679',
-            location: 'Studio Zen',
             recurrence: 'weekly',
             createdBy: 'admin-001',
         },
@@ -104,8 +94,6 @@ function buildInitialEvents(): CalendarEvent[] {
             end: makeDate(2, 15, 30),
             calendarId: '2',
             color: '#33b679',
-            location: 'Clínica Sorrir, Sala 203',
-            reminders: [{ type: 'notification', minutes: 60 }],
             createdBy: 'admin-001',
         },
         {
@@ -116,7 +104,6 @@ function buildInitialEvents(): CalendarEvent[] {
             calendarId: '4',
             color: '#d50000',
             description: 'Deploy v2.4.0 - nova funcionalidade de relatórios.',
-            guests: ['devops@empresa.com'],
             createdBy: 'admin-001',
         },
         {
@@ -126,8 +113,6 @@ function buildInitialEvents(): CalendarEvent[] {
             end: makeDate(3, 21, 0),
             calendarId: '3',
             color: '#f6bf26',
-            location: 'Casa da Mamãe',
-            guests: ['mae@familia.com', 'pai@familia.com', 'irmao@familia.com'],
             createdBy: 'admin-001',
         },
         {
@@ -148,7 +133,6 @@ function buildInitialEvents(): CalendarEvent[] {
             calendarId: '4',
             color: '#d50000',
             recurrence: 'weekly',
-            meetingLink: 'https://meet.google.com/one-on-one',
             createdBy: 'admin-001',
         },
         {
@@ -158,7 +142,6 @@ function buildInitialEvents(): CalendarEvent[] {
             end: makeDate(0, 7, 30),
             calendarId: '2',
             color: '#33b679',
-            location: 'SmartFit Centro',
             recurrence: 'daily',
             createdBy: 'admin-001',
         },
@@ -170,7 +153,6 @@ function buildInitialEvents(): CalendarEvent[] {
             calendarId: '4',
             color: '#d50000',
             allDay: true,
-            location: 'Centro de Convenções',
             description: 'Evento de 2 dias sobre tendências de tecnologia.',
             createdBy: 'admin-001',
         },
@@ -181,7 +163,6 @@ function buildInitialEvents(): CalendarEvent[] {
             end: makeDate(4, 19, 30),
             calendarId: '3',
             color: '#f6bf26',
-            location: 'Escola Municipal',
             createdBy: 'admin-001',
         },
         {
@@ -201,8 +182,6 @@ function buildInitialEvents(): CalendarEvent[] {
             end: makeDate(4, 16, 0),
             calendarId: '4',
             color: '#d50000',
-            meetingLink: 'https://meet.google.com/retro-sprint',
-            guests: ['time-dev@empresa.com'],
             createdBy: 'admin-001',
         },
         {
@@ -212,8 +191,6 @@ function buildInitialEvents(): CalendarEvent[] {
             end: makeDate(4, 20, 0),
             calendarId: '1',
             color: '#039be5',
-            location: 'Bar do Zé',
-            guests: ['amigo1@gmail.com', 'amigo2@gmail.com'],
             createdBy: 'admin-001',
         },
         {
@@ -223,7 +200,6 @@ function buildInitialEvents(): CalendarEvent[] {
             end: makeDate(-1, 9, 45),
             calendarId: '2',
             color: '#33b679',
-            location: 'Hospital Santa Cruz',
             createdBy: 'admin-001',
         },
         {
@@ -234,7 +210,6 @@ function buildInitialEvents(): CalendarEvent[] {
             calendarId: '4',
             color: '#d50000',
             recurrence: 'daily',
-            meetingLink: 'https://meet.google.com/daily-standup',
             createdBy: 'admin-001',
         },
         {
@@ -350,13 +325,6 @@ class CalendarService {
         const events = this.getStoredEvents();
         const filteredEvents = events.filter(e => e.calendarId !== id);
         this.saveEvents(filteredEvents);
-    }
-
-    // --- Utils ---
-
-    async generateMeetingLink(): Promise<string> {
-        await delay(500);
-        return `https://meet.google.com/${uuidv4().substring(0, 3)}-${uuidv4().substring(0, 4)}-${uuidv4().substring(0, 3)}`;
     }
 
     /**

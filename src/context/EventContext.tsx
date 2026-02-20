@@ -6,6 +6,7 @@ import { calendarService } from '../services/calendarService';
 interface EventOperationResult {
     success: boolean;
     error?: string;
+    data?: any;
 }
 
 interface EventContextType {
@@ -57,8 +58,7 @@ export function EventProvider({ children }: { children: ReactNode }) {
             const q = searchQuery.toLowerCase();
             return (
                 event.title.toLowerCase().includes(q) ||
-                (event.description !== undefined && event.description.toLowerCase().includes(q)) ||
-                (event.location !== undefined && event.location.toLowerCase().includes(q))
+                (event.description !== undefined && event.description.toLowerCase().includes(q))
             );
         });
     }, [events, visibleCalendarIds, searchQuery]);
@@ -135,7 +135,7 @@ export function EventProvider({ children }: { children: ReactNode }) {
         try {
             const newCalendar = await calendarService.createCalendar(calendarData);
             setCalendars(prev => [...prev, newCalendar]);
-            return { success: true };
+            return { success: true, data: newCalendar };
         } catch (error) {
             const message = error instanceof Error ? error.message : 'Failed to add calendar';
             console.error('Failed to add calendar:', error);

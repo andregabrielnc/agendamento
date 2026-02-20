@@ -22,11 +22,6 @@ export interface RecurrenceRule {
 
 export type RecurrenceType = 'none' | 'daily' | 'weekly' | 'monthly' | 'custom';
 
-export interface EventReminder {
-    type: 'notification' | 'email';
-    minutes: number;
-}
-
 export interface CalendarEvent {
     id: string;
     title: string;
@@ -34,15 +29,9 @@ export interface CalendarEvent {
     end: Date;
     allDay?: boolean;
     description?: string;
-    location?: string;
-    guests?: string[];
-    meetingLink?: string;
     recurrence?: RecurrenceType | RecurrenceRule;
     color?: string;
     calendarId: string;
-    reminders?: EventReminder[];
-    busyStatus?: 'busy' | 'free';
-    visibility?: 'default' | 'public' | 'private';
     createdBy?: string;
 }
 
