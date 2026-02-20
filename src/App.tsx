@@ -13,16 +13,18 @@ function AppContent() {
 
   return (
     <div className={styles.container}>
-      <div className={`${styles.sidebarWrapper} ${sidebarOpen ? styles.sidebarVisible : styles.sidebarHidden}`}>
-        <Sidebar />
-      </div>
-      {sidebarOpen && <div className={styles.sidebarOverlay} onClick={toggleSidebar} />}
-      <main className={styles.main}>
-        <Header />
-        <div className={styles.content}>
-          <CalendarGrid />
+      <Header />
+      <div className={styles.body}>
+        <div className={`${styles.sidebarWrapper} ${sidebarOpen ? styles.sidebarVisible : styles.sidebarHidden}`}>
+          <Sidebar />
         </div>
-      </main>
+        {sidebarOpen && <div className={styles.sidebarOverlay} onClick={toggleSidebar} />}
+        <main className={styles.main}>
+          <div className={styles.content}>
+            <CalendarGrid />
+          </div>
+        </main>
+      </div>
       <EventModal />
       {popoverState.isOpen && popoverState.event && (
         <EventPopover

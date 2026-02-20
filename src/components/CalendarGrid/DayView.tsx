@@ -30,6 +30,7 @@ export function DayView() {
 
     // Drag to Move State
     const [dragEventId, setDragEventId] = useState<string | null>(null);
+    const dragOffsetRef = useRef<number>(0);
 
     // Scroll to current time on mount
     useEffect(() => {
@@ -170,6 +171,8 @@ export function DayView() {
         setDragEventId(eventId);
         e.dataTransfer.effectAllowed = 'move';
         e.dataTransfer.setData('text/plain', eventId);
+        const eventRect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+        dragOffsetRef.current = e.clientY - eventRect.top;
     };
 
     const handleDragOver = (e: React.DragEvent) => {
@@ -185,7 +188,7 @@ export function DayView() {
 
         if (originalEvent) {
             const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-            const y = e.clientY - rect.top;
+            const y = e.clientY - rect.top - dragOffsetRef.current;
 
             const time = getTimeFromY(y, day);
             const newStart = roundToNearestMinutes(time, { nearestTo: 15 });
