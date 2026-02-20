@@ -257,3 +257,24 @@
     width: fit-content;
     margin-bottom: 16px;
 }
+
+.readOnlyNotice {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: var(--bg-hover);
+    border-radius: 6px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+}
+
+.calendarItemReadOnly {
+    cursor: default;
+    opacity: 0.85;
+}
+
+.calendarItemReadOnly:hover {
+    border-color: var(--border-color);
+}

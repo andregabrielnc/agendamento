@@ -46,7 +46,6 @@ export function EventProvider({ children }: { children: ReactNode }) {
         loadData();
     }, []);
 
-    // Memoize visible calendar IDs with a Set for O(1) lookups
     const visibleCalendarIds = useMemo(() => {
         return new Set(calendars.filter(c => c.visible).map(c => c.id));
     }, [calendars]);
@@ -77,11 +76,9 @@ export function EventProvider({ children }: { children: ReactNode }) {
     }, []);
 
     const updateEvent = useCallback(async (updatedEvent: CalendarEvent): Promise<EventOperationResult> => {
-        // Handle instance updates: update the ORIGINAL series
         const originalId = updatedEvent.id.split('_')[0];
         const eventToUpdate = { ...updatedEvent, id: originalId };
 
-        // Optimistic update
         const previousEvents = events;
         setEvents(prev => prev.map(e => (e.id === originalId ? eventToUpdate : e)));
 
@@ -91,7 +88,7 @@ export function EventProvider({ children }: { children: ReactNode }) {
         } catch (error) {
             const message = error instanceof Error ? error.message : 'Failed to update event';
             console.error('Failed to update event:', error);
-            setEvents(previousEvents); // Revert
+            setEvents(previousEvents);
             return { success: false, error: message };
         }
     }, [events]);
@@ -99,7 +96,6 @@ export function EventProvider({ children }: { children: ReactNode }) {
     const deleteEvent = useCallback(async (id: string): Promise<EventOperationResult> => {
         const originalId = id.split('_')[0];
 
-        // Optimistic update
         const previousEvents = events;
         setEvents(prev => prev.filter(e => e.id !== originalId));
 
@@ -109,7 +105,7 @@ export function EventProvider({ children }: { children: ReactNode }) {
         } catch (error) {
             const message = error instanceof Error ? error.message : 'Failed to delete event';
             console.error('Failed to delete event:', error);
-            setEvents(previousEvents); // Revert
+            setEvents(previousEvents);
             return { success: false, error: message };
         }
     }, [events]);
@@ -121,7 +117,6 @@ export function EventProvider({ children }: { children: ReactNode }) {
         }
 
         const updatedCalendar = { ...calendar, visible: !calendar.visible };
-        // Optimistic update
         const previousCalendars = calendars;
         setCalendars(prev => prev.map(c => (c.id === id ? updatedCalendar : c)));
 
@@ -131,7 +126,7 @@ export function EventProvider({ children }: { children: ReactNode }) {
         } catch (error) {
             const message = error instanceof Error ? error.message : 'Failed to toggle calendar';
             console.error('Failed to toggle calendar:', error);
-            setCalendars(previousCalendars); // Revert
+            setCalendars(previousCalendars);
             return { success: false, error: message };
         }
     }, [calendars]);
@@ -158,7 +153,7 @@ export function EventProvider({ children }: { children: ReactNode }) {
         } catch (error) {
             const message = error instanceof Error ? error.message : 'Failed to update calendar';
             console.error('Failed to update calendar:', error);
-            setCalendars(previousCalendars); // Revert
+            setCalendars(previousCalendars);
             return { success: false, error: message };
         }
     }, [calendars]);
@@ -176,8 +171,8 @@ export function EventProvider({ children }: { children: ReactNode }) {
         } catch (error) {
             const message = error instanceof Error ? error.message : 'Failed to delete calendar';
             console.error('Failed to delete calendar:', error);
-            setCalendars(previousCalendars); // Revert
-            setEvents(previousEvents); // Revert
+            setCalendars(previousCalendars);
+            setEvents(previousEvents);
             return { success: false, error: message };
         }
     }, [calendars, events]);

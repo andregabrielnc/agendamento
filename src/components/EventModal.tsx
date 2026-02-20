@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { X, MapPin, AlignLeft, VideoCamera, Users, CaretDown, Check, Bell, TextB, TextItalic, TextUnderline, ListNumbers, List, Link, TextStrikethrough, Info, Palette } from '@phosphor-icons/react';
+import { X, MapPin, AlignLeft, VideoCamera, Users, CaretDown, Check, Bell, TextB, TextItalic, TextUnderline, ListNumbers, List, Link, TextStrikethrough, Info, Palette, Lock } from '@phosphor-icons/react';
 import { useCalendar } from '../context/CalendarContext';
+import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { calendarService } from '../services/calendarService';
 import styles from './EventModal.module.css';
@@ -25,8 +26,12 @@ const EVENT_COLORS = [
 
 export function EventModal() {
     const { modalState, closeModal, addEvent, updateEvent, deleteEvent, calendars } = useCalendar();
+    const { user, canEditEvent } = useAuth();
     const { showToast } = useToast();
     const { isOpen, type, event, selectedDate } = modalState;
+
+    const isEditing = type === 'edit';
+    const canEdit = !isEditing || canEditEvent(event?.createdBy);
 
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
@@ -150,6 +155,7 @@ export function EventModal() {
             busyStatus: busyStatus as 'busy' | 'free',
             visibility: visibility as 'default' | 'public' | 'private',
             reminders: [{ type: 'notification' as const, minutes: reminderMinutes }],
+            createdBy: event?.createdBy || user?.id,
         };
 
         if (type === 'create') {
@@ -260,9 +266,16 @@ export function EventModal() {
                         </button>
                     </div>
                     <div className={styles.headerRight}>
-                        <button className={styles.saveBtn} onClick={() => handleSubmit()}>
-                            Salvar
-                        </button>
+                        {!canEdit && (
+                            <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--text-muted)' }}>
+                                <Lock size={14} /> Somente leitura
+                            </span>
+                        )}
+                        {canEdit && (
+                            <button className={styles.saveBtn} onClick={() => handleSubmit()}>
+                                Salvar
+                            </button>
+                        )}
                         <div style={{ position: 'relative' }}>
                             <button
                                 className={styles.moreActionsBtn}
@@ -274,8 +287,8 @@ export function EventModal() {
                             {showMoreActions && (
                                 <div className={styles.actionsDropdown}>
                                     <button onClick={handlePrint}>Imprimir</button>
-                                    {type === 'edit' && <button onClick={handleDuplicate}>Duplicar</button>}
-                                    {type === 'edit' && <button onClick={handleDelete} className={styles.deleteAction}>Excluir</button>}
+                                    {type === 'edit' && canEdit && <button onClick={handleDuplicate}>Duplicar</button>}
+                                    {type === 'edit' && canEdit && <button onClick={handleDelete} className={styles.deleteAction}>Excluir</button>}
                                 </div>
                             )}
                         </div>

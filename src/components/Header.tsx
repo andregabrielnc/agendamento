@@ -7,14 +7,18 @@ import {
     Sun,
     Moon,
     Gear,
-    User
+    SignOut,
+    UsersThree,
+    ShieldCheck
 } from '@phosphor-icons/react'
 import styles from './Header.module.css'
 import { useCalendar } from '../context/CalendarContext'
+import { useAuth } from '../context/AuthContext'
 import { ptBR } from 'date-fns/locale';
 import { format, addMonths, subMonths, addWeeks, subWeeks, addDays, subDays, addYears, subYears, startOfWeek, endOfWeek } from 'date-fns';
 import { useState, useRef, useEffect } from 'react';
 import { SettingsModal } from './SettingsModal';
+import { AdminUsers } from '../pages/AdminUsers';
 
 const VIEW_LABELS: Record<string, string> = {
     day: 'Dia',
@@ -27,21 +31,27 @@ const VIEW_LABELS: Record<string, string> = {
 
 export function Header() {
     const { currentDate, setCurrentDate, view, setView, searchQuery, setSearchQuery, theme, toggleTheme, toggleSidebar } = useCalendar();
+    const { user, isAdmin, logout } = useAuth();
     const [showViewMenu, setShowViewMenu] = useState(false);
+    const [showUserMenu, setShowUserMenu] = useState(false);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+    const [isUsersOpen, setIsUsersOpen] = useState(false);
     const viewMenuRef = useRef<HTMLDivElement>(null);
+    const userMenuRef = useRef<HTMLDivElement>(null);
 
-    // Close view menu when clicking outside
     useEffect(() => {
-        if (!showViewMenu) return;
+        if (!showViewMenu && !showUserMenu) return;
         const handleClickOutside = (e: MouseEvent) => {
-            if (viewMenuRef.current && !viewMenuRef.current.contains(e.target as Node)) {
+            if (showViewMenu && viewMenuRef.current && !viewMenuRef.current.contains(e.target as Node)) {
                 setShowViewMenu(false);
+            }
+            if (showUserMenu && userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+                setShowUserMenu(false);
             }
         };
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [showViewMenu]);
+    }, [showViewMenu, showUserMenu]);
 
     const handlePrev = () => {
         switch (view) {
@@ -98,6 +108,8 @@ export function Header() {
         setShowViewMenu(false);
     };
 
+    const userInitial = user?.name?.charAt(0)?.toUpperCase() || '?';
+
     return (
         <header className={styles.header}>
             <div className={styles.left}>
@@ -106,7 +118,7 @@ export function Header() {
                 </button>
                 <div className={styles.logo}>
                     <img src="/calendar-icon.svg" alt="Logo" width={40} height={40} />
-                    <span>Calendar</span>
+                    <span>Salas de Aula</span>
                 </div>
             </div>
 
@@ -171,12 +183,50 @@ export function Header() {
                 <button className={styles.iconBtn} onClick={() => setIsSettingsOpen(true)} title="Configurações">
                     <Gear size={24} />
                 </button>
-                <div className={styles.avatarBtn}>
-                    <User size={20} />
+
+                {/* User Avatar with Menu */}
+                <div className={styles.userMenuWrapper} ref={userMenuRef}>
+                    <button
+                        className={styles.avatarBtn}
+                        onClick={() => setShowUserMenu(!showUserMenu)}
+                        title={user?.name || ''}
+                    >
+                        {userInitial}
+                        {isAdmin && <span className={styles.adminDot} />}
+                    </button>
+                    {showUserMenu && (
+                        <div className={styles.userMenu} onClick={e => e.stopPropagation()}>
+                            <div className={styles.userMenuHeader}>
+                                <div className={styles.userMenuAvatar}>{userInitial}</div>
+                                <div className={styles.userMenuInfo}>
+                                    <div className={styles.userMenuName}>
+                                        {user?.name}
+                                        {isAdmin && <ShieldCheck size={14} className={styles.adminIcon} />}
+                                    </div>
+                                    <div className={styles.userMenuEmail}>{user?.email}</div>
+                                </div>
+                            </div>
+                            <div className={styles.userMenuDivider} />
+                            {isAdmin && (
+                                <button
+                                    className={styles.userMenuItem}
+                                    onClick={() => { setShowUserMenu(false); setIsUsersOpen(true); }}
+                                >
+                                    <UsersThree size={18} />
+                                    Gerenciar Usuários
+                                </button>
+                            )}
+                            <button className={styles.userMenuItem} onClick={() => { setShowUserMenu(false); logout(); }}>
+                                <SignOut size={18} />
+                                Sair
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
 
             <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+            <AdminUsers isOpen={isUsersOpen} onClose={() => setIsUsersOpen(false)} />
         </header>
     )
 }

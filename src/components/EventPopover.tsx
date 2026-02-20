@@ -5,6 +5,7 @@ import { ptBR } from 'date-fns/locale';
 import type { CalendarEvent } from '../types';
 import styles from './EventPopover.module.css';
 import { useCalendar } from '../context/CalendarContext';
+import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { ConfirmDialog } from './ConfirmDialog';
 
@@ -16,7 +17,10 @@ interface EventPopoverProps {
 
 export function EventPopover({ event, anchorEl, onClose }: EventPopoverProps) {
     const { deleteEvent, openEditModal, events, addEvent } = useCalendar();
+    const { canEditEvent, users } = useAuth();
     const { showToast } = useToast();
+    const canEdit = canEditEvent(event.createdBy);
+    const creator = users.find(u => u.id === event.createdBy);
     const popoverRef = useRef<HTMLDivElement>(null);
     const [style, setStyle] = useState<React.CSSProperties>({});
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -95,15 +99,19 @@ export function EventPopover({ event, anchorEl, onClose }: EventPopoverProps) {
                 >
                     <div className={styles.actionsHeader}>
                         <div className={styles.actionGroup}>
-                            <button onClick={handleEdit} className={styles.iconBtn} title="Editar evento">
-                                <PencilSimple size={18} />
-                            </button>
-                            <button onClick={handleDelete} className={styles.iconBtn} title="Excluir evento">
-                                <Trash size={18} />
-                            </button>
-                            <button onClick={handleDuplicate} className={styles.iconBtn} title="Duplicar evento">
-                                <CopySimple size={18} />
-                            </button>
+                            {canEdit && (
+                                <>
+                                    <button onClick={handleEdit} className={styles.iconBtn} title="Editar evento">
+                                        <PencilSimple size={18} />
+                                    </button>
+                                    <button onClick={handleDelete} className={styles.iconBtn} title="Excluir evento">
+                                        <Trash size={18} />
+                                    </button>
+                                    <button onClick={handleDuplicate} className={styles.iconBtn} title="Duplicar evento">
+                                        <CopySimple size={18} />
+                                    </button>
+                                </>
+                            )}
                             <button className={styles.iconBtn} title="Enviar email para convidados">
                                 <EnvelopeSimple size={18} />
                             </button>
@@ -158,7 +166,7 @@ export function EventPopover({ event, anchorEl, onClose }: EventPopoverProps) {
 
                         <div className={styles.footer}>
                             <div className={styles.owner}>
-                                Criado por: Andre Gabriel
+                                Criado por: {creator?.name || 'Desconhecido'}
                             </div>
                         </div>
                     </div>

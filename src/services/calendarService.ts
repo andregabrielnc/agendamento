@@ -7,11 +7,11 @@ const CALENDARS_STORAGE_KEY = 'calendar_calendars';
 const SIMULATE_DELAY = 300;
 
 const initialCalendars: Calendar[] = [
-    { id: '1', name: 'Andre Gabriel', color: '#039be5', visible: true },
-    { id: '2', name: 'Pessoal', color: '#33b679', visible: true },
-    { id: '3', name: 'Familia', color: '#f6bf26', visible: true },
-    { id: '4', name: 'Trabalho', color: '#d50000', visible: true },
-    { id: '5', name: 'Feriados', color: '#8e24aa', visible: true },
+    { id: '1', name: 'Sala 101 - Bloco A', color: '#039be5', visible: true, createdBy: 'admin-001' },
+    { id: '2', name: 'Sala 202 - Bloco B', color: '#33b679', visible: true, createdBy: 'admin-001' },
+    { id: '3', name: 'Auditório Principal', color: '#f6bf26', visible: true, createdBy: 'admin-001' },
+    { id: '4', name: 'Lab. Informática', color: '#d50000', visible: true, createdBy: 'admin-001' },
+    { id: '5', name: 'Sala de Reuniões', color: '#8e24aa', visible: true, createdBy: 'admin-001' },
 ];
 
 function buildInitialEvents(): CalendarEvent[] {
@@ -40,6 +40,7 @@ function buildInitialEvents(): CalendarEvent[] {
             busyStatus: 'busy',
             visibility: 'default',
             reminders: [{ type: 'notification', minutes: 30 }],
+            createdBy: 'admin-001',
         },
         {
             id: 'evt-2',
@@ -49,6 +50,7 @@ function buildInitialEvents(): CalendarEvent[] {
             calendarId: '2',
             color: '#33b679',
             location: 'Restaurante Sabor & Arte',
+            createdBy: 'admin-001',
         },
         {
             id: 'evt-3',
@@ -59,6 +61,7 @@ function buildInitialEvents(): CalendarEvent[] {
             color: '#d50000',
             description: 'Revisão de código dos componentes React do painel de controle.',
             meetingLink: 'https://meet.google.com/abc-defg-hij',
+            createdBy: 'admin-001',
         },
         {
             id: 'evt-4',
@@ -69,6 +72,7 @@ function buildInitialEvents(): CalendarEvent[] {
             color: '#f6bf26',
             allDay: true,
             description: 'Não esquecer o presente!',
+            createdBy: 'admin-001',
         },
         {
             id: 'evt-5',
@@ -80,6 +84,7 @@ function buildInitialEvents(): CalendarEvent[] {
             guests: ['time-dev@empresa.com', 'pm@empresa.com'],
             meetingLink: 'https://meet.google.com/xyz-abcd-efg',
             recurrence: 'weekly',
+            createdBy: 'admin-001',
         },
         {
             id: 'evt-6',
@@ -90,6 +95,7 @@ function buildInitialEvents(): CalendarEvent[] {
             color: '#33b679',
             location: 'Studio Zen',
             recurrence: 'weekly',
+            createdBy: 'admin-001',
         },
         {
             id: 'evt-7',
@@ -100,6 +106,7 @@ function buildInitialEvents(): CalendarEvent[] {
             color: '#33b679',
             location: 'Clínica Sorrir, Sala 203',
             reminders: [{ type: 'notification', minutes: 60 }],
+            createdBy: 'admin-001',
         },
         {
             id: 'evt-8',
@@ -110,6 +117,7 @@ function buildInitialEvents(): CalendarEvent[] {
             color: '#d50000',
             description: 'Deploy v2.4.0 - nova funcionalidade de relatórios.',
             guests: ['devops@empresa.com'],
+            createdBy: 'admin-001',
         },
         {
             id: 'evt-9',
@@ -120,6 +128,7 @@ function buildInitialEvents(): CalendarEvent[] {
             color: '#f6bf26',
             location: 'Casa da Mamãe',
             guests: ['mae@familia.com', 'pai@familia.com', 'irmao@familia.com'],
+            createdBy: 'admin-001',
         },
         {
             id: 'evt-10',
@@ -129,6 +138,7 @@ function buildInitialEvents(): CalendarEvent[] {
             calendarId: '2',
             color: '#33b679',
             description: 'Capítulos 8-10 do livro de TypeScript.',
+            createdBy: 'admin-001',
         },
         {
             id: 'evt-11',
@@ -139,6 +149,7 @@ function buildInitialEvents(): CalendarEvent[] {
             color: '#d50000',
             recurrence: 'weekly',
             meetingLink: 'https://meet.google.com/one-on-one',
+            createdBy: 'admin-001',
         },
         {
             id: 'evt-12',
@@ -149,6 +160,7 @@ function buildInitialEvents(): CalendarEvent[] {
             color: '#33b679',
             location: 'SmartFit Centro',
             recurrence: 'daily',
+            createdBy: 'admin-001',
         },
         {
             id: 'evt-13',
@@ -160,6 +172,7 @@ function buildInitialEvents(): CalendarEvent[] {
             allDay: true,
             location: 'Centro de Convenções',
             description: 'Evento de 2 dias sobre tendências de tecnologia.',
+            createdBy: 'admin-001',
         },
         {
             id: 'evt-14',
@@ -169,6 +182,7 @@ function buildInitialEvents(): CalendarEvent[] {
             calendarId: '3',
             color: '#f6bf26',
             location: 'Escola Municipal',
+            createdBy: 'admin-001',
         },
         {
             id: 'evt-15',
@@ -178,6 +192,7 @@ function buildInitialEvents(): CalendarEvent[] {
             calendarId: '5',
             color: '#8e24aa',
             allDay: true,
+            createdBy: 'admin-001',
         },
         {
             id: 'evt-16',
@@ -188,6 +203,7 @@ function buildInitialEvents(): CalendarEvent[] {
             color: '#d50000',
             meetingLink: 'https://meet.google.com/retro-sprint',
             guests: ['time-dev@empresa.com'],
+            createdBy: 'admin-001',
         },
         {
             id: 'evt-17',
@@ -198,6 +214,7 @@ function buildInitialEvents(): CalendarEvent[] {
             color: '#039be5',
             location: 'Bar do Zé',
             guests: ['amigo1@gmail.com', 'amigo2@gmail.com'],
+            createdBy: 'admin-001',
         },
         {
             id: 'evt-18',
@@ -207,6 +224,7 @@ function buildInitialEvents(): CalendarEvent[] {
             calendarId: '2',
             color: '#33b679',
             location: 'Hospital Santa Cruz',
+            createdBy: 'admin-001',
         },
         {
             id: 'evt-19',
@@ -217,6 +235,7 @@ function buildInitialEvents(): CalendarEvent[] {
             color: '#d50000',
             recurrence: 'daily',
             meetingLink: 'https://meet.google.com/daily-standup',
+            createdBy: 'admin-001',
         },
         {
             id: 'evt-20',
@@ -227,6 +246,7 @@ function buildInitialEvents(): CalendarEvent[] {
             color: '#d50000',
             allDay: true,
             description: 'Prazo final para envio do relatório mensal de progresso.',
+            createdBy: 'admin-001',
         },
     ];
 }

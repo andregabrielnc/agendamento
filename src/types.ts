@@ -1,5 +1,16 @@
 export type ViewType = 'day' | 'week' | 'month' | 'year' | 'agenda' | '4day';
 
+export type UserRole = 'admin' | 'user';
+
+export interface User {
+    id: string;
+    name: string;
+    email: string;
+    role: UserRole;
+    avatarUrl?: string;
+    createdAt: Date;
+}
+
 export interface RecurrenceRule {
     frequency: 'daily' | 'weekly' | 'monthly' | 'yearly';
     interval: number;
@@ -32,6 +43,7 @@ export interface CalendarEvent {
     reminders?: EventReminder[];
     busyStatus?: 'busy' | 'free';
     visibility?: 'default' | 'public' | 'private';
+    createdBy?: string;
 }
 
 export interface Calendar {
@@ -40,6 +52,7 @@ export interface Calendar {
     color: string;
     visible: boolean;
     description?: string;
+    createdBy?: string;
 }
 
 export interface ToastMessage {

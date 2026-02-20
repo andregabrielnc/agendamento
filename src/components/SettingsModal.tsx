@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { X, ArrowLeft, Plus } from '@phosphor-icons/react';
+import { X, ArrowLeft, Plus, Lock } from '@phosphor-icons/react';
 import { useCalendar } from '../context/CalendarContext';
+import { useAuth } from '../context/AuthContext';
 import styles from './SettingsModal.module.css';
 import type { Calendar } from '../types';
 
@@ -13,6 +14,7 @@ type View = 'general' | 'calendars' | 'calendar-details';
 
 export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     const { calendars, addCalendar, updateCalendar, deleteCalendar } = useCalendar();
+    const { isAdmin } = useAuth();
     const [activeView, setActiveView] = useState<View>('general');
     const [selectedCalendar, setSelectedCalendar] = useState<Calendar | null>(null);
 
@@ -24,6 +26,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     if (!isOpen) return null;
 
     const handleCalendarClick = (calendar: Calendar) => {
+        if (!isAdmin) return;
         setSelectedCalendar(calendar);
         setName(calendar.name);
         setDescription(calendar.description || '');
@@ -32,6 +35,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     };
 
     const handleAddClick = () => {
+        if (!isAdmin) return;
         setSelectedCalendar(null);
         setName('');
         setDescription('');
@@ -40,7 +44,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     };
 
     const handleSave = () => {
-        if (!name.trim()) return;
+        if (!name.trim() || !isAdmin) return;
 
         if (selectedCalendar) {
             updateCalendar({
@@ -61,7 +65,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     };
 
     const handleDelete = () => {
-        if (selectedCalendar) {
+        if (selectedCalendar && isAdmin) {
             deleteCalendar(selectedCalendar.id);
             setActiveView('calendars');
         }
@@ -82,15 +86,22 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             case 'calendars':
                 return (
                     <div className={styles.body}>
-                        <button className={styles.addBtn} onClick={handleAddClick}>
-                            <Plus size={16} />
-                            Adicionar agenda
-                        </button>
+                        {isAdmin ? (
+                            <button className={styles.addBtn} onClick={handleAddClick}>
+                                <Plus size={16} />
+                                Adicionar sala / agenda
+                            </button>
+                        ) : (
+                            <div className={styles.readOnlyNotice}>
+                                <Lock size={16} />
+                                <span>Somente administradores podem criar ou editar salas</span>
+                            </div>
+                        )}
                         <div className={styles.calendarList}>
                             {calendars.map(calendar => (
                                 <div
                                     key={calendar.id}
-                                    className={styles.calendarItem}
+                                    className={`${styles.calendarItem} ${!isAdmin ? styles.calendarItemReadOnly : ''}`}
                                     onClick={() => handleCalendarClick(calendar)}
                                 >
                                     <div className={styles.calendarInfo}>
@@ -107,13 +118,13 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     <div className={styles.body}>
                         <div className={styles.form}>
                             <div className={styles.formGroup}>
-                                <label>Nome</label>
+                                <label>Nome da Sala / Agenda</label>
                                 <input
                                     type="text"
                                     className={styles.input}
                                     value={name}
                                     onChange={e => setName(e.target.value)}
-                                    placeholder="Nome da agenda"
+                                    placeholder="Ex: Sala 101 - Bloco A"
                                 />
                             </div>
                             <div className={styles.formGroup}>
@@ -122,7 +133,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                                     className={styles.textarea}
                                     value={description}
                                     onChange={e => setDescription(e.target.value)}
-                                    placeholder="Descrição da agenda"
+                                    placeholder="Capacidade, equipamentos disponíveis..."
                                 />
                             </div>
                             <div className={styles.formGroup}>
@@ -164,12 +175,12 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     </div>
 
                     <div className={styles.sidebarSection}>
-                        <div className={styles.sectionTitle}>Adicionar agenda</div>
+                        <div className={styles.sectionTitle}>Salas / Agendas</div>
                         <button
                             className={`${styles.navItem} ${activeView === 'calendars' || activeView === 'calendar-details' ? styles.active : ''}`}
                             onClick={() => setActiveView('calendars')}
                         >
-                            Configurações das agendas
+                            Configurações das salas
                         </button>
                     </div>
                 </div>
@@ -185,7 +196,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                                     >
                                         <ArrowLeft size={18} />
                                     </button>
-                                    {selectedCalendar ? 'Detalhes da agenda' : 'Nova agenda'}
+                                    {selectedCalendar ? 'Detalhes da sala' : 'Nova sala'}
                                 </div>
                             ) : (
                                 activeView === 'general' ? 'Configurações' : 'Configurações'

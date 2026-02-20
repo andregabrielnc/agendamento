@@ -3,12 +3,14 @@ import { Header } from './components/Header'
 import { Sidebar } from './components/Sidebar'
 import { CalendarProvider, useCalendar } from './context/CalendarContext'
 import { ToastProvider } from './context/ToastContext'
+import { AuthProvider, useAuth } from './context/AuthContext'
 import { CalendarGrid } from './components/CalendarGrid/CalendarGrid'
 import { EventModal } from './components/EventModal'
 import { EventPopover } from './components/EventPopover'
 import { KeyboardShortcuts } from './components/KeyboardShortcuts'
+import { Login } from './pages/Login'
 
-function AppContent() {
+function CalendarApp() {
   const { popoverState, closePopover, sidebarOpen, toggleSidebar } = useCalendar();
 
   return (
@@ -38,13 +40,27 @@ function AppContent() {
   )
 }
 
+function AppContent() {
+  const { user } = useAuth();
+
+  if (!user) {
+    return <Login />;
+  }
+
+  return (
+    <CalendarProvider>
+      <CalendarApp />
+    </CalendarProvider>
+  );
+}
+
 function App() {
   return (
-    <ToastProvider>
-      <CalendarProvider>
+    <AuthProvider>
+      <ToastProvider>
         <AppContent />
-      </CalendarProvider>
-    </ToastProvider>
+      </ToastProvider>
+    </AuthProvider>
   )
 }
 
