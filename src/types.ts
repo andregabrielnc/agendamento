@@ -29,6 +29,7 @@ export interface CalendarEvent {
     end: Date;
     allDay?: boolean;
     description?: string;
+    phone?: string;
     recurrence?: RecurrenceType | RecurrenceRule;
     color?: string;
     calendarId: string;

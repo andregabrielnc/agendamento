@@ -454,15 +454,37 @@
     background: var(--bg-hover);
 }
 
+/* ===== Modal Footer ===== */
+
+.modalFooter {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    border-top: 1px solid var(--border-color);
+    background: var(--bg-surface);
+    gap: 8px;
+}
+
+.footerLeft {
+    display: flex;
+    align-items: center;
+}
+
+.footerRight {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+}
+
 /* ===== Formatting Toolbar ===== */
 
 .formattingToolbar {
     display: flex;
     align-items: center;
     gap: 2px;
-    padding: 8px 24px;
-    border-top: 1px solid var(--border-color);
-    background: var(--bg-surface);
+    padding: 0;
 }
 
 .toolbarBtn {
@@ -545,25 +567,13 @@
         padding: 10px 16px;
     }
 
-    .meetRow {
-        padding: 10px 16px;
-    }
-
-    .notificationRow {
-        padding: 10px 16px;
-    }
-
-    .statusRow {
-        padding: 10px 16px 10px 52px;
+    .modalFooter {
+        padding: 8px 12px;
         flex-wrap: wrap;
     }
 
-    .tabs {
-        padding: 0 16px;
-    }
-
-    .formattingToolbar {
-        padding: 8px 16px;
+    .footerLeft {
+        display: none;
     }
 
     .moreActionsBtn {

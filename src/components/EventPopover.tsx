@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState } from 'react';
-import { X, Trash, PencilSimple, EnvelopeSimple, CopySimple } from '@phosphor-icons/react';
+import { X, Trash, PencilSimple, EnvelopeSimple, CopySimple, Phone } from '@phosphor-icons/react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import type { CalendarEvent } from '../types';
@@ -74,6 +74,7 @@ export function EventPopover({ event, anchorEl, onClose }: EventPopoverProps) {
             start: event.start,
             end: event.end,
             description: event.description,
+            phone: event.phone,
             calendarId: event.calendarId,
             color: event.color,
             allDay: event.allDay,
@@ -127,6 +128,13 @@ export function EventPopover({ event, anchorEl, onClose }: EventPopoverProps) {
                                 <div className={styles.time}>{timeDisplay}</div>
                             </div>
                         </div>
+
+                        {event.phone && (
+                            <div className={styles.detailRow}>
+                                <Phone size={16} style={{ color: 'var(--text-secondary)', flexShrink: 0 }} />
+                                <span className={styles.description}>{event.phone}</span>
+                            </div>
+                        )}
 
                         {event.description && (
                             <div className={styles.detailRow}>
