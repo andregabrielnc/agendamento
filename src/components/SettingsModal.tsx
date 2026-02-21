@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { X, ArrowLeft, Plus, Lock, UploadSimple, Check, CaretLeft, CaretRight, DownloadSimple } from '@phosphor-icons/react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { X, ArrowLeft, Plus, Lock, UploadSimple, Check, CaretLeft, CaretRight, DownloadSimple, MagnifyingGlass } from '@phosphor-icons/react';
 import { useCalendar } from '../context/CalendarContext';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -68,6 +68,10 @@ export function SettingsModal({ isOpen, onClose, initialCalendarId }: SettingsMo
     const [statsTotais, setStatsTotais] = useState<{ total_eventos: number; total_presencas: number }>({ total_eventos: 0, total_presencas: 0 });
     const [nominalData, setNominalData] = useState<{ nome_completo: string; email: string; evento_titulo: string; sala_nome: string; criado_em: string }[]>([]);
     const [statsLoading, setStatsLoading] = useState(false);
+    const [statsSala, setStatsSala] = useState('');
+    const [statsSearch, setStatsSearch] = useState('');
+    const [statsPage, setStatsPage] = useState(1);
+    const ITEMS_PER_PAGE = 15;
 
     const fetchStats = useCallback(async () => {
         if (!isAdmin) return;
@@ -111,6 +115,50 @@ export function SettingsModal({ isOpen, onClose, initialCalendarId }: SettingsMo
         }
     };
 
+    // Reset page when filters change
+    useEffect(() => {
+        setStatsPage(1);
+    }, [statsTab, statsSala, statsSearch, statsPeriodo, statsMes, statsAno]);
+
+    // Filtered stats (resumo)
+    const filteredStatsData = useMemo(() => {
+        if (!statsSala) return statsData;
+        return statsData.filter(r => r.sala_nome === statsSala);
+    }, [statsData, statsSala]);
+
+    const filteredStatsTotais = useMemo(() => {
+        if (!statsSala) return statsTotais;
+        return filteredStatsData.reduce(
+            (acc, r) => ({ total_eventos: acc.total_eventos + r.total_eventos, total_presencas: acc.total_presencas + r.total_presencas }),
+            { total_eventos: 0, total_presencas: 0 }
+        );
+    }, [filteredStatsData, statsSala, statsTotais]);
+
+    // Filtered nominal (search + sala)
+    const filteredNominalData = useMemo(() => {
+        let data = nominalData;
+        if (statsSala) {
+            data = data.filter(r => r.sala_nome === statsSala);
+        }
+        if (statsSearch) {
+            const q = statsSearch.toLowerCase();
+            data = data.filter(r =>
+                r.nome_completo.toLowerCase().includes(q) ||
+                r.email.toLowerCase().includes(q) ||
+                r.evento_titulo.toLowerCase().includes(q) ||
+                r.sala_nome.toLowerCase().includes(q)
+            );
+        }
+        return data;
+    }, [nominalData, statsSala, statsSearch]);
+
+    // Pagination
+    const totalPages = Math.max(1, Math.ceil(filteredNominalData.length / ITEMS_PER_PAGE));
+    const paginatedNominal = filteredNominalData.slice((statsPage - 1) * ITEMS_PER_PAGE, statsPage * ITEMS_PER_PAGE);
+
+    // Sala options from calendars context
+    const salaOptions = calendars.map(c => c.name).sort();
+
     const getDisplayPeriod = () => {
         if (statsPeriodo === 'mensal') {
             const [y, m] = statsMes.split('-').map(Number);
@@ -121,7 +169,7 @@ export function SettingsModal({ isOpen, onClose, initialCalendarId }: SettingsMo
     };
 
     const handleExportResumo = () => {
-        exportToExcel(statsData as unknown as Record<string, unknown>[], `resumo_${statsPeriodo === 'mensal' ? statsMes : statsAno}`, [
+        exportToExcel(filteredStatsData as unknown as Record<string, unknown>[], `resumo_${statsPeriodo === 'mensal' ? statsMes : statsAno}`, [
             { key: 'sala_nome', header: 'Sala' },
             { key: 'total_eventos', header: 'Eventos' },
             { key: 'total_presencas', header: 'Presenças' },
@@ -129,7 +177,7 @@ export function SettingsModal({ isOpen, onClose, initialCalendarId }: SettingsMo
     };
 
     const handleExportNominal = () => {
-        const formatted = nominalData.map(r => ({
+        const formatted = filteredNominalData.map(r => ({
             ...r,
             criado_em_fmt: new Date(r.criado_em).toLocaleDateString('pt-BR'),
         }));
@@ -289,10 +337,33 @@ export function SettingsModal({ isOpen, onClose, initialCalendarId }: SettingsMo
                             </div>
                         </div>
 
+                        <div className={styles.statsFilters}>
+                            <select
+                                className={styles.salaSelect}
+                                value={statsSala}
+                                onChange={e => setStatsSala(e.target.value)}
+                            >
+                                <option value="">Todas as salas</option>
+                                {salaOptions.map(s => (
+                                    <option key={s} value={s}>{s}</option>
+                                ))}
+                            </select>
+                            <div className={styles.searchBox}>
+                                <MagnifyingGlass size={14} className={styles.searchIcon} />
+                                <input
+                                    type="text"
+                                    className={styles.searchInput}
+                                    placeholder="Pesquisar..."
+                                    value={statsSearch}
+                                    onChange={e => setStatsSearch(e.target.value)}
+                                />
+                            </div>
+                        </div>
+
                         {statsLoading ? (
                             <p className={styles.emptyStats}>Carregando...</p>
                         ) : statsTab === 'resumo' ? (
-                            statsData.length === 0 ? (
+                            filteredStatsData.length === 0 ? (
                                 <p className={styles.emptyStats}>Nenhum dado encontrado para este período.</p>
                             ) : (
                                 <table className={styles.statsTable}>
@@ -304,7 +375,7 @@ export function SettingsModal({ isOpen, onClose, initialCalendarId }: SettingsMo
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {statsData.map((row, i) => (
+                                        {filteredStatsData.map((row, i) => (
                                             <tr key={i}>
                                                 <td>{row.sala_nome}</td>
                                                 <td>{row.total_eventos}</td>
@@ -313,38 +384,60 @@ export function SettingsModal({ isOpen, onClose, initialCalendarId }: SettingsMo
                                         ))}
                                         <tr className={styles.totalRow}>
                                             <td>TOTAL</td>
-                                            <td>{statsTotais.total_eventos}</td>
-                                            <td>{statsTotais.total_presencas}</td>
+                                            <td>{filteredStatsTotais.total_eventos}</td>
+                                            <td>{filteredStatsTotais.total_presencas}</td>
                                         </tr>
                                     </tbody>
                                 </table>
                             )
                         ) : (
-                            nominalData.length === 0 ? (
+                            filteredNominalData.length === 0 ? (
                                 <p className={styles.emptyStats}>Nenhum dado encontrado para este período.</p>
                             ) : (
-                                <table className={styles.statsTable}>
-                                    <thead>
-                                        <tr>
-                                            <th>Nome</th>
-                                            <th>E-mail</th>
-                                            <th>Evento</th>
-                                            <th>Sala</th>
-                                            <th>Data</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {nominalData.map((row, i) => (
-                                            <tr key={i}>
-                                                <td>{row.nome_completo}</td>
-                                                <td>{row.email}</td>
-                                                <td>{row.evento_titulo}</td>
-                                                <td>{row.sala_nome}</td>
-                                                <td>{new Date(row.criado_em).toLocaleDateString('pt-BR')}</td>
+                                <>
+                                    <table className={styles.statsTable}>
+                                        <thead>
+                                            <tr>
+                                                <th>Nome</th>
+                                                <th>E-mail</th>
+                                                <th>Evento</th>
+                                                <th>Sala</th>
+                                                <th>Data</th>
                                             </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                                        </thead>
+                                        <tbody>
+                                            {paginatedNominal.map((row, i) => (
+                                                <tr key={i}>
+                                                    <td>{row.nome_completo}</td>
+                                                    <td>{row.email}</td>
+                                                    <td>{row.evento_titulo}</td>
+                                                    <td>{row.sala_nome}</td>
+                                                    <td>{new Date(row.criado_em).toLocaleDateString('pt-BR')}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                    <div className={styles.pagination}>
+                                        <button
+                                            className={styles.navArrow}
+                                            onClick={() => setStatsPage(p => Math.max(1, p - 1))}
+                                            disabled={statsPage <= 1}
+                                        >
+                                            <CaretLeft size={14} />
+                                        </button>
+                                        <span className={styles.pageInfo}>
+                                            Página {statsPage} de {totalPages}
+                                            <span className={styles.pageCount}>({filteredNominalData.length} registro{filteredNominalData.length !== 1 ? 's' : ''})</span>
+                                        </span>
+                                        <button
+                                            className={styles.navArrow}
+                                            onClick={() => setStatsPage(p => Math.min(totalPages, p + 1))}
+                                            disabled={statsPage >= totalPages}
+                                        >
+                                            <CaretRight size={14} />
+                                        </button>
+                                    </div>
+                                </>
                             )
                         )}
                     </div>
