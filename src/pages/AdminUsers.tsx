@@ -19,7 +19,7 @@ export function AdminUsers({ isOpen, onClose }: AdminUsersProps) {
     const [showAddForm, setShowAddForm] = useState(false);
     const [newName, setNewName] = useState('');
     const [newEmail, setNewEmail] = useState('');
-    const [newRole, setNewRole] = useState<'admin' | 'user'>('admin');
+    const newRole = 'admin';
 
     if (!isOpen) return null;
 
@@ -56,7 +56,6 @@ export function AdminUsers({ isOpen, onClose }: AdminUsersProps) {
             showToast(`Usuário ${newName.trim()} cadastrado com sucesso`, 'success');
             setNewName('');
             setNewEmail('');
-            setNewRole('admin');
             setShowAddForm(false);
         } else {
             showToast(result.error || 'Erro ao cadastrar usuário', 'error');
@@ -66,7 +65,6 @@ export function AdminUsers({ isOpen, onClose }: AdminUsersProps) {
     const handleCancelAdd = () => {
         setNewName('');
         setNewEmail('');
-        setNewRole('admin');
         setShowAddForm(false);
     };
 
@@ -128,13 +126,6 @@ export function AdminUsers({ isOpen, onClose }: AdminUsersProps) {
                             </div>
                         </div>
                         <div className={styles.addFormRow}>
-                            <div className={styles.addFormField}>
-                                <label>Perfil</label>
-                                <select value={newRole} onChange={e => setNewRole(e.target.value as 'admin' | 'user')}>
-                                    <option value="admin">Administrador</option>
-                                    <option value="user">Usuário</option>
-                                </select>
-                            </div>
                             <div className={styles.addFormActions}>
                                 <button
                                     className={styles.addFormIconBtn}
