@@ -183,7 +183,7 @@ function registerPresenca($pdo) {
             FROM eventos e
             LEFT JOIN salas s ON s.id = e.sala_id
             LEFT JOIN frequencia f ON f.evento_id = e.id
-            WHERE e.id = :eventoId
+            WHERE e.id::text = :eventoId
               AND f.evento_id IS NULL
               AND e.data_inicio <= NOW() + INTERVAL '15 minutes'
               AND e.data_fim >= NOW() - INTERVAL '15 minutes'
@@ -201,7 +201,7 @@ function registerPresenca($pdo) {
                 FROM eventos e
                 LEFT JOIN salas s ON s.id = e.sala_id
                 INNER JOIN frequencia f ON f.evento_id = e.id
-                WHERE e.id = :eventoId
+                WHERE e.id::text = :eventoId
             ";
             $stmt = $pdo->prepare($sqlRecCheck);
             $stmt->execute(['eventoId' => $eventoId]);
@@ -224,7 +224,7 @@ function registerPresenca($pdo) {
             $sqlOverlap = "
                 SELECT p.evento_titulo
                 FROM presencas p
-                INNER JOIN eventos e ON e.id = p.evento_id
+                INNER JOIN eventos e ON e.id::text = p.evento_id
                 WHERE p.evento_id != :eventoId
                   AND (p.email = :email OR p.fingerprint = :fingerprint)
                   AND e.data_inicio < :event_end
