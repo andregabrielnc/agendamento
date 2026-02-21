@@ -6,7 +6,11 @@ date_default_timezone_set('America/Sao_Paulo');
 function handlePresencas($method, $id, $pdo) {
     ensurePresencaTables($pdo);
 
-    if ($method === 'GET' && $id === 'debug') {
+    if ($method === 'GET' && $id === 'stats') {
+        getPresencaStats($pdo);
+    } elseif ($method === 'GET' && $id === 'nominal') {
+        getPresencaNominal($pdo);
+    } elseif ($method === 'GET' && $id === 'debug') {
         debugActiveEvents($pdo);
     } elseif ($method === 'GET' && $id) {
         getPresencasByEvento($id, $pdo);
@@ -410,4 +414,114 @@ function debugActiveEvents($pdo) {
     }
 
     jsonResponse($debug);
+}
+
+function getPresencaStats($pdo) {
+    requireAdmin();
+
+    $periodo = $_GET['periodo'] ?? 'mensal';
+    $mes = $_GET['mes'] ?? date('Y-m');
+    $ano = $_GET['ano'] ?? date('Y');
+
+    if ($periodo === 'mensal') {
+        $start = $mes . '-01';
+        $end = date('Y-m-d', strtotime($start . ' +1 month'));
+        $referencia = $mes;
+    } else {
+        $start = $ano . '-01-01';
+        $end = ($ano + 1) . '-01-01';
+        $referencia = $ano;
+    }
+
+    try {
+        $sql = "
+            SELECT
+                s.id AS sala_id,
+                s.nome AS sala_nome,
+                COUNT(DISTINCT e.id) AS total_eventos,
+                COUNT(DISTINCT p.id) AS total_presencas
+            FROM salas s
+            LEFT JOIN eventos e ON e.sala_id = s.id
+                AND e.data_inicio >= :start AND e.data_inicio < :end
+            LEFT JOIN presencas p ON p.evento_id = e.id::text
+                AND p.criado_em >= :start2 AND p.criado_em < :end2
+            GROUP BY s.id, s.nome
+            ORDER BY s.nome
+        ";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([
+            'start' => $start,
+            'end' => $end,
+            'start2' => $start,
+            'end2' => $end,
+        ]);
+        $dados = $stmt->fetchAll();
+
+        $totalEventos = 0;
+        $totalPresencas = 0;
+        foreach ($dados as &$row) {
+            $row['total_eventos'] = (int)$row['total_eventos'];
+            $row['total_presencas'] = (int)$row['total_presencas'];
+            $totalEventos += $row['total_eventos'];
+            $totalPresencas += $row['total_presencas'];
+        }
+
+        jsonResponse([
+            'periodo' => $periodo,
+            'referencia' => $referencia,
+            'dados' => $dados,
+            'totais' => [
+                'total_eventos' => $totalEventos,
+                'total_presencas' => $totalPresencas,
+            ],
+        ]);
+    } catch (PDOException $e) {
+        jsonResponse(['error' => 'Erro ao buscar estatísticas: ' . $e->getMessage()], 500);
+    }
+}
+
+function getPresencaNominal($pdo) {
+    requireAdmin();
+
+    $periodo = $_GET['periodo'] ?? 'mensal';
+    $mes = $_GET['mes'] ?? date('Y-m');
+    $ano = $_GET['ano'] ?? date('Y');
+
+    if ($periodo === 'mensal') {
+        $start = $mes . '-01';
+        $end = date('Y-m-d', strtotime($start . ' +1 month'));
+        $referencia = $mes;
+    } else {
+        $start = $ano . '-01-01';
+        $end = ($ano + 1) . '-01-01';
+        $referencia = $ano;
+    }
+
+    try {
+        $sql = "
+            SELECT
+                p.nome_completo,
+                p.email,
+                p.evento_titulo,
+                p.sala_nome,
+                p.criado_em
+            FROM presencas p
+            WHERE p.criado_em >= :start AND p.criado_em < :end
+            ORDER BY p.criado_em DESC
+        ";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([
+            'start' => $start,
+            'end' => $end,
+        ]);
+        $dados = $stmt->fetchAll();
+
+        jsonResponse([
+            'periodo' => $periodo,
+            'referencia' => $referencia,
+            'dados' => $dados,
+        ]);
+    } catch (PDOException $e) {
+        jsonResponse(['error' => 'Erro ao buscar presenças nominais: ' . $e->getMessage()], 500);
+    }
 }

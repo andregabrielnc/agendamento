@@ -351,6 +351,168 @@
     cursor: not-allowed;
 }
 
+/* ===== Stats / Report ===== */
+
+.statsHeader {
+    margin-bottom: 16px;
+}
+
+.statsHeader h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.statsControls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.statsTabGroup {
+    display: flex;
+    gap: 0;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.statsTabBtn {
+    padding: 6px 16px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    background: var(--bg-surface);
+    color: var(--text-secondary);
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s;
+}
+
+.statsTabBtn:hover {
+    background: var(--bg-hover);
+}
+
+.statsTabBtnActive {
+    background: var(--primary);
+    color: white;
+}
+
+.statsTabBtnActive:hover {
+    background: var(--primary-hover);
+}
+
+.statsNavGroup {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.periodSelect {
+    padding: 5px 8px;
+    font-size: 0.8rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    cursor: pointer;
+}
+
+.periodLabel {
+    font-size: 0.85rem;
+    font-weight: 500;
+    min-width: 80px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.navArrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: background-color 0.15s;
+}
+
+.navArrow:hover {
+    background: var(--bg-hover);
+}
+
+.exportBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: background-color 0.15s;
+    margin-left: 4px;
+}
+
+.exportBtn:hover {
+    background: var(--bg-hover);
+    color: var(--primary);
+}
+
+.statsTable {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.825rem;
+}
+
+.statsTable th {
+    text-align: left;
+    padding: 8px 10px;
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    border-bottom: 2px solid var(--border-color);
+    white-space: nowrap;
+}
+
+.statsTable td {
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.statsTable tbody tr:nth-child(even) {
+    background: var(--bg-hover);
+}
+
+.statsTable tbody tr:hover {
+    background: var(--primary-light, #e8f0fe);
+}
+
+.totalRow {
+    font-weight: 700;
+    background: var(--bg-surface) !important;
+    border-top: 2px solid var(--border-color);
+}
+
+.totalRow td {
+    border-bottom: none;
+}
+
+.emptyStats {
+    text-align: center;
+    color: var(--text-secondary);
+    padding: 40px 0;
+    font-size: 0.875rem;
+}
+
 /* ===== Responsive ===== */
 
 @media (max-width: 768px) {

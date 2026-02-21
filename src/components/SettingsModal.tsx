@@ -1,9 +1,10 @@
-import { useState } from 'react';
-import { X, ArrowLeft, Plus, Lock, UploadSimple, Check } from '@phosphor-icons/react';
+import { useState, useEffect, useCallback } from 'react';
+import { X, ArrowLeft, Plus, Lock, UploadSimple, Check, CaretLeft, CaretRight, DownloadSimple } from '@phosphor-icons/react';
 import { useCalendar } from '../context/CalendarContext';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { parseICS } from '../utils/icsParser';
+import { exportToExcel } from '../utils/exportExcel';
 import styles from './SettingsModal.module.css';
 import type { Calendar } from '../types';
 
@@ -54,6 +55,92 @@ export function SettingsModal({ isOpen, onClose, initialCalendarId }: SettingsMo
     // ICS Import State
     const [icsFile, setIcsFile] = useState<File | null>(null);
     const [icsEventCount, setIcsEventCount] = useState(0);
+
+    // Stats/Report State
+    type StatsTab = 'resumo' | 'nominal';
+    type StatsPeriodo = 'mensal' | 'anual';
+    const [statsTab, setStatsTab] = useState<StatsTab>('resumo');
+    const [statsPeriodo, setStatsPeriodo] = useState<StatsPeriodo>('mensal');
+    const now = new Date();
+    const [statsMes, setStatsMes] = useState(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`);
+    const [statsAno, setStatsAno] = useState(String(now.getFullYear()));
+    const [statsData, setStatsData] = useState<{ sala_nome: string; total_eventos: number; total_presencas: number }[]>([]);
+    const [statsTotais, setStatsTotais] = useState<{ total_eventos: number; total_presencas: number }>({ total_eventos: 0, total_presencas: 0 });
+    const [nominalData, setNominalData] = useState<{ nome_completo: string; email: string; evento_titulo: string; sala_nome: string; criado_em: string }[]>([]);
+    const [statsLoading, setStatsLoading] = useState(false);
+
+    const fetchStats = useCallback(async () => {
+        if (!isAdmin) return;
+        setStatsLoading(true);
+        try {
+            const params = statsPeriodo === 'mensal'
+                ? `periodo=mensal&mes=${statsMes}`
+                : `periodo=anual&ano=${statsAno}`;
+
+            if (statsTab === 'resumo') {
+                const res = await fetch(`/api/router.php?route=presencas/stats&${params}`, { credentials: 'include' });
+                const json = await res.json();
+                setStatsData(json.dados || []);
+                setStatsTotais(json.totais || { total_eventos: 0, total_presencas: 0 });
+            } else {
+                const res = await fetch(`/api/router.php?route=presencas/nominal&${params}`, { credentials: 'include' });
+                const json = await res.json();
+                setNominalData(json.dados || []);
+            }
+        } catch {
+            setStatsData([]);
+            setNominalData([]);
+        } finally {
+            setStatsLoading(false);
+        }
+    }, [isAdmin, statsTab, statsPeriodo, statsMes, statsAno]);
+
+    useEffect(() => {
+        if (isOpen && activeView === 'general' && isAdmin) {
+            fetchStats();
+        }
+    }, [isOpen, activeView, isAdmin, fetchStats]);
+
+    const navigatePeriod = (direction: -1 | 1) => {
+        if (statsPeriodo === 'mensal') {
+            const [y, m] = statsMes.split('-').map(Number);
+            const d = new Date(y, m - 1 + direction, 1);
+            setStatsMes(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+        } else {
+            setStatsAno(String(Number(statsAno) + direction));
+        }
+    };
+
+    const getDisplayPeriod = () => {
+        if (statsPeriodo === 'mensal') {
+            const [y, m] = statsMes.split('-').map(Number);
+            const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+            return `${meses[m - 1]} ${y}`;
+        }
+        return statsAno;
+    };
+
+    const handleExportResumo = () => {
+        exportToExcel(statsData as unknown as Record<string, unknown>[], `resumo_${statsPeriodo === 'mensal' ? statsMes : statsAno}`, [
+            { key: 'sala_nome', header: 'Sala' },
+            { key: 'total_eventos', header: 'Eventos' },
+            { key: 'total_presencas', header: 'Presenças' },
+        ]);
+    };
+
+    const handleExportNominal = () => {
+        const formatted = nominalData.map(r => ({
+            ...r,
+            criado_em_fmt: new Date(r.criado_em).toLocaleDateString('pt-BR'),
+        }));
+        exportToExcel(formatted as unknown as Record<string, unknown>[], `nominal_${statsPeriodo === 'mensal' ? statsMes : statsAno}`, [
+            { key: 'nome_completo', header: 'Nome' },
+            { key: 'email', header: 'E-mail' },
+            { key: 'evento_titulo', header: 'Evento' },
+            { key: 'sala_nome', header: 'Sala' },
+            { key: 'criado_em_fmt', header: 'Data' },
+        ]);
+    };
 
     if (!isOpen) return null;
 
@@ -145,13 +232,121 @@ export function SettingsModal({ isOpen, onClose, initialCalendarId }: SettingsMo
     const renderContent = () => {
         switch (activeView) {
             case 'general':
+                if (!isAdmin) {
+                    return (
+                        <div className={styles.body}>
+                            <h3>Geral</h3>
+                            <p>Configurações gerais do calendário (idioma, fuso horário) seriam exibidas aqui.</p>
+                            <p style={{ marginTop: 16, color: 'var(--text-secondary)' }}>
+                                Atualmente, o idioma está definido como <strong>Português (Brasil)</strong> e o tema segue sua preferência (Claro/Escuro).
+                            </p>
+                        </div>
+                    );
+                }
                 return (
                     <div className={styles.body}>
-                        <h3>Geral</h3>
-                        <p>Configurações gerais do calendário (idioma, fuso horário) seriam exibidas aqui.</p>
-                        <p style={{ marginTop: 16, color: 'var(--text-secondary)' }}>
-                            Atualmente, o idioma está definido como <strong>Português (Brasil)</strong> e o tema segue sua preferência (Claro/Escuro).
-                        </p>
+                        <div className={styles.statsHeader}>
+                            <h3>Relatório de Presenças</h3>
+                        </div>
+                        <div className={styles.statsControls}>
+                            <div className={styles.statsTabGroup}>
+                                <button
+                                    className={`${styles.statsTabBtn} ${statsTab === 'resumo' ? styles.statsTabBtnActive : ''}`}
+                                    onClick={() => setStatsTab('resumo')}
+                                >
+                                    Resumo
+                                </button>
+                                <button
+                                    className={`${styles.statsTabBtn} ${statsTab === 'nominal' ? styles.statsTabBtnActive : ''}`}
+                                    onClick={() => setStatsTab('nominal')}
+                                >
+                                    Nominal
+                                </button>
+                            </div>
+                            <div className={styles.statsNavGroup}>
+                                <select
+                                    className={styles.periodSelect}
+                                    value={statsPeriodo}
+                                    onChange={e => setStatsPeriodo(e.target.value as StatsPeriodo)}
+                                >
+                                    <option value="mensal">Mensal</option>
+                                    <option value="anual">Anual</option>
+                                </select>
+                                <button className={styles.navArrow} onClick={() => navigatePeriod(-1)}>
+                                    <CaretLeft size={16} />
+                                </button>
+                                <span className={styles.periodLabel}>{getDisplayPeriod()}</span>
+                                <button className={styles.navArrow} onClick={() => navigatePeriod(1)}>
+                                    <CaretRight size={16} />
+                                </button>
+                                <button
+                                    className={styles.exportBtn}
+                                    onClick={statsTab === 'resumo' ? handleExportResumo : handleExportNominal}
+                                    title="Exportar Excel"
+                                >
+                                    <DownloadSimple size={16} />
+                                </button>
+                            </div>
+                        </div>
+
+                        {statsLoading ? (
+                            <p className={styles.emptyStats}>Carregando...</p>
+                        ) : statsTab === 'resumo' ? (
+                            statsData.length === 0 ? (
+                                <p className={styles.emptyStats}>Nenhum dado encontrado para este período.</p>
+                            ) : (
+                                <table className={styles.statsTable}>
+                                    <thead>
+                                        <tr>
+                                            <th>Sala</th>
+                                            <th>Eventos</th>
+                                            <th>Presenças</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {statsData.map((row, i) => (
+                                            <tr key={i}>
+                                                <td>{row.sala_nome}</td>
+                                                <td>{row.total_eventos}</td>
+                                                <td>{row.total_presencas}</td>
+                                            </tr>
+                                        ))}
+                                        <tr className={styles.totalRow}>
+                                            <td>TOTAL</td>
+                                            <td>{statsTotais.total_eventos}</td>
+                                            <td>{statsTotais.total_presencas}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            )
+                        ) : (
+                            nominalData.length === 0 ? (
+                                <p className={styles.emptyStats}>Nenhum dado encontrado para este período.</p>
+                            ) : (
+                                <table className={styles.statsTable}>
+                                    <thead>
+                                        <tr>
+                                            <th>Nome</th>
+                                            <th>E-mail</th>
+                                            <th>Evento</th>
+                                            <th>Sala</th>
+                                            <th>Data</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {nominalData.map((row, i) => (
+                                            <tr key={i}>
+                                                <td>{row.nome_completo}</td>
+                                                <td>{row.email}</td>
+                                                <td>{row.evento_titulo}</td>
+                                                <td>{row.sala_nome}</td>
+                                                <td>{new Date(row.criado_em).toLocaleDateString('pt-BR')}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            )
+                        )}
                     </div>
                 );
             case 'calendars':
