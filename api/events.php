@@ -63,7 +63,7 @@ function createEvent($pdo) {
     ]);
 
     saveRecurrence($pdo, $id, $input['recurrence'] ?? null);
-    logMovimento($pdo, $id, 'criacao', $user['id']);
+    logMovimento($pdo, $id, 'criacao', $user);
 
     $event = fetchEventById($pdo, $id);
     jsonResponse($event, 201);
@@ -103,7 +103,7 @@ function updateEvent($id, $pdo) {
     $pdo->prepare('DELETE FROM frequencia WHERE evento_id = :id')->execute([':id' => $id]);
     saveRecurrence($pdo, $id, $input['recurrence'] ?? null);
 
-    logMovimento($pdo, $id, 'edicao', $user['id']);
+    logMovimento($pdo, $id, 'edicao', $user);
 
     $event = fetchEventById($pdo, $id);
     jsonResponse($event);
@@ -112,7 +112,7 @@ function updateEvent($id, $pdo) {
 function deleteEvent($id, $pdo) {
     $user = requireAuth();
 
-    logMovimento($pdo, $id, 'exclusao', $user['id']);
+    logMovimento($pdo, $id, 'exclusao', $user);
 
     $pdo->prepare('DELETE FROM frequencia WHERE evento_id = :id')->execute([':id' => $id]);
     $pdo->prepare('DELETE FROM eventos WHERE id = :id')->execute([':id' => $id]);
@@ -141,7 +141,9 @@ function saveRecurrence($pdo, $eventId, $recurrence) {
 
     // Full RecurrenceRule object
     if (is_array($recurrence)) {
-        $diasSemana = isset($recurrence['daysOfWeek']) ? json_encode($recurrence['daysOfWeek']) : null;
+        $diasSemana = isset($recurrence['daysOfWeek'])
+            ? '{' . implode(',', $recurrence['daysOfWeek']) . '}'
+            : null;
 
         $stmt = $pdo->prepare(
             'INSERT INTO frequencia (evento_id, tipo, intervalo, dias_semana, data_fim, contagem, tipo_fim)
@@ -197,7 +199,7 @@ function mapDbEventToFrontend($row) {
             'endType' => $row['freq_tipo_fim'] ?? 'never',
         ];
         if (!empty($row['freq_dias_semana'])) {
-            $event['recurrence']['daysOfWeek'] = json_decode($row['freq_dias_semana'], true);
+            $event['recurrence']['daysOfWeek'] = array_map('intval', explode(',', trim($row['freq_dias_semana'], '{}')));
         }
         if (!empty($row['freq_data_fim'])) {
             $event['recurrence']['endDate'] = $row['freq_data_fim'];
@@ -210,15 +212,16 @@ function mapDbEventToFrontend($row) {
     return $event;
 }
 
-function logMovimento($pdo, $eventId, $acao, $userId) {
+function logMovimento($pdo, $eventId, $acao, $user) {
     $stmt = $pdo->prepare(
-        'INSERT INTO movimentos (id, evento_id, acao, usuario_id, data_hora)
-         VALUES (:id, :evento_id, :acao, :usuario_id, NOW())'
+        'INSERT INTO movimentos (id, evento_id, acao, usuario_id, usuario_nome, data_hora)
+         VALUES (:id, :evento_id, :acao, :usuario_id, :usuario_nome, NOW())'
     );
     $stmt->execute([
         ':id' => generateUuid(),
         ':evento_id' => $eventId,
         ':acao' => $acao,
-        ':usuario_id' => $userId,
+        ':usuario_id' => $user['id'],
+        ':usuario_nome' => $user['name'],
     ]);
 }

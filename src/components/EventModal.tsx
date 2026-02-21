@@ -117,9 +117,11 @@ export function EventModal() {
         if (type === 'create') {
             addEvent(eventData);
             showToast('Evento criado', 'success');
+            closeModal();
         } else if (type === 'edit' && event) {
             updateEvent({ ...event, ...eventData });
             showToast('Evento atualizado', 'success');
+            closeModal();
         }
     };
 
@@ -328,6 +330,11 @@ export function EventModal() {
                                         <option key={c.id} value={c.id}>{c.name}</option>
                                     ))}
                                 </select>
+                                {selectedCalendar?.description && (
+                                    <span className={styles.calendarDescription}>
+                                        {selectedCalendar.description}
+                                    </span>
+                                )}
                             </div>
                         </div>
 

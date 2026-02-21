@@ -46,14 +46,6 @@ try {
     header('Content-Type: application/json; charset=utf-8');
     echo json_encode([
         'error' => 'Database connection failed',
-        'debug' => [
-            'host' => $dbHost,
-            'port' => $dbPort,
-            'dbname' => $dbName,
-            'user' => $dbUser,
-            'pass_set' => !empty($dbPass),
-            'pdo_message' => $e->getMessage(),
-        ],
     ], JSON_UNESCAPED_UNICODE);
     exit;
 }

@@ -414,9 +414,15 @@
 
 .calendarSelector {
     display: flex;
-    align-items: center;
-    gap: 8px;
+    flex-direction: column;
+    gap: 4px;
     flex: 1;
+}
+
+.calendarDescription {
+    font-size: 12px;
+    color: var(--text-muted);
+    padding-left: 8px;
 }
 
 .select {

@@ -311,3 +311,40 @@
     font-size: 0.8rem;
     color: var(--text-secondary);
 }
+
+/* ===== Color Palette ===== */
+
+.colorPalette {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+    max-width: 240px;
+}
+
+.paletteColor {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: transform 0.12s, box-shadow 0.12s;
+    position: relative;
+}
+
+.paletteColor:hover:not(.paletteColorDisabled) {
+    transform: scale(1.15);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.paletteColorSelected {
+    box-shadow: 0 0 0 2px var(--bg-surface), 0 0 0 4px currentColor;
+}
+
+.paletteColorDisabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}

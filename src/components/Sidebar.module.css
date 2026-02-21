@@ -74,9 +74,26 @@
     gap: 2px;
 }
 
+/* ===== Calendar Item with hover ===== */
+
 .calendarItem {
-    padding: 4px 4px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding: 2px 4px;
+    border-radius: 6px;
+    transition: background-color 0.15s;
 }
+
+.calendarItem:hover {
+    background-color: color-mix(in srgb, var(--cal-color, #808080) 10%, transparent);
+}
+
+.calendarItem:hover .menuBtn {
+    opacity: 1;
+}
+
+/* ===== Custom Checkbox ===== */
 
 .checkboxWrapper {
     display: flex;
@@ -85,18 +102,128 @@
     cursor: pointer;
     font-size: 13px;
     color: var(--text-primary);
-    padding: 4px 0;
+    padding: 6px 0;
+    flex: 1;
+    min-width: 0;
 }
 
-.checkboxWrapper input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
-    border-radius: 2px;
-    cursor: pointer;
+.checkbox {
+    width: 18px;
+    height: 18px;
+    border-radius: 3px;
+    border: 2px solid;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background-color 0.15s, border-color 0.15s;
+}
+
+.checkboxChecked {
+    border-color: transparent !important;
 }
 
 .calendarName {
     font-size: 13px;
     font-weight: 400;
     color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ===== Three-dot menu button ===== */
+
+.menuBtn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-secondary);
+    padding: 4px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.15s, background-color 0.15s;
+    flex-shrink: 0;
+}
+
+.menuBtn:hover {
+    background-color: rgba(0, 0, 0, 0.08);
+}
+
+/* ===== Context Menu ===== */
+
+.contextMenu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    z-index: 100;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+    min-width: 200px;
+    padding: 8px 0;
+    animation: fadeIn 0.12s ease-out;
+}
+
+.contextMenuItem {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 8px 16px;
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    font-size: 13px;
+    cursor: pointer;
+    transition: background-color 0.12s;
+}
+
+.contextMenuItem:hover {
+    background-color: var(--bg-hover);
+}
+
+.contextMenuSeparator {
+    height: 1px;
+    background: var(--border-color);
+    margin: 6px 0;
+}
+
+/* ===== Color Grid ===== */
+
+.colorGrid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 6px;
+    padding: 8px 12px;
+}
+
+.colorCircle {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.12s, box-shadow 0.12s;
+    padding: 0;
+}
+
+.colorCircle:hover {
+    transform: scale(1.2);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.colorCircleActive {
+    box-shadow: 0 0 0 2px var(--bg-surface), 0 0 0 4px currentColor;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
 }

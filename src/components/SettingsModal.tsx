@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, ArrowLeft, Plus, Lock, UploadSimple } from '@phosphor-icons/react';
+import { X, ArrowLeft, Plus, Lock, UploadSimple, Check } from '@phosphor-icons/react';
 import { useCalendar } from '../context/CalendarContext';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -10,21 +10,46 @@ import type { Calendar } from '../types';
 interface SettingsModalProps {
     isOpen: boolean;
     onClose: () => void;
+    initialCalendarId?: string;
 }
 
 type View = 'general' | 'calendars' | 'calendar-details';
 
-export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
+const PRESET_COLORS = [
+    '#d50000', '#e67c73', '#f4511e', '#f6bf26', '#33b679', '#0b8043',
+    '#039be5', '#3f51b5', '#7986cb', '#8e24aa', '#616161', '#a79b8e',
+    '#ad1457', '#d81b60', '#e91e63', '#f09300', '#009688', '#00897b',
+    '#4285f4', '#5e6ec7', '#b39ddb', '#9e69af', '#795548', '#bcaaa4',
+];
+
+export function SettingsModal({ isOpen, onClose, initialCalendarId }: SettingsModalProps) {
     const { calendars, addCalendar, updateCalendar, deleteCalendar, addEvent } = useCalendar();
     const { isAdmin } = useAuth();
     const { showToast } = useToast();
     const [activeView, setActiveView] = useState<View>('general');
     const [selectedCalendar, setSelectedCalendar] = useState<Calendar | null>(null);
+    const [initializedFor, setInitializedFor] = useState<string | undefined>(undefined);
 
     // Form State
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [color, setColor] = useState('#818cf8');
+
+    // Navigate to specific calendar when initialCalendarId is provided
+    if (isOpen && initialCalendarId && initializedFor !== initialCalendarId) {
+        const cal = calendars.find(c => c.id === initialCalendarId);
+        if (cal) {
+            setSelectedCalendar(cal);
+            setName(cal.name);
+            setDescription(cal.description || '');
+            setColor(cal.color);
+            setActiveView('calendar-details');
+            setInitializedFor(initialCalendarId);
+        }
+    }
+    if (!isOpen && initializedFor) {
+        setInitializedFor(undefined);
+    }
 
     // ICS Import State
     const [icsFile, setIcsFile] = useState<File | null>(null);
@@ -184,12 +209,27 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                             </div>
                             <div className={styles.formGroup}>
                                 <label>Cor</label>
-                                <input
-                                    type="color"
-                                    value={color}
-                                    onChange={e => setColor(e.target.value)}
-                                    style={{ width: 60, height: 40, padding: 0, border: 'none' }}
-                                />
+                                <div className={styles.colorPalette}>
+                                    {PRESET_COLORS.map(c => {
+                                        const usedBy = calendars.find(
+                                            cal => cal.color === c && cal.id !== selectedCalendar?.id
+                                        );
+                                        const isSelected = color === c;
+                                        const isDisabled = !!usedBy;
+                                        return (
+                                            <button
+                                                key={c}
+                                                className={`${styles.paletteColor} ${isSelected ? styles.paletteColorSelected : ''} ${isDisabled ? styles.paletteColorDisabled : ''}`}
+                                                style={{ backgroundColor: c }}
+                                                onClick={() => !isDisabled && setColor(c)}
+                                                title={isDisabled ? `Já utilizada por ${usedBy.name}` : c}
+                                                type="button"
+                                            >
+                                                {isSelected && <Check size={14} weight="bold" color="#fff" />}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
                             </div>
                             {!selectedCalendar && (
                                 <div className={styles.formGroup}>
