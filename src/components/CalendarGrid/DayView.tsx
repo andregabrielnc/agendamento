@@ -5,6 +5,7 @@ import { format, isSameDay, addMinutes, startOfDay, endOfDay, roundToNearestMinu
 import styles from './DayView.module.css';
 import { ptBR } from 'date-fns/locale';
 import { getRecurrenceInstances } from '../../utils/recurrenceUtils';
+import { computeEventLayout, getEventColumnStyle } from '../../utils/eventLayout';
 
 export function DayView() {
     const { currentDate, filteredEvents: events, openPopover, openCreateModal, updateEvent } = useCalendar();
@@ -19,6 +20,12 @@ export function DayView() {
         const end = endOfDay(day);
         return events.flatMap(event => getRecurrenceInstances(event, start, end));
     }, [events, day]);
+
+    // Compute overlap layouts for the day
+    const dayLayout = useMemo(() => {
+        const dayEvents = displayEvents.filter(e => isSameDay(e.start, day));
+        return computeEventLayout(dayEvents);
+    }, [displayEvents, day]);
 
     // Drag to Create State
     const [isDraggingCreate, setIsDraggingCreate] = useState(false);
@@ -272,6 +279,7 @@ export function DayView() {
                                     : getYFromTime(event.end);
 
                                 const height = Math.max(20, endY - startY);
+                                const colStyle = getEventColumnStyle(dayLayout.get(event.id));
 
                                 return (
                                     <div
@@ -280,6 +288,8 @@ export function DayView() {
                                         style={{
                                             top: `${startY}px`,
                                             height: `${height}px`,
+                                            left: colStyle.left,
+                                            width: colStyle.width,
                                             backgroundColor: event.color,
                                             zIndex: resizeEventId === event.id ? 10 : 1,
                                             opacity: dragEventId === event.id ? 0.5 : 1,
@@ -322,6 +332,8 @@ export function DayView() {
                                 style={{
                                     top: `${getYFromTime(draftEvent.start)}px`,
                                     height: `${getYFromTime(draftEvent.end) - getYFromTime(draftEvent.start)}px`,
+                                    left: '2px',
+                                    width: 'calc(100% - 4px)',
                                 }}
                             >
                                 <div className={styles.eventTitle}>(Sem titulo)</div>

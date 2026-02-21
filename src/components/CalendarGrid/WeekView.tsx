@@ -5,6 +5,7 @@ import { format, isSameDay, addMinutes, startOfDay, roundToNearestMinutes, diffe
 import styles from './WeekView.module.css'
 import { ptBR } from 'date-fns/locale';
 import { getRecurrenceInstances } from '../../utils/recurrenceUtils';
+import { computeEventLayout, getEventColumnStyle } from '../../utils/eventLayout';
 
 interface WeekViewProps {
     dayCount?: number;
@@ -24,6 +25,18 @@ export function WeekView({ dayCount }: WeekViewProps) {
         const end = endOfDay(days[days.length - 1]);
         return events.flatMap(event => getRecurrenceInstances(event, start, end));
     }, [events, days]);
+
+    // Compute overlap layouts per day
+    const layoutsByDay = useMemo(() => {
+        const map = new Map<string, Map<string, ReturnType<typeof computeEventLayout> extends Map<string, infer V> ? V : never>>();
+        for (const day of days) {
+            const dayKey = day.toISOString();
+            const dayEvents = displayEvents.filter(e => isSameDay(e.start, day));
+            const layout = computeEventLayout(dayEvents);
+            map.set(dayKey, layout);
+        }
+        return map;
+    }, [displayEvents, days]);
 
     // Drag to Create State
     const [isDraggingCreate, setIsDraggingCreate] = useState(false);
@@ -294,6 +307,8 @@ export function WeekView({ dayCount }: WeekViewProps) {
                                         : getYFromTime(event.end);
 
                                     const height = Math.max(20, endY - startY);
+                                    const dayLayout = layoutsByDay.get(day.toISOString());
+                                    const colStyle = getEventColumnStyle(dayLayout?.get(event.id));
 
                                     return (
                                         <div
@@ -302,6 +317,8 @@ export function WeekView({ dayCount }: WeekViewProps) {
                                             style={{
                                                 top: `${startY}px`,
                                                 height: `${height}px`,
+                                                left: colStyle.left,
+                                                width: colStyle.width,
                                                 backgroundColor: event.color,
                                                 zIndex: resizeEventId === event.id ? 10 : 1,
                                                 opacity: dragEventId === event.id ? 0.5 : 1
@@ -344,7 +361,9 @@ export function WeekView({ dayCount }: WeekViewProps) {
                                     className={`${styles.eventCard} ${styles.draftEvent}`}
                                     style={{
                                         top: `${getYFromTime(draftEvent.start)}px`,
-                                        height: `${getYFromTime(draftEvent.end) - getYFromTime(draftEvent.start)}px`
+                                        height: `${getYFromTime(draftEvent.end) - getYFromTime(draftEvent.start)}px`,
+                                        left: '2px',
+                                        width: 'calc(100% - 4px)',
                                     }}
                                 >
                                     <div className={styles.eventTitle}>(Sem título)</div>
