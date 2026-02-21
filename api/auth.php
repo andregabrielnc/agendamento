@@ -41,9 +41,14 @@ function handleLogin($pdo) {
     $adAuthFile = __DIR__ . '/../login/fetch_ad_user.php';
     $adUser = null;
     if (file_exists($adAuthFile) && !empty($password)) {
-        require_once $adAuthFile;
-        $username = explode('@', $email)[0];
-        $adUser = validaLoginAD($username, $password);
+        try {
+            require_once $adAuthFile;
+            $username = explode('@', $email)[0];
+            $adUser = validaLoginAD($username, $password);
+        } catch (\Throwable $e) {
+            // LDAP not available or AD unreachable, skip
+            $adUser = null;
+        }
     }
 
     // Look up user in administradores

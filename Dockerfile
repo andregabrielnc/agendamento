@@ -8,8 +8,8 @@ RUN npm run build
 FROM php:8.2-fpm-alpine
 
 # Install pdo_pgsql extension
-RUN apk add --no-cache postgresql-dev nginx \
-    && docker-php-ext-install pdo_pgsql
+RUN apk add --no-cache postgresql-dev openldap-dev nginx \
+    && docker-php-ext-install pdo_pgsql ldap
 
 # Copy built React app
 COPY --from=builder /app/dist /usr/share/nginx/html
