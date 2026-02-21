@@ -9,16 +9,29 @@ import {
     Gear,
     SignOut,
     UsersThree,
-    ShieldCheck
+    ShieldCheck,
+    Warning,
+    Bell,
+    Check
 } from '@phosphor-icons/react'
 import styles from './Header.module.css'
 import { useCalendar } from '../context/CalendarContext'
 import { useAuth } from '../context/AuthContext'
 import { ptBR } from 'date-fns/locale';
 import { format, addMonths, subMonths, addWeeks, subWeeks, addDays, subDays, addYears, subYears, startOfWeek, endOfWeek } from 'date-fns';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { SettingsModal } from './SettingsModal';
 import { AdminUsers } from '../pages/AdminUsers';
+import { ReportModal } from './ReportModal';
+
+interface Notification {
+    id: string;
+    usuario_id: string;
+    relato_id: string | null;
+    mensagem: string;
+    lida: boolean;
+    criado_em: string;
+}
 
 const VIEW_LABELS: Record<string, string> = {
     day: 'Dia',
@@ -36,11 +49,34 @@ export function Header() {
     const [showUserMenu, setShowUserMenu] = useState(false);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [isUsersOpen, setIsUsersOpen] = useState(false);
+    const [isReportOpen, setIsReportOpen] = useState(false);
+    const [notifications, setNotifications] = useState<Notification[]>([]);
+    const [showNotifications, setShowNotifications] = useState(false);
     const viewMenuRef = useRef<HTMLDivElement>(null);
     const userMenuRef = useRef<HTMLDivElement>(null);
+    const notifRef = useRef<HTMLDivElement>(null);
+
+    const fetchNotifications = useCallback(async () => {
+        try {
+            const res = await fetch('/api/router.php?route=notifications');
+            const data = await res.json();
+            if (Array.isArray(data)) {
+                setNotifications(data);
+            }
+        } catch {
+            // silently fail
+        }
+    }, []);
 
     useEffect(() => {
-        if (!showViewMenu && !showUserMenu) return;
+        if (!user) return;
+        fetchNotifications();
+        const interval = setInterval(fetchNotifications, 30000);
+        return () => clearInterval(interval);
+    }, [user, fetchNotifications]);
+
+    useEffect(() => {
+        if (!showViewMenu && !showUserMenu && !showNotifications) return;
         const handleClickOutside = (e: MouseEvent) => {
             if (showViewMenu && viewMenuRef.current && !viewMenuRef.current.contains(e.target as Node)) {
                 setShowViewMenu(false);
@@ -48,10 +84,13 @@ export function Header() {
             if (showUserMenu && userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
                 setShowUserMenu(false);
             }
+            if (showNotifications && notifRef.current && !notifRef.current.contains(e.target as Node)) {
+                setShowNotifications(false);
+            }
         };
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [showViewMenu, showUserMenu]);
+    }, [showViewMenu, showUserMenu, showNotifications]);
 
     const handlePrev = () => {
         switch (view) {
@@ -106,6 +145,18 @@ export function Header() {
     const selectView = (v: string) => {
         setView(v as any);
         setShowViewMenu(false);
+    };
+
+    const handleMarkAsRead = async (id: string) => {
+        try {
+            await fetch(`/api/router.php?route=notifications/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+            });
+            setNotifications(prev => prev.filter(n => n.id !== id));
+        } catch {
+            // silently fail
+        }
     };
 
     const userInitial = user?.name?.charAt(0)?.toUpperCase() || '?';
@@ -180,6 +231,46 @@ export function Header() {
                     {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
                 </button>
 
+                <button className={styles.iconBtn} onClick={() => setIsReportOpen(true)} title="Informar Problema">
+                    <Warning size={22} />
+                </button>
+
+                <div className={styles.notifWrapper} ref={notifRef}>
+                    <button
+                        className={styles.iconBtn}
+                        onClick={() => setShowNotifications(!showNotifications)}
+                        title="Notificações"
+                    >
+                        <Bell size={22} />
+                        {notifications.length > 0 && (
+                            <span className={styles.notifBadge}>
+                                {notifications.length > 9 ? '9+' : notifications.length}
+                            </span>
+                        )}
+                    </button>
+                    {showNotifications && (
+                        <div className={styles.notifDropdown} onClick={e => e.stopPropagation()}>
+                            <div className={styles.notifHeader}>Notificações</div>
+                            {notifications.length === 0 ? (
+                                <div className={styles.notifEmpty}>Nenhuma notificação</div>
+                            ) : (
+                                notifications.map(n => (
+                                    <div key={n.id} className={styles.notifItem}>
+                                        <span className={styles.notifMsg}>{n.mensagem}</span>
+                                        <button
+                                            className={styles.notifDismiss}
+                                            onClick={() => handleMarkAsRead(n.id)}
+                                            title="Marcar como lida"
+                                        >
+                                            <Check size={16} />
+                                        </button>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    )}
+                </div>
+
                 <button className={styles.iconBtn} onClick={() => setIsSettingsOpen(true)} title="Configurações">
                     <Gear size={24} />
                 </button>
@@ -227,6 +318,7 @@ export function Header() {
 
             <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
             <AdminUsers isOpen={isUsersOpen} onClose={() => setIsUsersOpen(false)} />
+            <ReportModal isOpen={isReportOpen} onClose={() => setIsReportOpen(false)} onNotificationsChange={fetchNotifications} />
         </header>
     )
 }

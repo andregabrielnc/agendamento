@@ -29,6 +29,12 @@ if ($resource === 'auth') {
 } elseif ($resource === 'users') {
     require_once __DIR__ . '/users.php';
     handleUsers($method, $subResource, $pdo);
+} elseif ($resource === 'reports') {
+    require_once __DIR__ . '/reports.php';
+    handleReports($method, $subResource, $pdo);
+} elseif ($resource === 'notifications') {
+    require_once __DIR__ . '/notifications.php';
+    handleNotifications($method, $subResource, $pdo);
 } else {
     jsonResponse(['error' => 'Route not found'], 404);
 }
