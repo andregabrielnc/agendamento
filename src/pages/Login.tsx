@@ -72,12 +72,9 @@ export function Login({ onPresenca }: LoginProps) {
                         </div>
                     </div>
                     <div className={styles.brandFooter}>
-                        <img src="/logo_hc.png" alt="EBSERH — Empresa Brasileira de Serviços Hospitalares" className={styles.brandLogo} />
-                        <span className={styles.brandFooterText}>
-                            <span>EBSERH</span>
-                            <span className={styles.dot}>·</span>
-                            <span>Empresa Brasileira de Serviços Hospitalares</span>
-                        </span>
+                        <span>Andre Gabriel N. Carvalho — UES/GEP</span>
+                        <span>Versão 3.1</span>
+                        <span>Contato Teams: andre.gabriel@ebserh.gov.br</span>
                     </div>
                 </div>
 
@@ -180,10 +177,8 @@ export function Login({ onPresenca }: LoginProps) {
                             </button>
                         )}
 
-                        <div className={styles.copyright}>
-                            <span>Andre Gabriel N. Carvalho — UES/GEP</span>
-                            <span>Versão 3.1</span>
-                            <span>Contato Teams: <a href="mailto:andre.gabriel@ebserh.gov.br">andre.gabriel@ebserh.gov.br</a></span>
+                        <div className={styles.formLogo}>
+                            <img src="/logo_hc.png" alt="EBSERH — Empresa Brasileira de Serviços Hospitalares" />
                         </div>
                     </form>
                 </div>
