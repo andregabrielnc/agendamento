@@ -94,33 +94,31 @@ function generateUuid() {
 }
 
 function ensureReportTables($pdo) {
-    try {
-        $pdo->exec("
-            CREATE TABLE IF NOT EXISTS relatos (
-                id VARCHAR(36) PRIMARY KEY,
-                usuario_id VARCHAR(36) NOT NULL,
-                usuario_nome VARCHAR(255) NOT NULL,
-                sala_id VARCHAR(36),
-                descricao TEXT NOT NULL,
-                status VARCHAR(20) DEFAULT 'aberto',
-                criado_em TIMESTAMP DEFAULT NOW(),
-                finalizado_em TIMESTAMP,
-                finalizado_por VARCHAR(36)
-            )
-        ");
-        $pdo->exec("
-            CREATE TABLE IF NOT EXISTS notificacoes (
-                id VARCHAR(36) PRIMARY KEY,
-                usuario_id VARCHAR(36) NOT NULL,
-                relato_id VARCHAR(36),
-                mensagem TEXT NOT NULL,
-                lida BOOLEAN DEFAULT FALSE,
-                criado_em TIMESTAMP DEFAULT NOW()
-            )
-        ");
-    } catch (\Throwable $e) {
-        // Tables may already exist, continue
-    }
-}
+    static $done = false;
+    if ($done) return;
+    $done = true;
 
-ensureReportTables($pdo);
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS relatos (
+            id VARCHAR(36) PRIMARY KEY,
+            usuario_id VARCHAR(36) NOT NULL,
+            usuario_nome VARCHAR(255) NOT NULL,
+            sala_id VARCHAR(36),
+            descricao TEXT NOT NULL,
+            status VARCHAR(20) DEFAULT 'aberto',
+            criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            finalizado_em TIMESTAMP,
+            finalizado_por VARCHAR(36)
+        )
+    ");
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS notificacoes (
+            id VARCHAR(36) PRIMARY KEY,
+            usuario_id VARCHAR(36) NOT NULL,
+            relato_id VARCHAR(36),
+            mensagem TEXT NOT NULL,
+            lida BOOLEAN DEFAULT FALSE,
+            criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ");
+}

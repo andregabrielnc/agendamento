@@ -1,6 +1,12 @@
 <?php
 
 function handleNotifications($method, $id, $pdo) {
+    try {
+        ensureReportTables($pdo);
+    } catch (\Throwable $e) {
+        jsonResponse(['error' => 'Erro ao inicializar tabelas: ' . $e->getMessage()], 500);
+    }
+
     switch ($method) {
         case 'GET':
             $user = requireAuth();

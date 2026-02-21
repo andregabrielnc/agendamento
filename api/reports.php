@@ -2,6 +2,7 @@
 
 function handleReports($method, $id, $pdo) {
     try {
+        ensureReportTables($pdo);
         switch ($method) {
             case 'GET':
                 $user = requireAuth();
