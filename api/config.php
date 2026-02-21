@@ -104,6 +104,88 @@ function generateUuid() {
     );
 }
 
+function ensureLoginAttemptsTable($pdo) {
+    static $done = false;
+    if ($done) return;
+    $done = true;
+
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS login_attempts (
+            id SERIAL PRIMARY KEY,
+            email VARCHAR(255) NOT NULL,
+            ip_address VARCHAR(45) NOT NULL,
+            tentativa_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ");
+    $pdo->exec("CREATE INDEX IF NOT EXISTS idx_login_attempts_email ON login_attempts(email)");
+    $pdo->exec("CREATE INDEX IF NOT EXISTS idx_login_attempts_ip ON login_attempts(ip_address)");
+}
+
+function checkLoginRateLimit($pdo, $email, $ip) {
+    ensureLoginAttemptsTable($pdo);
+
+    $maxAttempts = 6;
+    $lockoutMinutes = 30;
+
+    // Check by email
+    $stmt = $pdo->prepare("
+        SELECT COUNT(*) AS total,
+               MAX(tentativa_em) AS ultima
+        FROM login_attempts
+        WHERE email = :email
+          AND tentativa_em > NOW() - INTERVAL '$lockoutMinutes minutes'
+    ");
+    $stmt->execute([':email' => $email]);
+    $row = $stmt->fetch();
+
+    if ((int)$row['total'] >= $maxAttempts) {
+        $ultima = new DateTime($row['ultima']);
+        $desbloqueio = (clone $ultima)->modify("+$lockoutMinutes minutes");
+        $agora = new DateTime();
+        $restante = max(1, (int)ceil(($desbloqueio->getTimestamp() - $agora->getTimestamp()) / 60));
+        jsonResponse([
+            'error' => "Muitas tentativas de login. Tente novamente em $restante minuto" . ($restante > 1 ? 's' : '') . ".",
+            'blocked' => true,
+            'retryAfterMinutes' => $restante,
+        ], 429);
+    }
+
+    // Check by IP
+    $stmt = $pdo->prepare("
+        SELECT COUNT(*) AS total,
+               MAX(tentativa_em) AS ultima
+        FROM login_attempts
+        WHERE ip_address = :ip
+          AND tentativa_em > NOW() - INTERVAL '$lockoutMinutes minutes'
+    ");
+    $stmt->execute([':ip' => $ip]);
+    $row = $stmt->fetch();
+
+    if ((int)$row['total'] >= $maxAttempts) {
+        $ultima = new DateTime($row['ultima']);
+        $desbloqueio = (clone $ultima)->modify("+$lockoutMinutes minutes");
+        $agora = new DateTime();
+        $restante = max(1, (int)ceil(($desbloqueio->getTimestamp() - $agora->getTimestamp()) / 60));
+        jsonResponse([
+            'error' => "Muitas tentativas de login deste dispositivo. Tente novamente em $restante minuto" . ($restante > 1 ? 's' : '') . ".",
+            'blocked' => true,
+            'retryAfterMinutes' => $restante,
+        ], 429);
+    }
+}
+
+function recordFailedLogin($pdo, $email, $ip) {
+    ensureLoginAttemptsTable($pdo);
+    $stmt = $pdo->prepare("INSERT INTO login_attempts (email, ip_address) VALUES (:email, :ip)");
+    $stmt->execute([':email' => $email, ':ip' => $ip]);
+}
+
+function clearLoginAttempts($pdo, $email) {
+    ensureLoginAttemptsTable($pdo);
+    $stmt = $pdo->prepare("DELETE FROM login_attempts WHERE email = :email");
+    $stmt->execute([':email' => $email]);
+}
+
 function ensurePresencaTables($pdo) {
     static $done = false;
     if ($done) return;

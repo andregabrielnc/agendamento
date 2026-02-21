@@ -41,6 +41,10 @@ function handleLogin($pdo) {
         jsonResponse(['error' => 'E-mail deve pertencer ao domínio @ebserh.gov.br'], 400);
     }
 
+    // Rate limiting — block after 6 failed attempts for 30 minutes
+    $clientIp = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+    checkLoginRateLimit($pdo, $email, $clientIp);
+
     // AD authentication is MANDATORY
     $adAuthFile = __DIR__ . '/../login/fetch_ad_user.php';
     if (!file_exists($adAuthFile)) {
@@ -59,10 +63,12 @@ function handleLogin($pdo) {
     }
 
     if (!$adUser) {
+        recordFailedLogin($pdo, $email, $clientIp);
         jsonResponse(['error' => 'Usuário ou senha inválidos'], 401);
     }
 
-    // AD validated — proceed with login
+    // AD validated — clear failed attempts and proceed
+    clearLoginAttempts($pdo, $email);
     // Look up user in administradores
     $stmt = $pdo->prepare('SELECT id, nome, email, perfil, avatar_url, criado_em FROM administradores WHERE LOWER(email) = :email');
     $stmt->execute([':email' => $email]);
