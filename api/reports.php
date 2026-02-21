@@ -10,14 +10,14 @@ function handleReports($method, $id, $pdo) {
                     $stmt = $pdo->query("
                         SELECT r.*, s.nome AS sala_nome
                         FROM relatos r
-                        LEFT JOIN salas s ON s.id = r.sala_id
+                        LEFT JOIN salas s ON s.id::text = r.sala_id
                         ORDER BY r.criado_em DESC
                     ");
                 } else {
                     $stmt = $pdo->prepare("
                         SELECT r.*, s.nome AS sala_nome
                         FROM relatos r
-                        LEFT JOIN salas s ON s.id = r.sala_id
+                        LEFT JOIN salas s ON s.id::text = r.sala_id
                         WHERE r.usuario_id = :uid
                         ORDER BY r.criado_em DESC
                     ");
@@ -49,7 +49,7 @@ function handleReports($method, $id, $pdo) {
                     ':descricao' => $descricao,
                 ]);
 
-                $stmt = $pdo->prepare("SELECT r.*, s.nome AS sala_nome FROM relatos r LEFT JOIN salas s ON s.id = r.sala_id WHERE r.id = :id");
+                $stmt = $pdo->prepare("SELECT r.*, s.nome AS sala_nome FROM relatos r LEFT JOIN salas s ON s.id::text = r.sala_id WHERE r.id = :id");
                 $stmt->execute([':id' => $newId]);
                 jsonResponse($stmt->fetch(), 201);
                 break;
@@ -88,7 +88,7 @@ function handleReports($method, $id, $pdo) {
                         ]);
                     }
 
-                    $stmt = $pdo->prepare("SELECT r.*, s.nome AS sala_nome FROM relatos r LEFT JOIN salas s ON s.id = r.sala_id WHERE r.id = :id");
+                    $stmt = $pdo->prepare("SELECT r.*, s.nome AS sala_nome FROM relatos r LEFT JOIN salas s ON s.id::text = r.sala_id WHERE r.id = :id");
                     $stmt->execute([':id' => $id]);
                     jsonResponse($stmt->fetch());
                 } else {
