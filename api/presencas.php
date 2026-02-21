@@ -157,101 +157,103 @@ function getActiveEvents($pdo) {
 }
 
 function registerPresenca($pdo) {
-    $input = getJsonInput();
+    try {
+        $input = getJsonInput();
 
-    $eventoId = trim($input['eventoId'] ?? '');
-    $nomeCompleto = trim($input['nomeCompleto'] ?? '');
-    $email = trim(strtolower($input['email'] ?? ''));
-    $fingerprint = trim($input['fingerprint'] ?? '');
+        $eventoId = trim($input['eventoId'] ?? '');
+        $nomeCompleto = trim($input['nomeCompleto'] ?? '');
+        $email = trim(strtolower($input['email'] ?? ''));
+        $fingerprint = trim($input['fingerprint'] ?? '');
 
-    // Validation
-    if (!$eventoId || !$nomeCompleto || !$email || !$fingerprint) {
-        jsonResponse(['error' => 'Todos os campos são obrigatórios'], 400);
-    }
+        // Validation
+        if (!$eventoId || !$nomeCompleto || !$email || !$fingerprint) {
+            jsonResponse(['error' => 'Todos os campos são obrigatórios'], 400);
+        }
 
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        jsonResponse(['error' => 'E-mail inválido'], 400);
-    }
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            jsonResponse(['error' => 'E-mail inválido'], 400);
+        }
 
-    // Verify event is currently active
-    $now = new DateTime();
+        // Verify event is currently active
+        $now = new DateTime();
 
-    // Check non-recurring
-    $sqlCheck = "
-        SELECT e.id, e.titulo, e.data_inicio, e.data_fim, e.dia_inteiro, s.nome AS sala_nome
-        FROM eventos e
-        LEFT JOIN salas s ON s.id = e.sala_id
-        LEFT JOIN frequencia f ON f.evento_id = e.id
-        WHERE e.id = :eventoId
-          AND f.evento_id IS NULL
-          AND e.data_inicio <= NOW() + INTERVAL '15 minutes'
-          AND e.data_fim >= NOW() - INTERVAL '15 minutes'
-    ";
-    $stmt = $pdo->prepare($sqlCheck);
-    $stmt->execute(['eventoId' => $eventoId]);
-    $activeEvent = $stmt->fetch();
-
-    // If not found as non-recurring, check recurring
-    if (!$activeEvent) {
-        $sqlRecCheck = "
-            SELECT e.id, e.titulo, e.dia_inteiro, e.data_inicio, e.data_fim, s.nome AS sala_nome,
-                   f.tipo, f.intervalo, f.dias_semana, f.data_fim AS freq_data_fim,
-                   f.tipo_fim, f.excecoes
+        // Check non-recurring
+        $sqlCheck = "
+            SELECT e.id, e.titulo, e.data_inicio, e.data_fim, e.dia_inteiro, s.nome AS sala_nome
             FROM eventos e
             LEFT JOIN salas s ON s.id = e.sala_id
-            INNER JOIN frequencia f ON f.evento_id = e.id
+            LEFT JOIN frequencia f ON f.evento_id = e.id
             WHERE e.id = :eventoId
+              AND f.evento_id IS NULL
+              AND e.data_inicio <= NOW() + INTERVAL '15 minutes'
+              AND e.data_fim >= NOW() - INTERVAL '15 minutes'
         ";
-        $stmt = $pdo->prepare($sqlRecCheck);
+        $stmt = $pdo->prepare($sqlCheck);
         $stmt->execute(['eventoId' => $eventoId]);
-        $recEvent = $stmt->fetch();
+        $activeEvent = $stmt->fetch();
 
-        if ($recEvent && isRecurringEventActiveNow($recEvent, $now)) {
-            $activeEvent = $recEvent;
+        // If not found as non-recurring, check recurring
+        if (!$activeEvent) {
+            $sqlRecCheck = "
+                SELECT e.id, e.titulo, e.dia_inteiro, e.data_inicio, e.data_fim, s.nome AS sala_nome,
+                       f.tipo, f.intervalo, f.dias_semana, f.data_fim AS freq_data_fim,
+                       f.tipo_fim, f.excecoes
+                FROM eventos e
+                LEFT JOIN salas s ON s.id = e.sala_id
+                INNER JOIN frequencia f ON f.evento_id = e.id
+                WHERE e.id = :eventoId
+            ";
+            $stmt = $pdo->prepare($sqlRecCheck);
+            $stmt->execute(['eventoId' => $eventoId]);
+            $recEvent = $stmt->fetch();
+
+            if ($recEvent && isRecurringEventActiveNow($recEvent, $now)) {
+                $activeEvent = $recEvent;
+            }
         }
-    }
 
-    if (!$activeEvent) {
-        jsonResponse(['error' => 'Evento não está ativo no momento'], 400);
-    }
+        if (!$activeEvent) {
+            jsonResponse(['error' => 'Evento não está ativo no momento'], 400);
+        }
 
-    // Check if this email or device already registered for another event at the same time
-    $eventStart = $activeEvent['data_inicio'];
-    $eventEnd = $activeEvent['data_fim'];
+        // Check if this email or device already registered for another event at the same time
+        $eventStart = $activeEvent['data_inicio'] ?? null;
+        $eventEnd = $activeEvent['data_fim'] ?? null;
 
-    $sqlOverlap = "
-        SELECT p.evento_titulo
-        FROM presencas p
-        INNER JOIN eventos e ON e.id = p.evento_id
-        WHERE p.evento_id != :eventoId
-          AND (p.email = :email OR p.fingerprint = :fingerprint)
-          AND e.data_inicio < :event_end
-          AND e.data_fim > :event_start
-        LIMIT 1
-    ";
-    $stmtOverlap = $pdo->prepare($sqlOverlap);
-    $stmtOverlap->execute([
-        'eventoId' => $eventoId,
-        'email' => $email,
-        'fingerprint' => $fingerprint,
-        'event_end' => $eventEnd,
-        'event_start' => $eventStart,
-    ]);
-    $overlap = $stmtOverlap->fetch();
-    if ($overlap) {
-        jsonResponse(['error' => 'Você já registrou presença em outro evento neste horário: ' . $overlap['evento_titulo']], 409);
-    }
+        if ($eventStart && $eventEnd) {
+            $sqlOverlap = "
+                SELECT p.evento_titulo
+                FROM presencas p
+                INNER JOIN eventos e ON e.id = p.evento_id
+                WHERE p.evento_id != :eventoId
+                  AND (p.email = :email OR p.fingerprint = :fingerprint)
+                  AND e.data_inicio < :event_end
+                  AND e.data_fim > :event_start
+                LIMIT 1
+            ";
+            $stmtOverlap = $pdo->prepare($sqlOverlap);
+            $stmtOverlap->execute([
+                'eventoId' => $eventoId,
+                'email' => $email,
+                'fingerprint' => $fingerprint,
+                'event_end' => $eventEnd,
+                'event_start' => $eventStart,
+            ]);
+            $overlap = $stmtOverlap->fetch();
+            if ($overlap) {
+                jsonResponse(['error' => 'Você já registrou presença em outro evento neste horário: ' . $overlap['evento_titulo']], 409);
+            }
+        }
 
-    $id = generateUuid();
-    $ipAddress = $_SERVER['REMOTE_ADDR'] ?? null;
-    $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? null;
+        $id = generateUuid();
+        $ipAddress = $_SERVER['REMOTE_ADDR'] ?? null;
+        $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? null;
 
-    $sql = "
-        INSERT INTO presencas (id, evento_id, evento_titulo, sala_nome, nome_completo, email, ip_address, user_agent, fingerprint)
-        VALUES (:id, :evento_id, :evento_titulo, :sala_nome, :nome_completo, :email, :ip_address, :user_agent, :fingerprint)
-    ";
+        $sql = "
+            INSERT INTO presencas (id, evento_id, evento_titulo, sala_nome, nome_completo, email, ip_address, user_agent, fingerprint)
+            VALUES (:id, :evento_id, :evento_titulo, :sala_nome, :nome_completo, :email, :ip_address, :user_agent, :fingerprint)
+        ";
 
-    try {
         $stmt = $pdo->prepare($sql);
         $stmt->execute([
             'id' => $id,
@@ -264,6 +266,9 @@ function registerPresenca($pdo) {
             'user_agent' => $userAgent,
             'fingerprint' => $fingerprint,
         ]);
+
+        jsonResponse(['success' => true, 'message' => 'Presença registrada com sucesso'], 201);
+
     } catch (PDOException $e) {
         if (strpos($e->getCode(), '23505') !== false || strpos($e->getMessage(), 'unique') !== false || strpos($e->getMessage(), 'duplicate') !== false) {
             if (strpos($e->getMessage(), 'uq_presenca_email') !== false) {
@@ -274,10 +279,10 @@ function registerPresenca($pdo) {
             }
             jsonResponse(['error' => 'Presença já registrada'], 409);
         }
-        throw $e;
+        jsonResponse(['error' => 'Erro interno: ' . $e->getMessage()], 500);
+    } catch (\Throwable $e) {
+        jsonResponse(['error' => 'Erro interno: ' . $e->getMessage()], 500);
     }
-
-    jsonResponse(['success' => true, 'message' => 'Presença registrada com sucesso'], 201);
 }
 
 function getPresencasByEvento($eventoId, $pdo) {

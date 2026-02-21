@@ -86,13 +86,21 @@ export function Presenca({ onBack }: PresencaProps) {
                 }),
             });
 
-            const data = await res.json();
+            let data: Record<string, unknown>;
+            try {
+                data = await res.json();
+            } catch {
+                const text = await res.clone().text().catch(() => '');
+                console.error('Presença API response:', res.status, text);
+                setFormError('Erro no servidor. Tente novamente.');
+                return;
+            }
 
             if (!res.ok) {
                 if (res.status === 409) {
-                    setFormError(data.error || 'Presença já registrada');
+                    setFormError((data.error as string) || 'Presença já registrada');
                 } else {
-                    setFormError(data.error || 'Erro ao registrar presença');
+                    setFormError((data.error as string) || 'Erro ao registrar presença');
                 }
                 return;
             }
