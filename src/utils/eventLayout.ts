@@ -1,6 +1,11 @@
 /**
  * Computes side-by-side column layout for overlapping events,
- * similar to Google Calendar's overlap behavior.
+ * replicating Google Calendar's overlap behavior:
+ *
+ * 1. Events are grouped into clusters of transitively overlapping events.
+ * 2. Within each cluster, columns are assigned greedily (first-fit).
+ * 3. Each event expands rightward into empty neighboring columns.
+ * 4. Later columns slightly overlap earlier ones for the layered-card look.
  */
 
 interface LayoutEvent {
@@ -14,19 +19,14 @@ export interface EventLayout {
     column: number;
     /** Total columns in this overlap group */
     totalColumns: number;
+    /** How many consecutive columns this event spans (expands right) */
+    span: number;
 }
 
-/**
- * Given a list of events for a single day, returns a Map from event.id
- * to its column layout (column index + total columns in its group).
- *
- * Events that don't overlap get column=0, totalColumns=1 (full width).
- * Overlapping events are split into side-by-side columns.
- */
 export function computeEventLayout(events: LayoutEvent[]): Map<string, EventLayout> {
     if (events.length === 0) return new Map();
 
-    // Sort by start time, then longer events first (so they get placed in earlier columns)
+    // Sort by start time, then longer events first
     const sorted = [...events].sort((a, b) => {
         const diff = a.start.getTime() - b.start.getTime();
         if (diff !== 0) return diff;
@@ -85,7 +85,7 @@ export function computeEventLayout(events: LayoutEvent[]): Map<string, EventLayo
             return (b.end.getTime() - b.start.getTime()) - (a.end.getTime() - a.start.getTime());
         });
 
-        // Greedy column assignment: place each event in the first column where it fits
+        // Greedy column assignment
         const columns: LayoutEvent[][] = [];
 
         for (const event of cluster) {
@@ -96,21 +96,33 @@ export function computeEventLayout(events: LayoutEvent[]): Map<string, EventLayo
                 );
                 if (fits) {
                     columns[col].push(event);
-                    layoutMap.set(event.id, { column: col, totalColumns: 0 });
+                    layoutMap.set(event.id, { column: col, totalColumns: 0, span: 1 });
                     placed = true;
                     break;
                 }
             }
             if (!placed) {
                 columns.push([event]);
-                layoutMap.set(event.id, { column: columns.length - 1, totalColumns: 0 });
+                layoutMap.set(event.id, { column: columns.length - 1, totalColumns: 0, span: 1 });
             }
         }
 
         const totalCols = columns.length;
+
+        // Compute rightward expansion (span) for each event
         for (const event of cluster) {
             const layout = layoutMap.get(event.id)!;
             layout.totalColumns = totalCols;
+
+            let span = 1;
+            for (let nextCol = layout.column + 1; nextCol < totalCols; nextCol++) {
+                const blocked = columns[nextCol].some(
+                    e => event.start.getTime() < e.end.getTime() && event.end.getTime() > e.start.getTime()
+                );
+                if (blocked) break;
+                span++;
+            }
+            layout.span = span;
         }
     }
 
@@ -118,21 +130,35 @@ export function computeEventLayout(events: LayoutEvent[]): Map<string, EventLayo
 }
 
 /**
- * Returns inline style properties (left, width) for an event based on its layout.
- * Adds 1px gaps between columns for visual separation.
+ * Returns inline style properties for an event based on its layout.
+ * Replicates Google Calendar's visual style:
+ * - Events expand right to fill available columns
+ * - Columns > 0 overlap the previous column slightly (layered look)
+ * - Visual separation comes from the event's left border (CSS)
  */
+const OVERLAP_PX = 8;
+
 export function getEventColumnStyle(layout: EventLayout | undefined): { left: string; width: string } {
     if (!layout || layout.totalColumns <= 1) {
-        return { left: '2px', width: 'calc(100% - 4px)' };
+        return { left: '1px', width: 'calc(100% - 2px)' };
     }
 
-    const { column, totalColumns } = layout;
-    const pct = 100 / totalColumns;
-    const leftPct = column * pct;
-    const gap = 1; // px gap between events
+    const { column, totalColumns, span } = layout;
+    const colPct = 100 / totalColumns;
+    const leftPct = column * colPct;
+    const widthPct = span * colPct;
 
+    // Column 0: flush to left edge
+    if (column === 0) {
+        return {
+            left: '1px',
+            width: `calc(${widthPct}% - 2px)`,
+        };
+    }
+
+    // Columns > 0: shift left by OVERLAP_PX for the layered-card effect
     return {
-        left: `calc(${leftPct}% + ${gap}px)`,
-        width: `calc(${pct}% - ${gap * 2}px)`,
+        left: `calc(${leftPct}% - ${OVERLAP_PX}px)`,
+        width: `calc(${widthPct}% + ${OVERLAP_PX}px - 2px)`,
     };
 }
