@@ -53,9 +53,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     const u = parseUser(data);
                     setUser(u);
                     sessionStorage.setItem(SESSION_KEY, JSON.stringify(u));
+                } else {
+                    // Server session expired — clear local state
+                    setUser(null);
+                    sessionStorage.removeItem(SESSION_KEY);
                 }
             })
-            .catch(() => {});
+            .catch(() => {
+                setUser(null);
+                sessionStorage.removeItem(SESSION_KEY);
+            });
     }, []);
 
     // Load users list when logged in
