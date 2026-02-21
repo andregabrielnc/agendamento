@@ -233,6 +233,33 @@
     color: #34a853;
 }
 
+/* Finalize inline */
+
+.finalizeRow {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.finalizeInput {
+    flex: 1;
+    padding: 5px 8px;
+    border: 1px solid var(--primary);
+    border-radius: 4px;
+    font-size: 12px;
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    outline: none;
+    font-family: inherit;
+    min-width: 0;
+}
+
+.finalizeCount {
+    font-size: 10px;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
 /* Actions */
 
 .actions {

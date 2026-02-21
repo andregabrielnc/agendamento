@@ -63,6 +63,12 @@ function handleReports($method, $id, $pdo) {
                 $action = $input['action'] ?? '';
 
                 if ($action === 'finalizar') {
+                    $mensagem = trim($input['mensagem'] ?? '');
+                    if (!$mensagem) {
+                        $mensagem = 'Seu relato foi finalizado por um administrador.';
+                    }
+                    $mensagem = mb_substr($mensagem, 0, 120);
+
                     $stmt = $pdo->prepare("
                         UPDATE relatos
                         SET status = 'finalizado', finalizado_em = NOW(), finalizado_por = :fby
@@ -84,7 +90,7 @@ function handleReports($method, $id, $pdo) {
                             ':id' => $notifId,
                             ':uid' => $report['usuario_id'],
                             ':rid' => $id,
-                            ':msg' => 'Seu relato foi finalizado por um administrador.',
+                            ':msg' => $mensagem,
                         ]);
                     }
 

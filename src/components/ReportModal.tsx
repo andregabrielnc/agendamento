@@ -35,6 +35,8 @@ export function ReportModal({ isOpen, onClose, onNotificationsChange }: ReportMo
     const [salaId, setSalaId] = useState('');
     const [descricao, setDescricao] = useState('');
     const [submitting, setSubmitting] = useState(false);
+    const [finalizingId, setFinalizingId] = useState<string | null>(null);
+    const [finalizingMsg, setFinalizingMsg] = useState('');
 
     const fetchReports = useCallback(async () => {
         try {
@@ -94,16 +96,18 @@ export function ReportModal({ isOpen, onClose, onNotificationsChange }: ReportMo
         }
     };
 
-    const handleFinalize = async (id: string) => {
+    const handleFinalize = async (id: string, mensagem: string) => {
         try {
             const res = await fetch(`/api/router.php?route=reports/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'finalizar' }),
+                body: JSON.stringify({ action: 'finalizar', mensagem: mensagem.trim() }),
             });
             const data = await res.json();
             if (res.ok && !data.error) {
                 showToast('Relato finalizado', 'success');
+                setFinalizingId(null);
+                setFinalizingMsg('');
                 fetchReports();
                 onNotificationsChange?.();
             } else {
@@ -197,7 +201,40 @@ export function ReportModal({ isOpen, onClose, onNotificationsChange }: ReportMo
                                     </td>
                                     {isAdmin && <td className={styles.userCell}>{r.usuario_nome}</td>}
                                     <td>{r.sala_nome || '—'}</td>
-                                    <td className={styles.descCell} title={r.descricao}>{r.descricao}</td>
+                                    <td className={styles.descCell} title={r.descricao}>
+                                        {finalizingId === r.id ? (
+                                            <div className={styles.finalizeRow}>
+                                                <input
+                                                    type="text"
+                                                    className={styles.finalizeInput}
+                                                    value={finalizingMsg}
+                                                    onChange={e => setFinalizingMsg(e.target.value.slice(0, 120))}
+                                                    placeholder="Resposta ao usuário..."
+                                                    maxLength={120}
+                                                    autoFocus
+                                                    onKeyDown={e => {
+                                                        if (e.key === 'Enter') handleFinalize(r.id, finalizingMsg);
+                                                        if (e.key === 'Escape') { setFinalizingId(null); setFinalizingMsg(''); }
+                                                    }}
+                                                />
+                                                <span className={styles.finalizeCount}>{finalizingMsg.length}/120</span>
+                                                <button
+                                                    className={`${styles.actionBtn} ${styles.actionBtnFinalize}`}
+                                                    onClick={() => handleFinalize(r.id, finalizingMsg)}
+                                                    title="Confirmar"
+                                                >
+                                                    <CheckCircle size={18} />
+                                                </button>
+                                                <button
+                                                    className={styles.actionBtn}
+                                                    onClick={() => { setFinalizingId(null); setFinalizingMsg(''); }}
+                                                    title="Cancelar"
+                                                >
+                                                    <X size={18} />
+                                                </button>
+                                            </div>
+                                        ) : r.descricao}
+                                    </td>
                                     <td>
                                         <span className={`${styles.badge} ${r.status === 'finalizado' ? styles.badgeFinalizado : styles.badgeAberto}`}>
                                             {r.status === 'finalizado' ? 'Finalizado' : 'Aberto'}
@@ -205,10 +242,10 @@ export function ReportModal({ isOpen, onClose, onNotificationsChange }: ReportMo
                                     </td>
                                     <td>
                                         <div className={styles.actions}>
-                                            {isAdmin && r.status === 'aberto' && (
+                                            {isAdmin && r.status === 'aberto' && finalizingId !== r.id && (
                                                 <button
                                                     className={`${styles.actionBtn} ${styles.actionBtnFinalize}`}
-                                                    onClick={() => handleFinalize(r.id)}
+                                                    onClick={() => { setFinalizingId(r.id); setFinalizingMsg(''); }}
                                                     title="Finalizar relato"
                                                 >
                                                     <CheckCircle size={18} />
