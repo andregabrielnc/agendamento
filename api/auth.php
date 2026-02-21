@@ -28,6 +28,10 @@ function handleLogin($pdo) {
         jsonResponse(['error' => 'E-mail é obrigatório'], 400);
     }
 
+    if (empty($password)) {
+        jsonResponse(['error' => 'Senha é obrigatória'], 400);
+    }
+
     if (strpos($email, '@') === false) {
         $email .= '@ebserh.gov.br';
     }
@@ -37,38 +41,48 @@ function handleLogin($pdo) {
         jsonResponse(['error' => 'E-mail deve pertencer ao domínio @ebserh.gov.br'], 400);
     }
 
-    // Try AD authentication if available
+    // AD authentication is MANDATORY
     $adAuthFile = __DIR__ . '/../login/fetch_ad_user.php';
-    $adUser = null;
-    if (file_exists($adAuthFile) && !empty($password)) {
-        try {
-            require_once $adAuthFile;
-            $username = explode('@', $email)[0];
-            $adUser = validaLoginAD($username, $password);
-        } catch (\Throwable $e) {
-            // LDAP not available or AD unreachable, skip
-            $adUser = null;
-        }
+    if (!file_exists($adAuthFile)) {
+        error_log("AUTH: Arquivo de integração AD não encontrado");
+        jsonResponse(['error' => 'Serviço de autenticação indisponível'], 503);
     }
 
+    require_once $adAuthFile;
+    $username = explode('@', $email)[0];
+
+    try {
+        $adUser = validaLoginAD($username, $password);
+    } catch (\Throwable $e) {
+        error_log("AUTH: Erro ao conectar ao AD: " . $e->getMessage());
+        jsonResponse(['error' => 'Servidor de autenticação indisponível. Tente novamente mais tarde.'], 503);
+    }
+
+    if (!$adUser) {
+        jsonResponse(['error' => 'Usuário ou senha inválidos'], 401);
+    }
+
+    // AD validated — proceed with login
     // Look up user in administradores
     $stmt = $pdo->prepare('SELECT id, nome, email, perfil, avatar_url, criado_em FROM administradores WHERE LOWER(email) = :email');
     $stmt->execute([':email' => $email]);
     $dbUser = $stmt->fetch();
 
     if ($dbUser) {
+        // Update name/avatar from AD if changed
+        $adName = $adUser['name'] ?? $dbUser['nome'];
+        $adAvatar = $adUser['avatar'] ?? $dbUser['avatar_url'];
+        if ($adName !== $dbUser['nome'] || $adAvatar !== $dbUser['avatar_url']) {
+            $pdo->prepare('UPDATE administradores SET nome = :nome, avatar_url = :avatar WHERE id = :id')
+                ->execute([':nome' => $adName, ':avatar' => $adAvatar, ':id' => $dbUser['id']]);
+            $dbUser['nome'] = $adName;
+            $dbUser['avatar_url'] = $adAvatar;
+        }
         $user = mapDbUserToFrontend($dbUser);
     } else {
-        // Auto-create user on first login
-        $namePart = explode('@', $email)[0];
-        $namePart = str_replace('.', ' ', $namePart);
-        $capitalized = ucwords($namePart);
-
-        if ($adUser && !empty($adUser['name'])) {
-            $capitalized = $adUser['name'];
-        }
-
+        // Auto-create user on first AD-validated login
         $id = generateUuid();
+        $capitalized = !empty($adUser['name']) ? $adUser['name'] : ucwords(str_replace('.', ' ', $username));
         $avatarUrl = $adUser['avatar'] ?? null;
 
         $stmt = $pdo->prepare(

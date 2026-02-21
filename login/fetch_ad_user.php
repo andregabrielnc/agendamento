@@ -87,24 +87,7 @@ function validaLoginAD($usuario, $senha) {
         
     } catch (Exception $e) {
         error_log("LDAP: Erro na validação: " . $e->getMessage());
-        
-        // FALLBACK: Para desenvolvimento/testes locais
-        if (in_array($usuario, ['admin', 'teste', 'demo'])) {
-            return array(
-                'username' => $usuario,
-                'name' => 'Usuário ' . ucfirst($usuario),
-                'email' => $usuario . '@ebserh.gov.br',
-                'department' => 'TI - Desenvolvimento',
-                'phone' => '(62) 9999-9999',
-                'cargo' => $usuario === 'admin' ? 'Administrador' : 'Usuário',
-                'company' => 'EBSERH',
-                'description' => 'Usuário de teste',
-                'groups' => array(),
-                'avatar' => generateAvatarUrl('Usuário ' . ucfirst($usuario))
-            );
-        }
-        
-        return null;
+        throw $e;
     }
 }
 
