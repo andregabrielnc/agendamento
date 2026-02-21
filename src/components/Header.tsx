@@ -170,7 +170,7 @@ export function Header() {
                 </button>
                 <div className={styles.logo}>
                     <GraduationCap size={28} weight="duotone" />
-                    <span>Salas de Aula</span>
+                    <span>Espaços de Ensino</span>
                 </div>
             </div>
 
