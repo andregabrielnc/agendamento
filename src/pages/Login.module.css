@@ -369,3 +369,37 @@
         max-width: 100%;
     }
 }
+
+@media (max-width: 480px) {
+    .brandPanel {
+        padding: 24px 16px 20px;
+    }
+
+    .brandTitle {
+        font-size: 20px;
+    }
+
+    .brandIcon {
+        width: 56px;
+        height: 56px;
+        margin-bottom: 20px;
+    }
+
+    .formPanel {
+        padding: 24px 16px 32px;
+    }
+
+    .formTitle {
+        font-size: 22px;
+    }
+
+    .input {
+        padding: 10px 12px;
+        font-size: 14px;
+    }
+
+    .submitBtn {
+        padding: 12px 20px;
+        font-size: 14px;
+    }
+}
