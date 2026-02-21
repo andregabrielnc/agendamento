@@ -1,9 +1,13 @@
 import { useState } from 'react';
-import { Eye, EyeSlash, CircleNotch, GraduationCap, CalendarBlank } from '@phosphor-icons/react';
+import { Eye, EyeSlash, CircleNotch, GraduationCap, CalendarBlank, ListChecks } from '@phosphor-icons/react';
 import { useAuth } from '../context/AuthContext';
 import styles from './Login.module.css';
 
-export function Login() {
+interface LoginProps {
+    onPresenca?: () => void;
+}
+
+export function Login({ onPresenca }: LoginProps) {
     const { login } = useAuth();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -66,6 +70,16 @@ export function Login() {
                                 <span>Gerencie seus agendamentos facilmente</span>
                             </div>
                         </div>
+                        {onPresenca && (
+                            <button
+                                type="button"
+                                className={styles.presencaBtn}
+                                onClick={onPresenca}
+                            >
+                                <ListChecks size={20} weight="bold" />
+                                Registrar Presença
+                            </button>
+                        )}
                     </div>
                     <div className={styles.brandFooter}>
                         <span>EBSERH</span>

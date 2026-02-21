@@ -104,6 +104,31 @@ function generateUuid() {
     );
 }
 
+function ensurePresencaTables($pdo) {
+    static $done = false;
+    if ($done) return;
+    $done = true;
+
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS presencas (
+            id VARCHAR(36) PRIMARY KEY,
+            evento_id VARCHAR(36) NOT NULL,
+            evento_titulo VARCHAR(255),
+            sala_nome VARCHAR(255),
+            nome_completo VARCHAR(255) NOT NULL,
+            email VARCHAR(255) NOT NULL,
+            ip_address VARCHAR(45),
+            user_agent TEXT,
+            fingerprint VARCHAR(64),
+            criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            CONSTRAINT uq_presenca_email UNIQUE(evento_id, email),
+            CONSTRAINT uq_presenca_fingerprint UNIQUE(evento_id, fingerprint)
+        )
+    ");
+    $pdo->exec("CREATE INDEX IF NOT EXISTS idx_presencas_evento ON presencas(evento_id)");
+    $pdo->exec("CREATE INDEX IF NOT EXISTS idx_presencas_email ON presencas(email)");
+}
+
 function ensureReportTables($pdo) {
     static $done = false;
     if ($done) return;

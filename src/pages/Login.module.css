@@ -131,6 +131,32 @@
     flex-shrink: 0;
 }
 
+.presencaBtn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 32px;
+    padding: 10px 20px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+    color: #ffffff;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s;
+}
+
+.presencaBtn:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: translateY(-1px);
+}
+
+.presencaBtn:active {
+    transform: translateY(0);
+}
+
 .brandFooter {
     font-family: 'DM Sans', sans-serif;
     font-size: 11px;

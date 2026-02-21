@@ -1,0 +1,484 @@
+@import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@400;600;700&family=DM+Sans:wght@400;500;600&display=swap');
+
+.page {
+    width: 100vw;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: #f8f9fa;
+    position: relative;
+    overflow-x: hidden;
+}
+
+.bgPattern {
+    position: fixed;
+    inset: 0;
+    background-image:
+        radial-gradient(ellipse at 20% 50%, rgba(26, 115, 232, 0.12) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 20%, rgba(66, 133, 244, 0.06) 0%, transparent 50%),
+        radial-gradient(ellipse at 60% 80%, rgba(66, 133, 244, 0.08) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.container {
+    width: 100%;
+    max-width: 480px;
+    padding: 24px 16px 48px;
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* === Header === */
+
+.header {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 32px;
+}
+
+.headerIcon {
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #1557b0 0%, #1a73e8 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    margin-bottom: 16px;
+}
+
+.headerTitle {
+    font-family: 'Source Serif 4', Georgia, serif;
+    font-size: 24px;
+    font-weight: 700;
+    color: #1a73e8;
+    letter-spacing: -0.02em;
+    margin-bottom: 4px;
+    text-align: center;
+}
+
+.headerTime {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: #5f6368;
+    text-align: center;
+}
+
+/* === Step Dots === */
+
+.stepDots {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+}
+
+.dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #dadce0;
+    transition: background 0.2s;
+}
+
+.dotActive {
+    background: #1a73e8;
+}
+
+/* === Card === */
+
+.card {
+    width: 100%;
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow:
+        0 1px 3px rgba(0, 0, 0, 0.04),
+        0 8px 32px rgba(66, 133, 244, 0.08),
+        0 0 0 1px rgba(66, 133, 244, 0.06);
+    padding: 24px;
+}
+
+/* === Events List === */
+
+.eventsList {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.eventCard {
+    padding: 16px;
+    border: 2px solid #dadce0;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    font-family: 'DM Sans', sans-serif;
+}
+
+.eventCard:hover {
+    border-color: #4285f4;
+}
+
+.eventCardSelected {
+    border-color: #1a73e8;
+    background: rgba(26, 115, 232, 0.04);
+}
+
+.eventTitle {
+    font-size: 15px;
+    font-weight: 600;
+    color: #3c4043;
+    margin-bottom: 4px;
+}
+
+.eventMeta {
+    font-size: 13px;
+    color: #5f6368;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.eventRoom {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.eventTime {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.metaSeparator {
+    color: #dadce0;
+}
+
+/* === Empty State === */
+
+.emptyState {
+    text-align: center;
+    padding: 32px 16px;
+    font-family: 'DM Sans', sans-serif;
+}
+
+.emptyIcon {
+    color: #dadce0;
+    margin-bottom: 12px;
+}
+
+.emptyText {
+    font-size: 14px;
+    color: #5f6368;
+}
+
+/* === Event Summary (Step 2) === */
+
+.eventSummary {
+    background: rgba(26, 115, 232, 0.04);
+    border: 1px solid rgba(26, 115, 232, 0.15);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 24px;
+    font-family: 'DM Sans', sans-serif;
+}
+
+.eventSummaryTitle {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1a73e8;
+    margin-bottom: 2px;
+}
+
+.eventSummaryMeta {
+    font-size: 13px;
+    color: #5f6368;
+}
+
+/* === Form Fields === */
+
+.fieldGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 20px;
+}
+
+.label {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: #3c4043;
+    letter-spacing: 0.01em;
+}
+
+.input {
+    width: 100%;
+    border: 1.5px solid #dadce0;
+    border-radius: 10px;
+    background: #f8f9fa;
+    padding: 12px 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    color: #3c4043;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    box-sizing: border-box;
+}
+
+.input:focus {
+    border-color: #1a73e8;
+    box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.1);
+    background: #ffffff;
+}
+
+.input::placeholder {
+    color: #9aa0a6;
+}
+
+/* === Buttons === */
+
+.primaryBtn {
+    width: 100%;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    padding: 13px 24px;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #1557b0 0%, #1a73e8 100%);
+    color: #f8f9fa;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.primaryBtn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(66, 133, 244, 0.25);
+}
+
+.primaryBtn:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.primaryBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.backLink {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: #5f6368;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px 0;
+    margin-top: 16px;
+    transition: color 0.15s;
+}
+
+.backLink:hover {
+    color: #1a73e8;
+}
+
+.actions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* === Error Message === */
+
+.errorBox {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: #b91c1c;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    padding: 10px 14px;
+    line-height: 1.4;
+    margin-bottom: 16px;
+}
+
+/* === Spinner === */
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.spinner {
+    animation: spin 0.8s linear infinite;
+}
+
+/* === Success Screen (Step 3) === */
+
+.successContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 16px 0;
+}
+
+.successCheckWrapper {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    margin-bottom: 24px;
+}
+
+.successCircle {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: #0f9d58;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    animation: scaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes scaleIn {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes checkDraw {
+    0% {
+        opacity: 0;
+        transform: scale(0.5);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.successCheckIcon {
+    animation: checkDraw 0.3s 0.2s ease-out forwards;
+    opacity: 0;
+}
+
+.successTitle {
+    font-family: 'Source Serif 4', Georgia, serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: #0f9d58;
+    margin-bottom: 8px;
+}
+
+.successMessage {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: #5f6368;
+    margin-bottom: 24px;
+}
+
+.successDetails {
+    width: 100%;
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 24px;
+    font-family: 'DM Sans', sans-serif;
+    text-align: left;
+}
+
+.successDetailRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    font-size: 13px;
+}
+
+.successDetailLabel {
+    color: #5f6368;
+}
+
+.successDetailValue {
+    color: #3c4043;
+    font-weight: 500;
+}
+
+.closeBtn {
+    width: 100%;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    padding: 13px 24px;
+    border: 2px solid #dadce0;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #3c4043;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+}
+
+.closeBtn:hover {
+    border-color: #1a73e8;
+    background: rgba(26, 115, 232, 0.04);
+    color: #1a73e8;
+}
+
+/* === Responsive === */
+
+@media (max-width: 480px) {
+    .container {
+        padding: 16px 12px 32px;
+    }
+
+    .card {
+        padding: 20px 16px;
+        border-radius: 12px;
+    }
+
+    .headerTitle {
+        font-size: 20px;
+    }
+
+    .headerIcon {
+        width: 52px;
+        height: 52px;
+        border-radius: 12px;
+    }
+
+    .input {
+        padding: 10px 12px;
+        font-size: 14px;
+    }
+
+    .primaryBtn {
+        padding: 12px 20px;
+        font-size: 14px;
+    }
+}

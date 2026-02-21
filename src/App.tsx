@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import styles from './App.module.css'
 import { Header } from './components/Header'
 import { Sidebar } from './components/Sidebar'
@@ -9,6 +10,7 @@ import { EventModal } from './components/EventModal'
 import { EventPopover } from './components/EventPopover'
 import { KeyboardShortcuts } from './components/KeyboardShortcuts'
 import { Login } from './pages/Login'
+import { Presenca } from './pages/Presenca'
 
 function CalendarApp() {
   const { popoverState, closePopover, sidebarOpen, toggleSidebar } = useCalendar();
@@ -42,9 +44,13 @@ function CalendarApp() {
 
 function AppContent() {
   const { user } = useAuth();
+  const [currentPage, setCurrentPage] = useState<'login' | 'presenca'>('login');
 
   if (!user) {
-    return <Login />;
+    if (currentPage === 'presenca') {
+      return <Presenca onBack={() => setCurrentPage('login')} />;
+    }
+    return <Login onPresenca={() => setCurrentPage('presenca')} />;
   }
 
   return (
