@@ -99,20 +99,18 @@ function updateCalendar($id, $pdo) {
 function deleteCalendar($id, $pdo) {
     requireAdmin();
 
-    // Delete related frequencia rows for events in this sala
-    $pdo->prepare(
-        'DELETE FROM frequencia WHERE evento_id IN (SELECT id FROM eventos WHERE sala_id = :sala_id)'
-    )->execute([':sala_id' => $id]);
+    // Check if sala has any events
+    $stmt = $pdo->prepare('SELECT COUNT(*) FROM eventos WHERE sala_id = :id');
+    $stmt->execute([':id' => $id]);
+    $eventCount = (int)$stmt->fetchColumn();
 
-    // Delete related movimentos rows for events in this sala
-    $pdo->prepare(
-        'DELETE FROM movimentos WHERE evento_id IN (SELECT id FROM eventos WHERE sala_id = :sala_id)'
-    )->execute([':sala_id' => $id]);
+    if ($eventCount > 0) {
+        jsonResponse([
+            'error' => "Não é possível excluir esta sala pois possui $eventCount agendamento" . ($eventCount > 1 ? 's' : '') . " vinculado" . ($eventCount > 1 ? 's' : ''),
+        ], 409);
+    }
 
-    // Delete events in this sala
-    $pdo->prepare('DELETE FROM eventos WHERE sala_id = :id')->execute([':id' => $id]);
-
-    // Delete the sala
+    // No events — safe to delete
     $pdo->prepare('DELETE FROM salas WHERE id = :id')->execute([':id' => $id]);
 
     jsonResponse(['success' => true]);

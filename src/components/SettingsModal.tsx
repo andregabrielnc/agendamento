@@ -270,10 +270,14 @@ export function SettingsModal({ isOpen, onClose, initialCalendarId }: SettingsMo
         setActiveView('calendars');
     };
 
-    const handleDelete = () => {
+    const handleDelete = async () => {
         if (selectedCalendar && isAdmin) {
-            deleteCalendar(selectedCalendar.id);
-            setActiveView('calendars');
+            const result = await deleteCalendar(selectedCalendar.id);
+            if (result.success) {
+                setActiveView('calendars');
+            } else {
+                showToast(result.error || 'Erro ao excluir sala', 'error');
+            }
         }
     };
 
