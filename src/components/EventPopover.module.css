@@ -46,10 +46,15 @@
     transition: background 0.15s;
 }
 
-.iconBtn:hover,
+.iconBtn:hover:not(:disabled),
 .closeBtn:hover {
     background-color: var(--bg-hover);
     color: var(--text-primary);
+}
+
+.iconBtnDisabled {
+    opacity: 0.35;
+    cursor: not-allowed;
 }
 
 .dots {

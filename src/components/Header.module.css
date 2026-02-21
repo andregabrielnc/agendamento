@@ -444,9 +444,7 @@
         display: none;
     }
     .dateTitle {
-        font-size: 16px;
-        min-width: auto;
-        margin-left: 4px;
+        display: none;
     }
     .todayBtn {
         padding: 4px 10px;

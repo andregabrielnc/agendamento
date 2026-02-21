@@ -1,18 +1,17 @@
 import { useState, useEffect } from 'react';
-import { X, AlignLeft, CaretDown, Check, TextB, TextItalic, TextUnderline, ListNumbers, List, Link, TextStrikethrough, Lock, Phone, Trash } from '@phosphor-icons/react';
+import { X, AlignLeft, CaretDown, Check, TextB, TextItalic, TextUnderline, ListNumbers, List, Link, TextStrikethrough, Lock, Phone } from '@phosphor-icons/react';
 import { useCalendar } from '../context/CalendarContext';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import styles from './EventModal.module.css';
 import { format } from 'date-fns';
 import { RecurrenceModal } from './RecurrenceModal';
-import { ConfirmDialog } from './ConfirmDialog';
 import { RecurrenceActionDialog } from './RecurrenceActionDialog';
 import type { RecurrenceRule } from './RecurrenceModal';
 import type { RecurrenceEditMode } from '../types';
 
 export function EventModal() {
-    const { modalState, closeModal, addEvent, updateEvent, deleteEvent, calendars } = useCalendar();
+    const { modalState, closeModal, addEvent, updateEvent, calendars } = useCalendar();
     const { user, canEditEvent, users } = useAuth();
     const { showToast } = useToast();
     const { isOpen, type, event, selectedDate } = modalState;
@@ -36,12 +35,8 @@ export function EventModal() {
     const [showRecurrenceOptions, setShowRecurrenceOptions] = useState(false);
     const [isRecurrenceModalOpen, setIsRecurrenceModalOpen] = useState(false);
 
-    // UI State
-    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-
     // Recurrence action dialog state
     const [showRecurrenceDialog, setShowRecurrenceDialog] = useState(false);
-    const [recurrenceDialogAction, setRecurrenceDialogAction] = useState<'edit' | 'delete'>('edit');
     const [pendingEventData, setPendingEventData] = useState<any>(null);
 
     useEffect(() => {
@@ -83,7 +78,6 @@ export function EventModal() {
                     setCustomRule(null);
                 }
             }
-            setShowDeleteConfirm(false);
             setShowRecurrenceDialog(false);
             setPendingEventData(null);
         }
@@ -172,7 +166,6 @@ export function EventModal() {
         } else if (type === 'edit' && event) {
             if (isRecurringEvent) {
                 setPendingEventData(eventData);
-                setRecurrenceDialogAction('edit');
                 setShowRecurrenceDialog(true);
             } else {
                 updateEvent({ ...event, ...eventData });
@@ -182,24 +175,6 @@ export function EventModal() {
         }
     };
 
-    const handleDelete = () => {
-        if (isRecurringEvent) {
-            setRecurrenceDialogAction('delete');
-            setShowRecurrenceDialog(true);
-        } else {
-            setShowDeleteConfirm(true);
-        }
-    };
-
-    const confirmDelete = () => {
-        if (event) {
-            deleteEvent(event.id);
-            closeModal();
-            showToast('Evento excluído', 'info');
-        }
-        setShowDeleteConfirm(false);
-    };
-
     const handleRecurrenceDialogConfirm = (mode: RecurrenceEditMode) => {
         setShowRecurrenceDialog(false);
 
@@ -207,13 +182,9 @@ export function EventModal() {
             ? format(modalState.instanceDate, 'yyyy-MM-dd')
             : undefined;
 
-        if (recurrenceDialogAction === 'edit' && event && pendingEventData) {
+        if (event && pendingEventData) {
             updateEvent({ ...event, ...pendingEventData }, mode, instanceDate);
             showToast('Evento atualizado', 'success');
-            closeModal();
-        } else if (recurrenceDialogAction === 'delete' && event) {
-            deleteEvent(event.id, mode, instanceDate);
-            showToast('Evento excluído', 'info');
             closeModal();
         }
 
@@ -453,16 +424,6 @@ export function EventModal() {
                         </div>
                     </div>
                     <div className={styles.footerRight}>
-                        {isEditing && canEdit && (
-                            <button
-                                type="button"
-                                className={styles.deleteBtn}
-                                onClick={handleDelete}
-                            >
-                                <Trash size={16} />
-                                Excluir
-                            </button>
-                        )}
                         {canEdit && (
                             <button className={styles.saveBtn} onClick={() => handleSubmit()}>
                                 Salvar
@@ -482,19 +443,9 @@ export function EventModal() {
                 }}
             />
 
-            <ConfirmDialog
-                isOpen={showDeleteConfirm}
-                title="Excluir evento"
-                message={`Tem certeza que deseja excluir "${title || event?.title || 'este evento'}"?`}
-                confirmLabel="Excluir"
-                destructive
-                onConfirm={confirmDelete}
-                onCancel={() => setShowDeleteConfirm(false)}
-            />
-
             <RecurrenceActionDialog
                 isOpen={showRecurrenceDialog}
-                title={recurrenceDialogAction === 'delete' ? 'Excluir evento recorrente' : 'Editar evento recorrente'}
+                title="Editar evento recorrente"
                 onConfirm={handleRecurrenceDialogConfirm}
                 onCancel={() => { setShowRecurrenceDialog(false); setPendingEventData(null); }}
             />

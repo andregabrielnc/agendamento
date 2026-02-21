@@ -99,16 +99,22 @@ export function EventPopover({ event, anchorEl, onClose }: EventPopoverProps) {
                 >
                     <div className={styles.actionsHeader}>
                         <div className={styles.actionGroup}>
-                            {canEdit && (
-                                <>
-                                    <button onClick={handleEdit} className={styles.iconBtn} title="Editar evento">
-                                        <PencilSimple size={18} />
-                                    </button>
-                                    <button onClick={handleDelete} className={styles.iconBtn} title="Excluir evento">
-                                        <Trash size={18} />
-                                    </button>
-                                </>
-                            )}
+                            <button
+                                onClick={canEdit ? handleEdit : undefined}
+                                className={`${styles.iconBtn} ${!canEdit ? styles.iconBtnDisabled : ''}`}
+                                title={canEdit ? 'Editar evento' : 'Sem permissão para editar'}
+                                disabled={!canEdit}
+                            >
+                                <PencilSimple size={18} />
+                            </button>
+                            <button
+                                onClick={canEdit ? handleDelete : undefined}
+                                className={`${styles.iconBtn} ${!canEdit ? styles.iconBtnDisabled : ''}`}
+                                title={canEdit ? 'Excluir evento' : 'Sem permissão para excluir'}
+                                disabled={!canEdit}
+                            >
+                                <Trash size={18} />
+                            </button>
                         </div>
                         <button onClick={onClose} className={styles.closeBtn}>
                             <X size={18} />
