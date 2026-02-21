@@ -196,12 +196,12 @@ export function ReportModal({ isOpen, onClose, onNotificationsChange }: ReportMo
                         <tbody>
                             {reports.map(r => (
                                 <tr key={r.id}>
-                                    <td className={styles.dateCell}>
+                                    <td className={styles.dateCell} data-label="Data/Hora">
                                         {format(new Date(r.criado_em), "dd/MM/yyyy HH:mm", { locale: ptBR })}
                                     </td>
-                                    {isAdmin && <td className={styles.userCell}>{r.usuario_nome}</td>}
-                                    <td>{r.sala_nome || '—'}</td>
-                                    <td className={styles.descCell} title={r.descricao}>
+                                    {isAdmin && <td className={styles.userCell} data-label="Usuário">{r.usuario_nome}</td>}
+                                    <td data-label="Sala">{r.sala_nome || '—'}</td>
+                                    <td className={styles.descCell} title={r.descricao} data-label="Relato">
                                         {finalizingId === r.id ? (
                                             <div className={styles.finalizeRow}>
                                                 <input
@@ -235,7 +235,7 @@ export function ReportModal({ isOpen, onClose, onNotificationsChange }: ReportMo
                                             </div>
                                         ) : r.descricao}
                                     </td>
-                                    <td>
+                                    <td data-label="Status">
                                         <span className={`${styles.badge} ${r.status === 'finalizado' ? styles.badgeFinalizado : styles.badgeAberto}`}>
                                             {r.status === 'finalizado' ? 'Finalizado' : 'Aberto'}
                                         </span>

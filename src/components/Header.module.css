@@ -342,7 +342,7 @@
     position: absolute;
     top: calc(100% + 8px);
     right: 0;
-    width: 300px;
+    width: min(300px, calc(100vw - 24px));
     max-height: 360px;
     overflow-y: auto;
     background: var(--bg-surface);
@@ -459,6 +459,9 @@
     .avatarBtn {
         display: none;
     }
+    .notifDropdown {
+        right: -60px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -468,5 +471,9 @@
     .viewSwitcher {
         padding: 4px 8px;
         font-size: 13px;
+    }
+    .notifDropdown {
+        right: -100px;
+        width: calc(100vw - 16px);
     }
 }

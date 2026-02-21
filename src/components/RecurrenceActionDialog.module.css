@@ -141,3 +141,11 @@
         opacity: 1;
     }
 }
+
+/* ===== Responsive ===== */
+
+@media (max-width: 480px) {
+    .dialog {
+        width: calc(100vw - 32px);
+    }
+}

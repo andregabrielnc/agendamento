@@ -196,3 +196,17 @@
         padding-right: 4px;
     }
 }
+
+@media (max-width: 480px) {
+    .timeGutter {
+        width: 32px;
+    }
+
+    .timeGutterHeader {
+        width: 32px;
+    }
+
+    .timeLabel {
+        font-size: 9px;
+    }
+}

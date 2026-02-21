@@ -152,3 +152,19 @@
         opacity: 1;
     }
 }
+
+/* ===== Responsive ===== */
+
+@media (max-width: 480px) {
+    .dialog {
+        width: calc(100vw - 32px);
+    }
+
+    .actions {
+        flex-direction: column;
+    }
+
+    .actions button {
+        width: 100%;
+    }
+}

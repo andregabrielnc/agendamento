@@ -166,3 +166,19 @@
         opacity: 0;
     }
 }
+
+/* ===== Responsive ===== */
+
+@media (max-width: 480px) {
+    .container {
+        padding: 12px;
+        left: 0;
+        right: 0;
+        align-items: stretch;
+    }
+
+    .toast {
+        min-width: 0;
+        max-width: 100%;
+    }
+}

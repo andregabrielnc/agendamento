@@ -181,3 +181,16 @@
         opacity: 1;
     }
 }
+
+/* ===== Responsive ===== */
+
+@media (max-width: 600px) {
+    .modal {
+        width: calc(100vw - 32px);
+        max-height: 85vh;
+    }
+
+    .body {
+        padding: 16px;
+    }
+}

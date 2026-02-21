@@ -199,3 +199,21 @@
 .saveBtn:hover {
     background-color: #1557b0;
 }
+
+/* ===== Responsive ===== */
+
+@media (max-width: 480px) {
+    .modal {
+        width: 95vw;
+    }
+
+    .weekDays {
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .dayBtn {
+        width: 40px;
+        height: 40px;
+    }
+}

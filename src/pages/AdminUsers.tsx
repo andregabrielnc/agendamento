@@ -146,7 +146,7 @@ export function AdminUsers({ isOpen, onClose }: AdminUsersProps) {
                         <tbody>
                             {filteredUsers.map(u => (
                                 <tr key={u.id} className={u.id === currentUser?.id ? styles.currentRow : ''}>
-                                    <td>
+                                    <td data-label="Usuário">
                                         <div className={styles.userCell}>
                                             <div className={`${styles.avatar} ${u.role === 'admin' ? styles.avatarAdmin : ''}`}>
                                                 {u.name.charAt(0).toUpperCase()}
@@ -154,8 +154,8 @@ export function AdminUsers({ isOpen, onClose }: AdminUsersProps) {
                                             <span className={styles.userName}>{u.name}</span>
                                         </div>
                                     </td>
-                                    <td className={styles.emailCell}>{u.email}</td>
-                                    <td>
+                                    <td className={styles.emailCell} data-label="E-mail">{u.email}</td>
+                                    <td data-label="Perfil">
                                         <span className={`${styles.badge} ${u.role === 'admin' ? styles.badgeAdmin : styles.badgeUser}`}>
                                             {u.role === 'admin' ? (
                                                 <><ShieldCheck size={14} /> Admin</>
@@ -164,7 +164,7 @@ export function AdminUsers({ isOpen, onClose }: AdminUsersProps) {
                                             )}
                                         </span>
                                     </td>
-                                    <td className={styles.dateCell}>
+                                    <td className={styles.dateCell} data-label="Cadastro">
                                         {format(u.createdAt, "dd/MM/yyyy", { locale: ptBR })}
                                     </td>
                                     <td>
