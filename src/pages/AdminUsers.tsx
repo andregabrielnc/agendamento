@@ -25,10 +25,10 @@ export function AdminUsers({ isOpen, onClose }: AdminUsersProps) {
         return u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
     });
 
-    const handleToggleRole = (u: typeof users[0]) => {
+    const handleToggleRole = async (u: typeof users[0]) => {
         if (u.id === currentUser?.id) return;
         const newRole = u.role === 'admin' ? 'user' : 'admin';
-        const result = updateUser({ ...u, role: newRole });
+        const result = await updateUser({ ...u, role: newRole });
         if (result.success) {
             showToast(
                 newRole === 'admin'
