@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, ShieldCheck, UserCircle, MagnifyingGlass, Plus } from '@phosphor-icons/react';
+import { X, ShieldCheck, UserCircle, MagnifyingGlass, Plus, FloppyDisk, XCircle } from '@phosphor-icons/react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { format } from 'date-fns';
@@ -63,6 +63,13 @@ export function AdminUsers({ isOpen, onClose }: AdminUsersProps) {
         }
     };
 
+    const handleCancelAdd = () => {
+        setNewName('');
+        setNewEmail('');
+        setNewRole('admin');
+        setShowAddForm(false);
+    };
+
     return (
         <div className={styles.overlay} onClick={onClose}>
             <div className={styles.modal} onClick={e => e.stopPropagation()}>
@@ -88,46 +95,62 @@ export function AdminUsers({ isOpen, onClose }: AdminUsersProps) {
                         <button
                             className={styles.addBtn}
                             onClick={() => setShowAddForm(!showAddForm)}
+                            title="Cadastrar usuário"
                         >
-                            <Plus size={16} />
-                            Cadastrar
+                            <Plus size={18} />
                         </button>
                     )}
                 </div>
 
                 {showAddForm && (
                     <div className={styles.addForm}>
-                        <div className={styles.addFormField}>
-                            <label>Nome</label>
-                            <input
-                                type="text"
-                                placeholder="Nome completo"
-                                value={newName}
-                                onChange={e => setNewName(e.target.value)}
-                            />
-                        </div>
-                        <div className={styles.addFormField}>
-                            <label>E-mail</label>
-                            <div className={styles.emailInputGroup}>
+                        <div className={styles.addFormRow}>
+                            <div className={styles.addFormField}>
+                                <label>Nome</label>
                                 <input
                                     type="text"
-                                    placeholder="usuario"
-                                    value={newEmail}
-                                    onChange={e => setNewEmail(e.target.value)}
+                                    placeholder="Nome completo"
+                                    value={newName}
+                                    onChange={e => setNewName(e.target.value)}
                                 />
-                                <span className={styles.emailSuffix}>@ebserh.gov.br</span>
+                            </div>
+                            <div className={styles.addFormField}>
+                                <label>E-mail</label>
+                                <div className={styles.emailInputGroup}>
+                                    <input
+                                        type="text"
+                                        placeholder="usuario"
+                                        value={newEmail}
+                                        onChange={e => setNewEmail(e.target.value)}
+                                    />
+                                    <span className={styles.emailSuffix}>@ebserh.gov.br</span>
+                                </div>
                             </div>
                         </div>
-                        <div className={styles.addFormField}>
-                            <label>Perfil</label>
-                            <select value={newRole} onChange={e => setNewRole(e.target.value as 'admin' | 'user')}>
-                                <option value="admin">Administrador</option>
-                                <option value="user">Usuário</option>
-                            </select>
-                        </div>
-                        <div className={styles.addFormActions}>
-                            <button className={styles.addFormCancel} onClick={() => setShowAddForm(false)}>Cancelar</button>
-                            <button className={styles.addFormSave} onClick={handleCreateUser}>Salvar</button>
+                        <div className={styles.addFormRow}>
+                            <div className={styles.addFormField}>
+                                <label>Perfil</label>
+                                <select value={newRole} onChange={e => setNewRole(e.target.value as 'admin' | 'user')}>
+                                    <option value="admin">Administrador</option>
+                                    <option value="user">Usuário</option>
+                                </select>
+                            </div>
+                            <div className={styles.addFormActions}>
+                                <button
+                                    className={styles.addFormIconBtn}
+                                    onClick={handleCancelAdd}
+                                    title="Cancelar"
+                                >
+                                    <XCircle size={20} />
+                                </button>
+                                <button
+                                    className={`${styles.addFormIconBtn} ${styles.addFormIconSave}`}
+                                    onClick={handleCreateUser}
+                                    title="Salvar"
+                                >
+                                    <FloppyDisk size={20} />
+                                </button>
+                            </div>
                         </div>
                     </div>
                 )}
