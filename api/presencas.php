@@ -1,5 +1,8 @@
 <?php
 
+// Match PHP timezone to database timezone (BRT)
+date_default_timezone_set('America/Sao_Paulo');
+
 function handlePresencas($method, $id, $pdo) {
     ensurePresencaTables($pdo);
 
