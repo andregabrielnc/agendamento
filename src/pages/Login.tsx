@@ -48,7 +48,7 @@ export function Login() {
                         <div className={styles.brandIcon}>
                             <GraduationCap size={48} weight="duotone" />
                         </div>
-                        <h1 className={styles.brandTitle}>Agendamento de Salas</h1>
+                        <h1 className={styles.brandTitle}>E-Saúde Agendamentos</h1>
                         <p className={styles.brandSubtitle}>
                             Aplicativo de agendamento de espaços de Ensino
                         </p>
@@ -80,7 +80,7 @@ export function Login() {
                         <div className={styles.formHeader}>
                             <h2 className={styles.formTitle}>Entrar</h2>
                             <p className={styles.formDescription}>
-                                Use suas credenciais do Active Directory
+                                Use suas credenciais
                             </p>
                         </div>
 
