@@ -22,11 +22,8 @@ COPY login/ /usr/share/nginx/html/login/
 
 # DB credentials come from environment variables (set in Coolify)
 
-# Copy nginx config
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-# Remove default nginx config if it exists
-RUN rm -f /etc/nginx/http.d/default.conf
+# Copy nginx config (Alpine nginx includes from /etc/nginx/http.d/)
+COPY nginx.conf /etc/nginx/http.d/default.conf
 
 # Copy startup script
 COPY start.sh /start.sh
