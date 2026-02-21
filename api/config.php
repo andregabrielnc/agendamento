@@ -28,7 +28,7 @@ $dbHost = getEnvVar('DB_HOST', '10.50.0.3');
 $dbPort = getEnvVar('DB_PORT', '5432');
 $dbName = getEnvVar('DB_NAME', 'agendamento');
 $dbUser = getEnvVar('DB_USERNAME', 'agendamento');
-$dbPass = getEnvVar('DB_PASSWORD', '');
+$dbPass = getEnvVar('DB_PASSWORD', "u_#^4a-7'|7Cc\\&tKs");
 
 try {
     $pdo = new PDO(
