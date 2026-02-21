@@ -70,16 +70,6 @@ export function Login({ onPresenca }: LoginProps) {
                                 <span>Gerencie seus agendamentos facilmente</span>
                             </div>
                         </div>
-                        {onPresenca && (
-                            <button
-                                type="button"
-                                className={styles.presencaBtn}
-                                onClick={onPresenca}
-                            >
-                                <ListChecks size={20} weight="bold" />
-                                Registrar Presença
-                            </button>
-                        )}
                     </div>
                     <div className={styles.brandFooter}>
                         <span>EBSERH</span>
@@ -167,6 +157,25 @@ export function Login({ onPresenca }: LoginProps) {
                                 Recuperar minha senha
                             </a>
                         </p>
+
+                        {onPresenca && (
+                            <div className={styles.presencaDivider}>
+                                <span className={styles.presencaDividerLine} />
+                                <span className={styles.presencaDividerText}>ou</span>
+                                <span className={styles.presencaDividerLine} />
+                            </div>
+                        )}
+
+                        {onPresenca && (
+                            <button
+                                type="button"
+                                className={styles.presencaBtn}
+                                onClick={onPresenca}
+                            >
+                                <ListChecks size={20} weight="bold" />
+                                Registrar Presença em Sala
+                            </button>
+                        )}
 
                         <div className={styles.copyright}>
                             <span>Andre Gabriel N. Carvalho — UES/GEP</span>

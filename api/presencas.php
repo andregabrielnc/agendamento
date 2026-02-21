@@ -215,6 +215,33 @@ function registerPresenca($pdo) {
         jsonResponse(['error' => 'Evento não está ativo no momento'], 400);
     }
 
+    // Check if this email or device already registered for another event at the same time
+    $eventStart = $activeEvent['data_inicio'];
+    $eventEnd = $activeEvent['data_fim'];
+
+    $sqlOverlap = "
+        SELECT p.evento_titulo
+        FROM presencas p
+        INNER JOIN eventos e ON e.id = p.evento_id
+        WHERE p.evento_id != :eventoId
+          AND (p.email = :email OR p.fingerprint = :fingerprint)
+          AND e.data_inicio < :event_end
+          AND e.data_fim > :event_start
+        LIMIT 1
+    ";
+    $stmtOverlap = $pdo->prepare($sqlOverlap);
+    $stmtOverlap->execute([
+        'eventoId' => $eventoId,
+        'email' => $email,
+        'fingerprint' => $fingerprint,
+        'event_end' => $eventEnd,
+        'event_start' => $eventStart,
+    ]);
+    $overlap = $stmtOverlap->fetch();
+    if ($overlap) {
+        jsonResponse(['error' => 'Você já registrou presença em outro evento neste horário: ' . $overlap['evento_titulo']], 409);
+    }
+
     $id = generateUuid();
     $ipAddress = $_SERVER['REMOTE_ADDR'] ?? null;
     $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? null;
