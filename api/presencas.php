@@ -113,9 +113,8 @@ function getActiveEvents($pdo) {
 
     $activeEvents = [];
 
-    // Add non-recurring events (filter dia_inteiro in PHP for type safety)
+    // Add non-recurring events (time window already filtered in SQL)
     foreach ($nonRecurring as $event) {
-        if (isDiaInteiro($event['dia_inteiro'])) continue;
         $activeEvents[] = [
             'id' => $event['id'],
             'title' => $event['titulo'],
@@ -127,7 +126,6 @@ function getActiveEvents($pdo) {
 
     // Check recurring events
     foreach ($recurringEvents as $event) {
-        if (isDiaInteiro($event['dia_inteiro'])) continue;
         if (isRecurringEventActiveNow($event, $now)) {
             // Recompute start/end to today's date with original time-of-day
             $origStart = new DateTime($event['data_inicio']);
@@ -193,11 +191,6 @@ function registerPresenca($pdo) {
     $stmt->execute(['eventoId' => $eventoId]);
     $activeEvent = $stmt->fetch();
 
-    // Filter dia_inteiro in PHP
-    if ($activeEvent && isDiaInteiro($activeEvent['dia_inteiro'])) {
-        $activeEvent = false;
-    }
-
     // If not found as non-recurring, check recurring
     if (!$activeEvent) {
         $sqlRecCheck = "
@@ -213,7 +206,7 @@ function registerPresenca($pdo) {
         $stmt->execute(['eventoId' => $eventoId]);
         $recEvent = $stmt->fetch();
 
-        if ($recEvent && !isDiaInteiro($recEvent['dia_inteiro']) && isRecurringEventActiveNow($recEvent, $now)) {
+        if ($recEvent && isRecurringEventActiveNow($recEvent, $now)) {
             $activeEvent = $recEvent;
         }
     }
@@ -278,9 +271,11 @@ function getPresencasByEvento($eventoId, $pdo) {
 // Temporary debug endpoint: GET /api/router.php?route=presencas/debug
 function debugActiveEvents($pdo) {
     $now = new DateTime();
+    $todayStr = $now->format('Y-m-d');
     $debug = [
         'server_time' => $now->format('Y-m-d H:i:s'),
         'server_timezone' => $now->getTimezone()->getName(),
+        'today' => $todayStr,
         'day_of_week' => (int)$now->format('w'),
         'day_name' => $now->format('l'),
     ];
@@ -292,9 +287,9 @@ function debugActiveEvents($pdo) {
         $debug['db_time_error'] = $e->getMessage();
     }
 
-    // All non-all-day events (recent)
+    // 1. Events for TODAY specifically
     try {
-        $stmt = $pdo->query("
+        $stmt = $pdo->prepare("
             SELECT e.id, e.titulo, e.data_inicio, e.data_fim, e.dia_inteiro, s.nome AS sala_nome,
                    CASE WHEN f.evento_id IS NOT NULL THEN 'recorrente' ELSE 'unico' END AS tipo_evento,
                    f.tipo AS freq_tipo, f.intervalo AS freq_intervalo, f.dias_semana AS freq_dias_semana,
@@ -302,50 +297,84 @@ function debugActiveEvents($pdo) {
             FROM eventos e
             LEFT JOIN salas s ON s.id = e.sala_id
             LEFT JOIN frequencia f ON f.evento_id = e.id
-            ORDER BY e.data_inicio DESC
-            LIMIT 30
+            WHERE e.data_inicio::date = :today
+            ORDER BY e.data_inicio
         ");
-        $events = $stmt->fetchAll();
-        $debug['total_events'] = count($events);
-        $debug['events'] = [];
-
-        foreach ($events as $event) {
-            $entry = [
+        $stmt->execute(['today' => $todayStr]);
+        $todayEvents = $stmt->fetchAll();
+        $debug['today_events_count'] = count($todayEvents);
+        $debug['today_events'] = [];
+        foreach ($todayEvents as $event) {
+            $debug['today_events'][] = [
                 'id' => $event['id'],
                 'titulo' => $event['titulo'],
                 'sala' => $event['sala_nome'],
                 'data_inicio' => $event['data_inicio'],
                 'data_fim' => $event['data_fim'],
                 'dia_inteiro_raw' => $event['dia_inteiro'],
-                'dia_inteiro_type' => gettype($event['dia_inteiro']),
                 'is_dia_inteiro' => isDiaInteiro($event['dia_inteiro']),
                 'tipo_evento' => $event['tipo_evento'],
             ];
-
-            if ($event['tipo_evento'] === 'recorrente') {
-                $entry['freq_tipo'] = $event['freq_tipo'];
-                $entry['freq_intervalo'] = $event['freq_intervalo'];
-                $entry['freq_dias_semana'] = $event['freq_dias_semana'];
-                $entry['freq_data_fim'] = $event['freq_data_fim'];
-                $entry['tipo_fim'] = $event['tipo_fim'];
-                $entry['excecoes'] = $event['excecoes'];
-
-                if (!isDiaInteiro($event['dia_inteiro'])) {
-                    $entry['is_active_now'] = isRecurringEventActiveNow($event, $now);
-                }
-            } else {
-                // Check if non-recurring would match
-                $start = new DateTime($event['data_inicio']);
-                $end = new DateTime($event['data_fim']);
-                $nowPlus15 = (clone $now)->modify('+15 minutes');
-                $nowMinus15 = (clone $now)->modify('-15 minutes');
-                $entry['in_time_window'] = ($start <= $nowPlus15 && $end >= $nowMinus15);
-            }
-
-            $debug['events'][] = $entry;
         }
     } catch (PDOException $e) {
-        $debug['events_error'] = $e->getMessage();
+        $debug['today_events_error'] = $e->getMessage();
+    }
+
+    // 2. Search for "Comemora" event
+    try {
+        $stmt = $pdo->query("
+            SELECT e.id, e.titulo, e.data_inicio, e.data_fim, e.dia_inteiro, s.nome AS sala_nome,
+                   CASE WHEN f.evento_id IS NOT NULL THEN 'recorrente' ELSE 'unico' END AS tipo_evento
+            FROM eventos e
+            LEFT JOIN salas s ON s.id = e.sala_id
+            LEFT JOIN frequencia f ON f.evento_id = e.id
+            WHERE e.titulo ILIKE '%comemora%' OR e.titulo ILIKE '%infanticidio%' OR e.titulo ILIKE '%20 anos%'
+        ");
+        $debug['search_comemoracao'] = $stmt->fetchAll();
+    } catch (PDOException $e) {
+        $debug['search_error'] = $e->getMessage();
+    }
+
+    // 3. All recurring events
+    try {
+        $stmt = $pdo->query("
+            SELECT e.id, e.titulo, e.data_inicio, e.data_fim, e.dia_inteiro, s.nome AS sala_nome,
+                   f.tipo, f.intervalo, f.dias_semana, f.data_fim AS freq_data_fim, f.tipo_fim, f.excecoes
+            FROM eventos e
+            LEFT JOIN salas s ON s.id = e.sala_id
+            INNER JOIN frequencia f ON f.evento_id = e.id
+        ");
+        $recEvents = $stmt->fetchAll();
+        $debug['recurring_events_count'] = count($recEvents);
+        $debug['recurring_events'] = [];
+        foreach ($recEvents as $event) {
+            $entry = [
+                'id' => $event['id'],
+                'titulo' => $event['titulo'],
+                'sala' => $event['sala_nome'],
+                'data_inicio' => $event['data_inicio'],
+                'data_fim' => $event['data_fim'],
+                'dia_inteiro' => $event['dia_inteiro'],
+                'freq_tipo' => $event['tipo'],
+                'freq_intervalo' => $event['intervalo'],
+                'freq_dias_semana' => $event['dias_semana'],
+                'freq_data_fim' => $event['freq_data_fim'],
+            ];
+            if (!isDiaInteiro($event['dia_inteiro'])) {
+                $entry['is_active_now'] = isRecurringEventActiveNow($event, $now);
+            }
+            $debug['recurring_events'][] = $entry;
+        }
+    } catch (PDOException $e) {
+        $debug['recurring_error'] = $e->getMessage();
+    }
+
+    // 4. Total event count
+    try {
+        $total = $pdo->query("SELECT COUNT(*) FROM eventos")->fetchColumn();
+        $debug['total_events_in_db'] = (int)$total;
+    } catch (PDOException $e) {
+        $debug['count_error'] = $e->getMessage();
     }
 
     jsonResponse($debug);
