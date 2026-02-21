@@ -20,7 +20,7 @@ export function EventPopover({ event, anchorEl, onClose }: EventPopoverProps) {
     const { deleteEvent, openEditModal, events } = useCalendar();
     const { canEditEvent } = useAuth();
     const { showToast } = useToast();
-    const canEdit = canEditEvent(event.createdBy);
+    const canEdit = canEditEvent(event.createdBy, event.start);
     const popoverRef = useRef<HTMLDivElement>(null);
     const [style, setStyle] = useState<React.CSSProperties>({});
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);

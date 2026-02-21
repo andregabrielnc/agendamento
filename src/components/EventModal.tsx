@@ -17,7 +17,7 @@ export function EventModal() {
     const { isOpen, type, event, selectedDate } = modalState;
 
     const isEditing = type === 'edit';
-    const canEdit = !isEditing || canEditEvent(event?.createdBy);
+    const canEdit = !isEditing || canEditEvent(event?.createdBy, event?.start);
 
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');

@@ -46,6 +46,15 @@ function createEvent($pdo) {
     $user = requireAuth();
     $input = getJsonInput();
 
+    // Non-admin cannot create events in the past
+    if ($user['role'] !== 'admin') {
+        $startDate = substr($input['start'] ?? '', 0, 10);
+        $today = date('Y-m-d');
+        if ($startDate && $startDate < $today) {
+            jsonResponse(['error' => 'Não é possível criar eventos em datas passadas'], 403);
+        }
+    }
+
     $id = generateUuid();
 
     $stmt = $pdo->prepare('
@@ -78,6 +87,22 @@ function updateEvent($id, $pdo) {
 
     $mode = $input['_recurrenceMode'] ?? 'all';
     $instanceDate = $input['_instanceDate'] ?? null;
+
+    // Non-admin: block editing past events (check by instance or original date)
+    if ($mode === 'single' || $mode === 'thisAndFollowing') {
+        checkPastEventRestriction($pdo, $id, $user, $instanceDate);
+    } else {
+        checkPastEventRestriction($pdo, $id, $user);
+    }
+
+    // Non-admin: block setting start date to the past
+    if ($user['role'] !== 'admin') {
+        $newStart = substr($input['start'] ?? '', 0, 10);
+        $today = date('Y-m-d');
+        if ($newStart && $newStart < $today) {
+            jsonResponse(['error' => 'Não é possível mover eventos para datas passadas'], 403);
+        }
+    }
 
     if ($mode === 'single' && $instanceDate) {
         // Add exception to the original event's recurrence
@@ -191,6 +216,13 @@ function deleteEvent($id, $pdo) {
 
     $mode = $input['_recurrenceMode'] ?? 'all';
     $instanceDate = $input['_instanceDate'] ?? null;
+
+    // Non-admin: block deleting past events
+    if ($mode === 'single' || $mode === 'thisAndFollowing') {
+        checkPastEventRestriction($pdo, $id, $user, $instanceDate);
+    } else {
+        checkPastEventRestriction($pdo, $id, $user);
+    }
 
     if ($mode === 'single' && $instanceDate) {
         // Just add an exception date — the instance disappears
@@ -371,6 +403,26 @@ function mapDbEventToFrontend($row) {
     }
 
     return $event;
+}
+
+function checkPastEventRestriction($pdo, $eventId, $user, $instanceDate = null) {
+    if ($user['role'] === 'admin') return;
+
+    $today = date('Y-m-d');
+
+    if ($instanceDate) {
+        $dateToCheck = substr($instanceDate, 0, 10);
+    } else {
+        $stmt = $pdo->prepare('SELECT data_inicio FROM eventos WHERE id = :id');
+        $stmt->execute([':id' => $eventId]);
+        $row = $stmt->fetch();
+        if (!$row) return;
+        $dateToCheck = substr($row['data_inicio'], 0, 10);
+    }
+
+    if ($dateToCheck < $today) {
+        jsonResponse(['error' => 'Não é possível modificar ou excluir eventos de dias anteriores'], 403);
+    }
 }
 
 function logMovimento($pdo, $eventId, $acao, $user) {

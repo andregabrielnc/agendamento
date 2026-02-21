@@ -10,7 +10,7 @@ interface AuthContextType {
     logout: () => void;
     updateUser: (user: User) => Promise<{ success: boolean; error?: string }>;
     createUser: (data: { name: string; email: string; role: string }) => Promise<{ success: boolean; error?: string }>;
-    canEditEvent: (eventCreatedBy?: string) => boolean;
+    canEditEvent: (eventCreatedBy?: string, eventStart?: Date) => boolean;
     canManageCalendars: () => boolean;
 }
 
@@ -171,10 +171,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const isAdmin = user?.role === 'admin';
 
-    const canEditEvent = useCallback((eventCreatedBy?: string) => {
+    const canEditEvent = useCallback((eventCreatedBy?: string, eventStart?: Date) => {
         if (!user) return false;
         if (user.role === 'admin') return true;
-        return eventCreatedBy === user.id;
+        if (eventCreatedBy !== user.id) return false;
+        // Block editing events from past days (today is still allowed)
+        if (eventStart) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const startDate = new Date(eventStart);
+            startDate.setHours(0, 0, 0, 0);
+            if (startDate < today) return false;
+        }
+        return true;
     }, [user]);
 
     const canManageCalendars = useCallback(() => {
