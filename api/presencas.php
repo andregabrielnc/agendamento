@@ -178,7 +178,7 @@ function registerPresenca($pdo) {
 
     // Check non-recurring
     $sqlCheck = "
-        SELECT e.id, e.titulo, e.dia_inteiro, s.nome AS sala_nome
+        SELECT e.id, e.titulo, e.data_inicio, e.data_fim, e.dia_inteiro, s.nome AS sala_nome
         FROM eventos e
         LEFT JOIN salas s ON s.id = e.sala_id
         LEFT JOIN frequencia f ON f.evento_id = e.id
