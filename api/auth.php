@@ -130,13 +130,4 @@ function handleLogout() {
     jsonResponse(['success' => true]);
 }
 
-function mapDbUserToFrontend($row) {
-    return [
-        'id' => $row['id'],
-        'name' => $row['nome'],
-        'email' => $row['email'],
-        'role' => $row['perfil'] ?? 'user',
-        'avatarUrl' => $row['avatar_url'] ?? null,
-        'createdAt' => $row['criado_em'] ?? date('c'),
-    ];
-}
+// mapDbUserToFrontend is in config.php (shared)

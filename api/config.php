@@ -82,6 +82,17 @@ function requireAdmin() {
     return $user;
 }
 
+function mapDbUserToFrontend($row) {
+    return [
+        'id' => $row['id'],
+        'name' => $row['nome'],
+        'email' => $row['email'],
+        'role' => $row['perfil'] ?? 'user',
+        'avatarUrl' => $row['avatar_url'] ?? null,
+        'createdAt' => $row['criado_em'] ?? date('c'),
+    ];
+}
+
 function generateUuid() {
     return sprintf(
         '%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
