@@ -21,8 +21,8 @@ COPY api/ /usr/share/nginx/html/api/
 COPY login/ /usr/share/nginx/html/login/
 
 # DB credentials come from environment variables (set in Coolify)
-# PHP-FPM clears env vars by default; disable that so getenv() works
-RUN sed -i 's/;clear_env = no/clear_env = no/' /usr/local/etc/php-fpm.d/www.conf
+# PHP-FPM clears env vars by default; override with a dedicated conf file
+RUN printf '[www]\nclear_env = no\n' > /usr/local/etc/php-fpm.d/zz-clear-env.conf
 
 # Copy nginx config (Alpine nginx includes from /etc/nginx/http.d/)
 COPY nginx.conf /etc/nginx/http.d/default.conf

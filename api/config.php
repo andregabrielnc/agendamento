@@ -44,8 +44,17 @@ try {
 } catch (PDOException $e) {
     http_response_code(500);
     header('Content-Type: application/json; charset=utf-8');
-    echo json_encode(['error' => 'Database connection failed'], JSON_UNESCAPED_UNICODE);
-    error_log('DB connection error: ' . $e->getMessage());
+    echo json_encode([
+        'error' => 'Database connection failed',
+        'debug' => [
+            'host' => $dbHost,
+            'port' => $dbPort,
+            'dbname' => $dbName,
+            'user' => $dbUser,
+            'pass_set' => !empty($dbPass),
+            'pdo_message' => $e->getMessage(),
+        ],
+    ], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
