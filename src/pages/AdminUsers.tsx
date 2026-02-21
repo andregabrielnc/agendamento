@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, ShieldCheck, UserCircle, MagnifyingGlass, Plus, FloppyDisk, XCircle } from '@phosphor-icons/react';
+import { X, ShieldCheck, UserCircle, MagnifyingGlass, Plus, FloppyDisk, XCircle, CaretLeft, CaretRight } from '@phosphor-icons/react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { format } from 'date-fns';
@@ -19,7 +19,9 @@ export function AdminUsers({ isOpen, onClose }: AdminUsersProps) {
     const [showAddForm, setShowAddForm] = useState(false);
     const [newName, setNewName] = useState('');
     const [newEmail, setNewEmail] = useState('');
+    const [page, setPage] = useState(1);
     const newRole = 'admin';
+    const perPage = 8;
 
     if (!isOpen) return null;
 
@@ -28,6 +30,10 @@ export function AdminUsers({ isOpen, onClose }: AdminUsersProps) {
         const q = search.toLowerCase();
         return u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
     });
+
+    const totalPages = Math.max(1, Math.ceil(filteredUsers.length / perPage));
+    const currentPage = Math.min(page, totalPages);
+    const paginatedUsers = filteredUsers.slice((currentPage - 1) * perPage, currentPage * perPage);
 
     const handleToggleRole = async (u: typeof users[0]) => {
         if (u.id === currentUser?.id) return;
@@ -85,7 +91,7 @@ export function AdminUsers({ isOpen, onClose }: AdminUsersProps) {
                             type="text"
                             placeholder="Buscar por nome ou e-mail..."
                             value={search}
-                            onChange={e => setSearch(e.target.value)}
+                            onChange={e => { setSearch(e.target.value); setPage(1); }}
                             className={styles.searchInput}
                         />
                     </div>
@@ -158,7 +164,7 @@ export function AdminUsers({ isOpen, onClose }: AdminUsersProps) {
                             </tr>
                         </thead>
                         <tbody>
-                            {filteredUsers.map(u => (
+                            {paginatedUsers.map(u => (
                                 <tr key={u.id} className={u.id === currentUser?.id ? styles.currentRow : ''}>
                                     <td data-label="Usuário">
                                         <div className={styles.userCell}>
@@ -204,7 +210,30 @@ export function AdminUsers({ isOpen, onClose }: AdminUsersProps) {
                 </div>
 
                 <div className={styles.footer}>
-                    {users.length} usuário{users.length !== 1 ? 's' : ''} cadastrado{users.length !== 1 ? 's' : ''}
+                    <span className={styles.footerCount}>
+                        {filteredUsers.length} de {users.length} usuário{users.length !== 1 ? 's' : ''}
+                    </span>
+                    {totalPages > 1 && (
+                        <div className={styles.pagination}>
+                            <button
+                                className={styles.pageBtn}
+                                onClick={() => setPage(p => Math.max(1, p - 1))}
+                                disabled={currentPage <= 1}
+                                title="Anterior"
+                            >
+                                <CaretLeft size={16} />
+                            </button>
+                            <span className={styles.pageInfo}>{currentPage} / {totalPages}</span>
+                            <button
+                                className={styles.pageBtn}
+                                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                                disabled={currentPage >= totalPages}
+                                title="Próxima"
+                            >
+                                <CaretRight size={16} />
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
