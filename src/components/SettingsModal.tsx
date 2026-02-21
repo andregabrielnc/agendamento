@@ -302,7 +302,7 @@ export function SettingsModal({ isOpen, onClose, initialCalendarId }: SettingsMo
                 return (
                     <div className={styles.body}>
                         <div className={styles.statsHeader}>
-                            <h3>Relatório de Presenças</h3>
+                            <h3>Relatório Gerencial</h3>
                         </div>
                         <div className={styles.statsControls}>
                             <div className={styles.statsTabGroup}>
@@ -571,7 +571,7 @@ export function SettingsModal({ isOpen, onClose, initialCalendarId }: SettingsMo
         <div className={styles.overlay} onClick={onClose}>
             <div className={styles.modal} onClick={e => e.stopPropagation()}>
                 <div className={styles.sidebar}>
-                    <div className={styles.sidebarTitle}>Configurações</div>
+                    <div className={styles.sidebarTitle}>Gestão das Salas</div>
 
                     <div className={styles.sidebarSection}>
                         <div className={styles.sectionTitle}>Geral</div>
@@ -608,7 +608,7 @@ export function SettingsModal({ isOpen, onClose, initialCalendarId }: SettingsMo
                                     {selectedCalendar ? 'Detalhes da sala' : 'Nova sala'}
                                 </div>
                             ) : (
-                                activeView === 'general' ? 'Configurações' : 'Configurações'
+                                activeView === 'general' ? 'Gestão das Salas' : 'Gestão das Salas'
                             )}
                         </div>
                         <button onClick={onClose} className={styles.closeBtn}>
