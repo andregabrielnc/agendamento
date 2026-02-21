@@ -282,9 +282,9 @@ export function Presenca({ onBack }: PresencaProps) {
                                     <Check size={40} weight="bold" className={styles.successCheckIcon} />
                                 </div>
                             </div>
-                            <h2 className={styles.successTitle}>Presença registrada com sucesso!</h2>
+                            <h2 className={styles.successTitle}>Sua presença em sala foi registrada!</h2>
                             <p className={styles.successMessage}>
-                                Sua presença foi confirmada para o evento abaixo.
+                                Confira os detalhes do evento abaixo.
                             </p>
                             <div className={styles.successDetails}>
                                 <div className={styles.successDetailRow}>
