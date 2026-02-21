@@ -488,79 +488,83 @@ export function SettingsModal({ isOpen, onClose, initialCalendarId }: SettingsMo
             case 'calendar-details':
                 return (
                     <div className={styles.body}>
-                        <div className={styles.form}>
-                            <div className={styles.formGroup}>
-                                <label>Nome da Sala / Agenda</label>
-                                <input
-                                    type="text"
-                                    className={styles.input}
-                                    value={name}
-                                    onChange={e => setName(e.target.value)}
-                                    placeholder="Ex: Sala 101 - Bloco A"
-                                />
-                            </div>
-                            <div className={styles.formGroup}>
-                                <label>Descrição</label>
-                                <textarea
-                                    className={styles.textarea}
-                                    value={description}
-                                    onChange={e => setDescription(e.target.value)}
-                                    placeholder="Capacidade, equipamentos disponíveis..."
-                                />
-                            </div>
-                            <div className={styles.formGroup}>
-                                <label>Cor</label>
-                                <div className={styles.colorPalette}>
-                                    {PRESET_COLORS.map(c => {
-                                        const usedBy = calendars.find(
-                                            cal => cal.color === c && cal.id !== selectedCalendar?.id
-                                        );
-                                        const isSelected = color === c;
-                                        const isDisabled = !!usedBy;
-                                        return (
-                                            <button
-                                                key={c}
-                                                className={`${styles.paletteColor} ${isSelected ? styles.paletteColorSelected : ''} ${isDisabled ? styles.paletteColorDisabled : ''}`}
-                                                style={{ backgroundColor: c }}
-                                                onClick={() => !isDisabled && setColor(c)}
-                                                title={isDisabled ? `Já utilizada por ${usedBy.name}` : c}
-                                                type="button"
-                                            >
-                                                {isSelected && <Check size={14} weight="bold" color="#fff" />}
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                            {!selectedCalendar && (
+                        <div className={styles.formGrid}>
+                            <div className={styles.formLeft}>
                                 <div className={styles.formGroup}>
-                                    <label>Importar eventos (.ics)</label>
-                                    <div className={styles.icsUpload}>
-                                        <label className={styles.icsUploadBtn}>
-                                            <UploadSimple size={16} />
-                                            {icsFile ? icsFile.name : 'Selecionar arquivo .ics'}
-                                            <input
-                                                type="file"
-                                                accept=".ics"
-                                                onChange={handleIcsFileChange}
-                                                style={{ display: 'none' }}
-                                            />
-                                        </label>
-                                        {icsEventCount > 0 && (
-                                            <span className={styles.icsCount}>
-                                                {icsEventCount} evento{icsEventCount !== 1 ? 's' : ''} encontrado{icsEventCount !== 1 ? 's' : ''}
-                                            </span>
-                                        )}
-                                    </div>
+                                    <label>Nome da Sala / Agenda</label>
+                                    <input
+                                        type="text"
+                                        className={styles.input}
+                                        value={name}
+                                        onChange={e => setName(e.target.value)}
+                                        placeholder="Ex: Sala 101 - Bloco A"
+                                    />
                                 </div>
-                            )}
-                            <div className={styles.buttonGroup}>
-                                <button className={styles.saveBtn} onClick={handleSave}>Salvar</button>
-                                <button className={styles.cancelBtn} onClick={() => setActiveView('calendars')}>Cancelar</button>
-                                {selectedCalendar && (
-                                    <button className={styles.deleteBtn} onClick={handleDelete}>Excluir</button>
+                                <div className={styles.formGroup}>
+                                    <label>Descrição</label>
+                                    <textarea
+                                        className={styles.textarea}
+                                        value={description}
+                                        onChange={e => setDescription(e.target.value)}
+                                        placeholder="Capacidade, equipamentos disponíveis..."
+                                    />
+                                </div>
+                                {!selectedCalendar && (
+                                    <div className={styles.formGroup}>
+                                        <label>Importar eventos (.ics)</label>
+                                        <div className={styles.icsUpload}>
+                                            <label className={styles.icsUploadBtn}>
+                                                <UploadSimple size={16} />
+                                                {icsFile ? icsFile.name : 'Selecionar arquivo .ics'}
+                                                <input
+                                                    type="file"
+                                                    accept=".ics"
+                                                    onChange={handleIcsFileChange}
+                                                    style={{ display: 'none' }}
+                                                />
+                                            </label>
+                                            {icsEventCount > 0 && (
+                                                <span className={styles.icsCount}>
+                                                    {icsEventCount} evento{icsEventCount !== 1 ? 's' : ''} encontrado{icsEventCount !== 1 ? 's' : ''}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
                                 )}
                             </div>
+                            <div className={styles.formRight}>
+                                <div className={styles.formGroup}>
+                                    <label>Cor</label>
+                                    <div className={styles.colorPalette}>
+                                        {PRESET_COLORS.map(c => {
+                                            const usedBy = calendars.find(
+                                                cal => cal.color === c && cal.id !== selectedCalendar?.id
+                                            );
+                                            const isSelected = color === c;
+                                            const isDisabled = !!usedBy;
+                                            return (
+                                                <button
+                                                    key={c}
+                                                    className={`${styles.paletteColor} ${isSelected ? styles.paletteColorSelected : ''} ${isDisabled ? styles.paletteColorDisabled : ''}`}
+                                                    style={{ backgroundColor: c }}
+                                                    onClick={() => !isDisabled && setColor(c)}
+                                                    title={isDisabled ? `Já utilizada por ${usedBy.name}` : c}
+                                                    type="button"
+                                                >
+                                                    {isSelected && <Check size={14} weight="bold" color="#fff" />}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className={styles.buttonGroup}>
+                            <button className={styles.saveBtn} onClick={handleSave}>Salvar</button>
+                            <button className={styles.cancelBtn} onClick={() => setActiveView('calendars')}>Cancelar</button>
+                            {selectedCalendar && (
+                                <button className={styles.deleteBtn} onClick={handleDelete}>Excluir</button>
+                            )}
                         </div>
                     </div>
                 );

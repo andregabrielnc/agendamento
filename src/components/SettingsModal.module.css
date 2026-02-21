@@ -160,15 +160,36 @@
     max-width: 500px;
 }
 
+.formGrid {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 24px;
+    align-items: start;
+}
+
+.formLeft {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+}
+
+.formRight {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
 .formGroup {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
 }
 
 .formGroup label {
-    font-size: 0.875rem;
-    font-weight: 500;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-secondary);
 }
 
 .input,
@@ -183,7 +204,7 @@
 
 .textarea {
     resize: vertical;
-    min-height: 80px;
+    min-height: 56px;
 }
 
 .input:focus,
@@ -195,7 +216,9 @@
 .buttonGroup {
     display: flex;
     gap: 12px;
-    margin-top: 12px;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-color);
 }
 
 .saveBtn {
@@ -318,14 +341,13 @@
 
 .colorPalette {
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 8px;
-    max-width: 240px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
 }
 
 .paletteColor {
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
     border: none;
     cursor: pointer;
@@ -648,7 +670,11 @@
         max-width: 100%;
     }
 
+    .formGrid {
+        grid-template-columns: 1fr;
+    }
+
     .colorPalette {
-        max-width: 100%;
+        grid-template-columns: repeat(6, 1fr);
     }
 }
