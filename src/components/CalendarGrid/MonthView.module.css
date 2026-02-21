@@ -88,14 +88,13 @@
     padding: 1px 6px;
     border-radius: 4px;
     font-size: 12px;
-    white-space: nowrap;
     overflow: hidden;
-    text-overflow: ellipsis;
     color: white;
     cursor: pointer;
     transition: opacity 0.15s;
     user-select: none;
     line-height: 1.6;
+    word-break: break-word;
 }
 
 .eventCard:hover {

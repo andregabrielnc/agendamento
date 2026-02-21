@@ -58,7 +58,7 @@ export function EventProvider({ children }: { children: ReactNode }) {
             const q = searchQuery.toLowerCase();
             return (
                 event.title.toLowerCase().includes(q) ||
-                (event.description !== undefined && event.description.toLowerCase().includes(q))
+                (!!event.description && event.description.toLowerCase().includes(q))
             );
         });
     }, [events, visibleCalendarIds, searchQuery]);

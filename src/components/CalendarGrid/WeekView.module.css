@@ -131,15 +131,12 @@
 .eventTitle {
     font-weight: 600;
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
     font-size: 12px;
+    word-break: break-word;
 }
 
 .eventTime {
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
     font-size: 11px;
     opacity: 0.9;
 }

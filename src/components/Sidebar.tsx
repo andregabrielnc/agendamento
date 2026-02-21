@@ -1,7 +1,8 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { Plus, CaretDown, Check, DotsThreeVertical } from '@phosphor-icons/react'
 import styles from './Sidebar.module.css'
 import { useCalendar } from '../context/CalendarContext'
+import { useAuth } from '../context/AuthContext'
 import { MiniCalendar } from './MiniCalendar'
 import { SettingsModal } from './SettingsModal'
 
@@ -12,9 +13,16 @@ const PRESET_COLORS = [
     '#4285f4', '#5e6ec7', '#b39ddb', '#9e69af', '#795548', '#bcaaa4',
 ];
 
+interface MenuPosition {
+    top: number;
+    left: number;
+}
+
 export function Sidebar() {
     const { calendars, toggleCalendar, updateCalendar, openCreateModal } = useCalendar();
+    const { isAdmin } = useAuth();
     const [menuOpenFor, setMenuOpenFor] = useState<string | null>(null);
+    const [menuPos, setMenuPos] = useState<MenuPosition>({ top: 0, left: 0 });
     const [settingsCalendarId, setSettingsCalendarId] = useState<string | undefined>(undefined);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
@@ -30,6 +38,36 @@ export function Sidebar() {
             document.addEventListener('mousedown', handleClickOutside);
             return () => document.removeEventListener('mousedown', handleClickOutside);
         }
+    }, [menuOpenFor]);
+
+    // Adjust menu position if it overflows the viewport
+    useEffect(() => {
+        if (menuOpenFor && menuRef.current) {
+            const rect = menuRef.current.getBoundingClientRect();
+            const viewportH = window.innerHeight;
+            const viewportW = window.innerWidth;
+            let { top, left } = menuPos;
+
+            if (rect.bottom > viewportH - 8) {
+                top = Math.max(8, viewportH - rect.height - 8);
+            }
+            if (rect.right > viewportW - 8) {
+                left = Math.max(8, viewportW - rect.width - 8);
+            }
+            if (top !== menuPos.top || left !== menuPos.left) {
+                setMenuPos({ top, left });
+            }
+        }
+    }, [menuOpenFor, menuPos]);
+
+    const openMenu = useCallback((calendarId: string, btnEl: HTMLButtonElement) => {
+        if (menuOpenFor === calendarId) {
+            setMenuOpenFor(null);
+            return;
+        }
+        const rect = btnEl.getBoundingClientRect();
+        setMenuPos({ top: rect.bottom + 4, left: rect.left });
+        setMenuOpenFor(calendarId);
     }, [menuOpenFor]);
 
     const handleShowOnly = (calendarId: string) => {
@@ -64,6 +102,8 @@ export function Sidebar() {
         }
         setMenuOpenFor(null);
     };
+
+    const activeCalendar = menuOpenFor ? calendars.find(c => c.id === menuOpenFor) : null;
 
     return (
         <aside className={styles.sidebar}>
@@ -105,56 +145,69 @@ export function Sidebar() {
                                 </span>
                                 <span className={styles.calendarName}>{calendar.name}</span>
                             </div>
-                            <button
-                                className={styles.menuBtn}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setMenuOpenFor(menuOpenFor === calendar.id ? null : calendar.id);
-                                }}
-                            >
-                                <DotsThreeVertical size={16} weight="bold" />
-                            </button>
-
-                            {menuOpenFor === calendar.id && (
-                                <div className={styles.contextMenu} ref={menuRef} onClick={e => e.stopPropagation()}>
-                                    <button
-                                        className={styles.contextMenuItem}
-                                        onClick={() => handleShowOnly(calendar.id)}
-                                    >
-                                        Exibir apenas esta
-                                    </button>
-                                    <button
-                                        className={styles.contextMenuItem}
-                                        onClick={() => handleHide(calendar.id)}
-                                    >
-                                        Ocultar na lista
-                                    </button>
-                                    <button
-                                        className={styles.contextMenuItem}
-                                        onClick={() => handleOpenSettings(calendar.id)}
-                                    >
-                                        Configurações
-                                    </button>
-                                    <div className={styles.contextMenuSeparator} />
-                                    <div className={styles.colorGrid}>
-                                        {PRESET_COLORS.map(c => (
-                                            <button
-                                                key={c}
-                                                className={`${styles.colorCircle} ${calendar.color === c ? styles.colorCircleActive : ''}`}
-                                                style={{ backgroundColor: c }}
-                                                onClick={() => handleColorChange(calendar.id, c)}
-                                                title={c}
-                                            >
-                                                {calendar.color === c && <Check size={10} weight="bold" color="#fff" />}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
+                            {isAdmin && (
+                                <button
+                                    className={styles.menuBtn}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        openMenu(calendar.id, e.currentTarget);
+                                    }}
+                                >
+                                    <DotsThreeVertical size={16} weight="bold" />
+                                </button>
                             )}
                         </div>
                     ))}
                 </div>
             </div>
+
+            {/* Fixed-position context menu rendered as portal-like overlay */}
+            {menuOpenFor && activeCalendar && (
+                <div
+                    className={styles.contextMenuOverlay}
+                    onMouseDown={() => setMenuOpenFor(null)}
+                >
+                    <div
+                        className={styles.contextMenu}
+                        ref={menuRef}
+                        style={{ top: menuPos.top, left: menuPos.left }}
+                        onMouseDown={e => e.stopPropagation()}
+                    >
+                        <button
+                            className={styles.contextMenuItem}
+                            onClick={() => handleShowOnly(activeCalendar.id)}
+                        >
+                            Exibir apenas esta
+                        </button>
+                        <button
+                            className={styles.contextMenuItem}
+                            onClick={() => handleHide(activeCalendar.id)}
+                        >
+                            Ocultar na lista
+                        </button>
+                        <button
+                            className={styles.contextMenuItem}
+                            onClick={() => handleOpenSettings(activeCalendar.id)}
+                        >
+                            Configurações
+                        </button>
+                        <div className={styles.contextMenuSeparator} />
+                        <div className={styles.colorGrid}>
+                            {PRESET_COLORS.map(c => (
+                                <button
+                                    key={c}
+                                    className={`${styles.colorCircle} ${activeCalendar.color === c ? styles.colorCircleActive : ''}`}
+                                    style={{ backgroundColor: c }}
+                                    onClick={() => handleColorChange(activeCalendar.id, c)}
+                                    title={c}
+                                >
+                                    {activeCalendar.color === c && <Check size={10} weight="bold" color="#fff" />}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <SettingsModal
                 isOpen={isSettingsOpen}
