@@ -7,7 +7,8 @@ import {
     isAfter,
     getDay,
     startOfDay,
-    isValid
+    isValid,
+    format
 } from 'date-fns';
 import type { CalendarEvent, RecurrenceRule } from '../types';
 
@@ -42,6 +43,14 @@ export function getRecurrenceInstances(
 
     const MAX_INSTANCES = 365;
 
+    // Build set of exception dates to skip
+    const exceptionDates = new Set<string>();
+    if (rule.exceptions) {
+        for (const ex of rule.exceptions) {
+            exceptionDates.add(ex);
+        }
+    }
+
     while (count < MAX_INSTANCES) {
         // Safe check for endDate
         if (rule.endType === 'date' && rule.endDate) {
@@ -60,13 +69,16 @@ export function getRecurrenceInstances(
         }
 
         if (isValidInstance) {
-            if (isBefore(currentStart, rangeEnd) && isAfter(currentEnd, rangeStart)) {
-                instances.push({
-                    ...event,
-                    id: `${event.id}_${count}`,
-                    start: new Date(currentStart),
-                    end: new Date(currentEnd),
-                });
+            const dateKey = format(currentStart, 'yyyy-MM-dd');
+            if (!exceptionDates.has(dateKey)) {
+                if (isBefore(currentStart, rangeEnd) && isAfter(currentEnd, rangeStart)) {
+                    instances.push({
+                        ...event,
+                        id: `${event.id}_${count}`,
+                        start: new Date(currentStart),
+                        end: new Date(currentEnd),
+                    });
+                }
             }
             count++;
         }
@@ -118,13 +130,16 @@ export function getRecurrenceInstances(
                 }
                 if (rule.endType === 'count' && specializedCount >= rule.occurrenceCount!) return instances;
 
-                if (isBefore(instanceStart, rangeEnd) && isAfter(instanceEnd, rangeStart)) {
-                    instances.push({
-                        ...event,
-                        id: `${event.id}_${specializedCount}`,
-                        start: instanceStart,
-                        end: instanceEnd,
-                    });
+                const specializedDateKey = format(instanceStart, 'yyyy-MM-dd');
+                if (!exceptionDates.has(specializedDateKey)) {
+                    if (isBefore(instanceStart, rangeEnd) && isAfter(instanceEnd, rangeStart)) {
+                        instances.push({
+                            ...event,
+                            id: `${event.id}_${specializedCount}`,
+                            start: instanceStart,
+                            end: instanceEnd,
+                        });
+                    }
                 }
                 specializedCount++;
             }

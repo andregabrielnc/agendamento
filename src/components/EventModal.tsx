@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, AlignLeft, CaretDown, Check, TextB, TextItalic, TextUnderline, ListNumbers, List, Link, TextStrikethrough, Lock, Phone } from '@phosphor-icons/react';
+import { X, AlignLeft, CaretDown, Check, TextB, TextItalic, TextUnderline, ListNumbers, List, Link, TextStrikethrough, Lock, Phone, Trash } from '@phosphor-icons/react';
 import { useCalendar } from '../context/CalendarContext';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -7,11 +7,13 @@ import styles from './EventModal.module.css';
 import { format } from 'date-fns';
 import { RecurrenceModal } from './RecurrenceModal';
 import { ConfirmDialog } from './ConfirmDialog';
+import { RecurrenceActionDialog } from './RecurrenceActionDialog';
 import type { RecurrenceRule } from './RecurrenceModal';
+import type { RecurrenceEditMode } from '../types';
 
 export function EventModal() {
     const { modalState, closeModal, addEvent, updateEvent, deleteEvent, calendars } = useCalendar();
-    const { user, canEditEvent } = useAuth();
+    const { user, canEditEvent, users } = useAuth();
     const { showToast } = useToast();
     const { isOpen, type, event, selectedDate } = modalState;
 
@@ -35,8 +37,12 @@ export function EventModal() {
     const [isRecurrenceModalOpen, setIsRecurrenceModalOpen] = useState(false);
 
     // UI State
-    const [showMoreActions, setShowMoreActions] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+    // Recurrence action dialog state
+    const [showRecurrenceDialog, setShowRecurrenceDialog] = useState(false);
+    const [recurrenceDialogAction, setRecurrenceDialogAction] = useState<'edit' | 'delete'>('edit');
+    const [pendingEventData, setPendingEventData] = useState<any>(null);
 
     useEffect(() => {
         if (isOpen) {
@@ -59,8 +65,8 @@ export function EventModal() {
                 setEndDateStr(format(event.end, 'yyyy-MM-dd'));
                 if (event.allDay) {
                     setAllDay(true);
-                    setStart('00:00');
-                    setEnd('23:59');
+                    setStart('07:00');
+                    setEnd('18:00');
                 } else {
                     setAllDay(false);
                     setStart(format(event.start, 'HH:mm'));
@@ -78,17 +84,49 @@ export function EventModal() {
                 }
             }
             setShowDeleteConfirm(false);
+            setShowRecurrenceDialog(false);
+            setPendingEventData(null);
         }
     }, [isOpen, type, event, selectedDate, calendars]);
 
     if (!isOpen) return null;
 
+    // Determine if this is a recurring event being edited
+    const isRecurringEvent = isEditing && event && event.recurrence && event.recurrence !== 'none';
+
+    // Creator info
+    const creator = isEditing && event ? users.find(u => u.id === event.createdBy) : null;
+
+    const buildEventData = () => {
+        const startTime = allDay ? '07:00' : start;
+        const endTime = allDay ? '18:00' : end;
+
+        const startDate = new Date(`${date}T${startTime}`);
+        const endDate = new Date(`${endDateStr}T${endTime}`);
+        const selectedCalendar = calendars.find(c => c.id === calendarId);
+
+        return {
+            title: title || '(Sem título)',
+            start: startDate,
+            end: endDate,
+            description,
+            phone,
+            calendarId,
+            color: selectedCalendar?.color,
+            allDay,
+            recurrence: recurrence === 'custom' && customRule ? customRule : (recurrence as any),
+            createdBy: event?.createdBy || user?.id,
+        };
+    };
+
     const handleSubmit = (e?: React.FormEvent) => {
         if (e) e.preventDefault();
 
-        const startDate = new Date(`${date}T${start}`);
-        const endDate = new Date(`${endDateStr}T${end}`);
-        const selectedCalendar = calendars.find(c => c.id === calendarId);
+        const startTime = allDay ? '07:00' : start;
+        const endTime = allDay ? '18:00' : end;
+
+        const startDate = new Date(`${date}T${startTime}`);
+        const endDate = new Date(`${endDateStr}T${endTime}`);
 
         if (startDate >= endDate && !allDay) {
             showToast('A data de término deve ser posterior à data de início.', 'error');
@@ -101,70 +139,61 @@ export function EventModal() {
             return;
         }
 
-        const eventData = {
-            title: title || '(Sem título)',
-            start: startDate,
-            end: endDate,
-            description,
-            phone,
-            calendarId,
-            color: selectedCalendar?.color,
-            allDay,
-            recurrence: recurrence === 'custom' && customRule ? customRule : (recurrence as any),
-            createdBy: event?.createdBy || user?.id,
-        };
+        const eventData = buildEventData();
 
         if (type === 'create') {
             addEvent(eventData);
             showToast('Evento criado', 'success');
             closeModal();
         } else if (type === 'edit' && event) {
-            updateEvent({ ...event, ...eventData });
-            showToast('Evento atualizado', 'success');
-            closeModal();
+            if (isRecurringEvent) {
+                setPendingEventData(eventData);
+                setRecurrenceDialogAction('edit');
+                setShowRecurrenceDialog(true);
+            } else {
+                updateEvent({ ...event, ...eventData });
+                showToast('Evento atualizado', 'success');
+                closeModal();
+            }
         }
     };
 
     const handleDelete = () => {
-        setShowMoreActions(false);
-        setShowDeleteConfirm(true);
+        if (isRecurringEvent) {
+            setRecurrenceDialogAction('delete');
+            setShowRecurrenceDialog(true);
+        } else {
+            setShowDeleteConfirm(true);
+        }
     };
 
     const confirmDelete = () => {
         if (event) {
             deleteEvent(event.id);
             closeModal();
-            showToast('Evento excluído', 'info', undefined, () => {
-                // Undo would re-add, but for simplicity just notify
-            });
+            showToast('Evento excluído', 'info');
         }
         setShowDeleteConfirm(false);
     };
 
-    const handleDuplicate = () => {
-        if (!event) return;
-        setShowMoreActions(false);
+    const handleRecurrenceDialogConfirm = (mode: RecurrenceEditMode) => {
+        setShowRecurrenceDialog(false);
 
-        const cal = calendars.find(c => c.id === event.calendarId);
+        const instanceDate = modalState.instanceDate
+            ? format(modalState.instanceDate, 'yyyy-MM-dd')
+            : undefined;
 
-        addEvent({
-            title: `${event.title} (cópia)`,
-            start: event.start,
-            end: event.end,
-            description: event.description,
-            phone: event.phone,
-            calendarId: event.calendarId,
-            color: cal?.color,
-            allDay: event.allDay,
-            recurrence: event.recurrence,
-        });
-        closeModal();
-        showToast('Evento duplicado', 'success');
-    };
+        if (recurrenceDialogAction === 'edit' && event && pendingEventData) {
+            updateEvent({ ...event, ...pendingEventData }, mode, instanceDate);
+            showToast('Evento atualizado', 'success');
+            closeModal();
+        } else if (recurrenceDialogAction === 'delete' && event) {
+            deleteEvent(event.id, mode, instanceDate);
+            showToast('Evento excluído', 'info');
+            closeModal();
+        }
 
-    const handlePrint = () => {
-        window.print();
-        setShowMoreActions(false);
+        setPendingEventData(null);
     };
 
     const getRecurrenceLabel = (currentRecurrence: string) => {
@@ -194,9 +223,17 @@ export function EventModal() {
         setPhone(formatPhone(e.target.value));
     };
 
+    const handleAllDayChange = (checked: boolean) => {
+        setAllDay(checked);
+        if (checked) {
+            setStart('07:00');
+            setEnd('18:00');
+        }
+    };
+
     return (
         <div className={styles.overlay} onClick={closeModal}>
-            <div className={styles.modal} onClick={e => { e.stopPropagation(); setShowRecurrenceOptions(false); setShowMoreActions(false); }}>
+            <div className={styles.modal} onClick={e => { e.stopPropagation(); setShowRecurrenceOptions(false); }}>
 
                 {/* ===== Header ===== */}
                 <div className={styles.header}>
@@ -269,7 +306,7 @@ export function EventModal() {
                                     type="checkbox"
                                     id="allDay"
                                     checked={allDay}
-                                    onChange={e => setAllDay(e.target.checked)}
+                                    onChange={e => handleAllDayChange(e.target.checked)}
                                 />
                                 <label htmlFor="allDay">Dia inteiro</label>
                             </div>
@@ -367,6 +404,13 @@ export function EventModal() {
                             </div>
                         </div>
                     </div>
+
+                    {/* Creator info */}
+                    {isEditing && creator && (
+                        <div className={styles.creatorInfo}>
+                            Agendado por: {creator.name} — {creator.role === 'admin' ? 'Administrador' : 'Usuário'}
+                        </div>
+                    )}
                 </div>
 
                 {/* ===== Footer ===== */}
@@ -386,23 +430,14 @@ export function EventModal() {
                     </div>
                     <div className={styles.footerRight}>
                         {isEditing && canEdit && (
-                            <div style={{ position: 'relative' }}>
-                                <button
-                                    type="button"
-                                    className={styles.moreActionsBtn}
-                                    onClick={(e) => { e.stopPropagation(); setShowMoreActions(!showMoreActions); }}
-                                >
-                                    Mais ações
-                                    <CaretDown size={14} weight="bold" />
-                                </button>
-                                {showMoreActions && (
-                                    <div className={styles.actionsDropdown}>
-                                        <button onClick={handleDuplicate}>Duplicar</button>
-                                        <button onClick={handlePrint}>Imprimir</button>
-                                        <button className={styles.deleteAction} onClick={handleDelete}>Excluir</button>
-                                    </div>
-                                )}
-                            </div>
+                            <button
+                                type="button"
+                                className={styles.deleteBtn}
+                                onClick={handleDelete}
+                            >
+                                <Trash size={16} />
+                                Excluir
+                            </button>
                         )}
                         {canEdit && (
                             <button className={styles.saveBtn} onClick={() => handleSubmit()}>
@@ -431,6 +466,13 @@ export function EventModal() {
                 destructive
                 onConfirm={confirmDelete}
                 onCancel={() => setShowDeleteConfirm(false)}
+            />
+
+            <RecurrenceActionDialog
+                isOpen={showRecurrenceDialog}
+                title={recurrenceDialogAction === 'delete' ? 'Excluir evento recorrente' : 'Editar evento recorrente'}
+                onConfirm={handleRecurrenceDialogConfirm}
+                onCancel={() => { setShowRecurrenceDialog(false); setPendingEventData(null); }}
             />
         </div>
     )

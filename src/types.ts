@@ -18,7 +18,10 @@ export interface RecurrenceRule {
     endDate?: Date;
     occurrenceCount?: number;
     endType: 'never' | 'date' | 'count';
+    exceptions?: string[];
 }
+
+export type RecurrenceEditMode = 'single' | 'all' | 'thisAndFollowing';
 
 export type RecurrenceType = 'none' | 'daily' | 'weekly' | 'monthly' | 'custom';
 

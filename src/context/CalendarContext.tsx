@@ -13,7 +13,7 @@
  */
 
 import type { ReactNode } from 'react';
-import type { CalendarEvent, Calendar, ViewType } from '../types';
+import type { CalendarEvent, Calendar, ViewType, RecurrenceEditMode } from '../types';
 
 import { ThemeProvider, useTheme } from './ThemeContext';
 import { ViewProvider, useView } from './ViewContext';
@@ -49,8 +49,8 @@ interface CalendarContextType {
     events: CalendarEvent[];
     calendars: Calendar[];
     addEvent: (event: Omit<CalendarEvent, 'id'>) => Promise<{ success: boolean; error?: string }>;
-    updateEvent: (event: CalendarEvent) => Promise<{ success: boolean; error?: string }>;
-    deleteEvent: (id: string) => Promise<{ success: boolean; error?: string }>;
+    updateEvent: (event: CalendarEvent, mode?: RecurrenceEditMode, instanceDate?: string) => Promise<{ success: boolean; error?: string }>;
+    deleteEvent: (id: string, mode?: RecurrenceEditMode, instanceDate?: string) => Promise<{ success: boolean; error?: string }>;
     addCalendar: (calendar: Omit<Calendar, 'id'>) => Promise<{ success: boolean; error?: string; data?: any }>;
     updateCalendar: (calendar: Calendar) => Promise<{ success: boolean; error?: string }>;
     deleteCalendar: (id: string) => Promise<{ success: boolean; error?: string }>;
@@ -65,6 +65,7 @@ interface CalendarContextType {
         type: 'create' | 'edit' | null;
         selectedDate?: Date;
         event?: CalendarEvent;
+        instanceDate?: Date;
     };
     popoverState: {
         isOpen: boolean;
@@ -72,7 +73,7 @@ interface CalendarContextType {
         anchorEl: HTMLElement | null;
     };
     openCreateModal: (date?: Date) => void;
-    openEditModal: (event: CalendarEvent) => void;
+    openEditModal: (event: CalendarEvent, instanceDate?: Date) => void;
     closeModal: () => void;
     openPopover: (event: CalendarEvent, anchorEl: HTMLElement) => void;
     closePopover: () => void;

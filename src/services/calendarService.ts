@@ -1,4 +1,4 @@
-import type { CalendarEvent, Calendar } from '../types';
+import type { CalendarEvent, Calendar, RecurrenceEditMode } from '../types';
 
 class ApiError extends Error {
     status: number;
@@ -63,16 +63,17 @@ class CalendarService {
         });
     }
 
-    async updateEvent(event: CalendarEvent): Promise<CalendarEvent> {
+    async updateEvent(event: CalendarEvent, mode?: RecurrenceEditMode, instanceDate?: string): Promise<CalendarEvent> {
         return apiCall<CalendarEvent>(`/api/router.php?route=events/${event.id}`, {
             method: 'PUT',
-            body: JSON.stringify(event),
+            body: JSON.stringify({ ...event, _recurrenceMode: mode, _instanceDate: instanceDate }),
         });
     }
 
-    async deleteEvent(id: string): Promise<void> {
+    async deleteEvent(id: string, mode?: RecurrenceEditMode, instanceDate?: string): Promise<void> {
         await apiCall<{ success: boolean }>(`/api/router.php?route=events/${id}`, {
             method: 'DELETE',
+            body: JSON.stringify({ _recurrenceMode: mode, _instanceDate: instanceDate }),
         });
     }
 

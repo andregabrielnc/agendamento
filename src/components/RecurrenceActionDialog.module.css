@@ -1,0 +1,143 @@
+/* ===== RecurrenceActionDialog - Google Calendar Style ===== */
+
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.32);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.15s ease-out;
+}
+
+.dialog {
+    background-color: var(--bg-surface);
+    border-radius: 12px;
+    width: 400px;
+    max-width: calc(100vw - 48px);
+    box-shadow: 0 24px 38px 3px rgba(0, 0, 0, 0.14),
+                0 9px 46px 8px rgba(0, 0, 0, 0.12),
+                0 11px 15px -7px rgba(0, 0, 0, 0.2);
+    animation: scaleUp 0.2s cubic-bezier(0.165, 0.84, 0.44, 1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* ===== Header ===== */
+
+.header {
+    padding: 24px 24px 0;
+}
+
+.title {
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--text-primary);
+    line-height: 1.4;
+    margin: 0;
+}
+
+/* ===== Body ===== */
+
+.body {
+    padding: 16px 24px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.radioOption {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 4px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+    font-size: 14px;
+    color: var(--text-primary);
+    transition: background-color 0.15s;
+}
+
+.radioOption:hover {
+    background-color: var(--bg-hover);
+}
+
+.radioOption input[type="radio"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #1a73e8;
+    cursor: pointer;
+    margin: 0;
+}
+
+/* ===== Footer ===== */
+
+.footer {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px 16px;
+}
+
+.cancelBtn {
+    background: transparent;
+    border: none;
+    color: var(--primary);
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 8px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    letter-spacing: 0.25px;
+    transition: background-color 0.15s;
+}
+
+.cancelBtn:hover {
+    background-color: var(--primary-light);
+}
+
+.confirmBtn {
+    background-color: var(--primary);
+    border: none;
+    color: #ffffff;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 8px 24px;
+    border-radius: 20px;
+    cursor: pointer;
+    letter-spacing: 0.25px;
+    transition: background-color 0.15s, box-shadow 0.15s;
+}
+
+.confirmBtn:hover {
+    background-color: var(--primary-hover);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* ===== Animations ===== */
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes scaleUp {
+    from {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}

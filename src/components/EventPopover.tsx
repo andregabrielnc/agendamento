@@ -1,13 +1,14 @@
 import { useRef, useEffect, useState } from 'react';
-import { X, Trash, PencilSimple, EnvelopeSimple, CopySimple, Phone } from '@phosphor-icons/react';
+import { X, Trash, PencilSimple, Phone } from '@phosphor-icons/react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import type { CalendarEvent } from '../types';
+import type { CalendarEvent, RecurrenceEditMode } from '../types';
 import styles from './EventPopover.module.css';
 import { useCalendar } from '../context/CalendarContext';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { ConfirmDialog } from './ConfirmDialog';
+import { RecurrenceActionDialog } from './RecurrenceActionDialog';
 
 interface EventPopoverProps {
     event: CalendarEvent;
@@ -16,7 +17,7 @@ interface EventPopoverProps {
 }
 
 export function EventPopover({ event, anchorEl, onClose }: EventPopoverProps) {
-    const { deleteEvent, openEditModal, events, addEvent } = useCalendar();
+    const { deleteEvent, openEditModal, events } = useCalendar();
     const { canEditEvent, users } = useAuth();
     const { showToast } = useToast();
     const canEdit = canEditEvent(event.createdBy);
@@ -24,6 +25,9 @@ export function EventPopover({ event, anchorEl, onClose }: EventPopoverProps) {
     const popoverRef = useRef<HTMLDivElement>(null);
     const [style, setStyle] = useState<React.CSSProperties>({});
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [showRecurrenceDialog, setShowRecurrenceDialog] = useState(false);
+
+    const isRecurringEvent = event.recurrence && event.recurrence !== 'none';
 
     useEffect(() => {
         if (anchorEl && popoverRef.current) {
@@ -51,7 +55,11 @@ export function EventPopover({ event, anchorEl, onClose }: EventPopoverProps) {
     if (!anchorEl) return null;
 
     const handleDelete = () => {
-        setShowDeleteConfirm(true);
+        if (isRecurringEvent) {
+            setShowRecurrenceDialog(true);
+        } else {
+            setShowDeleteConfirm(true);
+        }
     };
 
     const confirmDelete = () => {
@@ -61,26 +69,19 @@ export function EventPopover({ event, anchorEl, onClose }: EventPopoverProps) {
         setShowDeleteConfirm(false);
     };
 
+    const handleRecurrenceDeleteConfirm = (mode: RecurrenceEditMode) => {
+        setShowRecurrenceDialog(false);
+        const instanceDate = format(event.start, 'yyyy-MM-dd');
+        deleteEvent(event.id, mode, instanceDate);
+        onClose();
+        showToast('Evento excluído', 'info');
+    };
+
     const handleEdit = () => {
         const originalId = event.id.split('_')[0];
         const originalEvent = events.find(e => e.id === originalId);
-        openEditModal(originalEvent || event);
+        openEditModal(originalEvent || event, event.start);
         onClose();
-    };
-
-    const handleDuplicate = () => {
-        addEvent({
-            title: `${event.title} (cópia)`,
-            start: event.start,
-            end: event.end,
-            description: event.description,
-            phone: event.phone,
-            calendarId: event.calendarId,
-            color: event.color,
-            allDay: event.allDay,
-        });
-        onClose();
-        showToast('Evento duplicado', 'success');
     };
 
     const timeDisplay = event.allDay
@@ -106,14 +107,8 @@ export function EventPopover({ event, anchorEl, onClose }: EventPopoverProps) {
                                     <button onClick={handleDelete} className={styles.iconBtn} title="Excluir evento">
                                         <Trash size={18} />
                                     </button>
-                                    <button onClick={handleDuplicate} className={styles.iconBtn} title="Duplicar evento">
-                                        <CopySimple size={18} />
-                                    </button>
                                 </>
                             )}
-                            <button className={styles.iconBtn} title="Enviar email para convidados">
-                                <EnvelopeSimple size={18} />
-                            </button>
                         </div>
                         <button onClick={onClose} className={styles.closeBtn}>
                             <X size={18} />
@@ -160,6 +155,13 @@ export function EventPopover({ event, anchorEl, onClose }: EventPopoverProps) {
                 destructive
                 onConfirm={confirmDelete}
                 onCancel={() => setShowDeleteConfirm(false)}
+            />
+
+            <RecurrenceActionDialog
+                isOpen={showRecurrenceDialog}
+                title="Excluir evento recorrente"
+                onConfirm={handleRecurrenceDeleteConfirm}
+                onCancel={() => setShowRecurrenceDialog(false)}
             />
         </>
     );

@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import type { ReactNode } from 'react';
-import type { CalendarEvent, Calendar } from '../types';
+import type { CalendarEvent, Calendar, RecurrenceEditMode } from '../types';
 import { calendarService } from '../services/calendarService';
 
 interface EventOperationResult {
@@ -13,8 +13,8 @@ interface EventContextType {
     events: CalendarEvent[];
     calendars: Calendar[];
     addEvent: (event: Omit<CalendarEvent, 'id'>) => Promise<EventOperationResult>;
-    updateEvent: (event: CalendarEvent) => Promise<EventOperationResult>;
-    deleteEvent: (id: string) => Promise<EventOperationResult>;
+    updateEvent: (event: CalendarEvent, mode?: RecurrenceEditMode, instanceDate?: string) => Promise<EventOperationResult>;
+    deleteEvent: (id: string, mode?: RecurrenceEditMode, instanceDate?: string) => Promise<EventOperationResult>;
     addCalendar: (calendar: Omit<Calendar, 'id'>) => Promise<EventOperationResult>;
     updateCalendar: (calendar: Calendar) => Promise<EventOperationResult>;
     deleteCalendar: (id: string) => Promise<EventOperationResult>;
@@ -75,15 +75,36 @@ export function EventProvider({ children }: { children: ReactNode }) {
         }
     }, []);
 
-    const updateEvent = useCallback(async (updatedEvent: CalendarEvent): Promise<EventOperationResult> => {
+    const reloadEvents = useCallback(async () => {
+        try {
+            const loadedEvents = await calendarService.fetchEvents();
+            setEvents(loadedEvents);
+        } catch (error) {
+            console.error('Failed to reload events:', error);
+        }
+    }, []);
+
+    const updateEvent = useCallback(async (updatedEvent: CalendarEvent, mode?: RecurrenceEditMode, instanceDate?: string): Promise<EventOperationResult> => {
         const originalId = updatedEvent.id.split('_')[0];
         const eventToUpdate = { ...updatedEvent, id: originalId };
+
+        if (mode && mode !== 'all') {
+            try {
+                await calendarService.updateEvent(eventToUpdate, mode, instanceDate);
+                await reloadEvents();
+                return { success: true };
+            } catch (error) {
+                const message = error instanceof Error ? error.message : 'Failed to update event';
+                console.error('Failed to update event:', error);
+                return { success: false, error: message };
+            }
+        }
 
         const previousEvents = events;
         setEvents(prev => prev.map(e => (e.id === originalId ? eventToUpdate : e)));
 
         try {
-            await calendarService.updateEvent(eventToUpdate);
+            await calendarService.updateEvent(eventToUpdate, mode, instanceDate);
             return { success: true };
         } catch (error) {
             const message = error instanceof Error ? error.message : 'Failed to update event';
@@ -91,16 +112,28 @@ export function EventProvider({ children }: { children: ReactNode }) {
             setEvents(previousEvents);
             return { success: false, error: message };
         }
-    }, [events]);
+    }, [events, reloadEvents]);
 
-    const deleteEvent = useCallback(async (id: string): Promise<EventOperationResult> => {
+    const deleteEvent = useCallback(async (id: string, mode?: RecurrenceEditMode, instanceDate?: string): Promise<EventOperationResult> => {
         const originalId = id.split('_')[0];
+
+        if (mode && mode !== 'all') {
+            try {
+                await calendarService.deleteEvent(originalId, mode, instanceDate);
+                await reloadEvents();
+                return { success: true };
+            } catch (error) {
+                const message = error instanceof Error ? error.message : 'Failed to delete event';
+                console.error('Failed to delete event:', error);
+                return { success: false, error: message };
+            }
+        }
 
         const previousEvents = events;
         setEvents(prev => prev.filter(e => e.id !== originalId));
 
         try {
-            await calendarService.deleteEvent(originalId);
+            await calendarService.deleteEvent(originalId, mode, instanceDate);
             return { success: true };
         } catch (error) {
             const message = error instanceof Error ? error.message : 'Failed to delete event';
@@ -108,7 +141,7 @@ export function EventProvider({ children }: { children: ReactNode }) {
             setEvents(previousEvents);
             return { success: false, error: message };
         }
-    }, [events]);
+    }, [events, reloadEvents]);
 
     const toggleCalendar = useCallback(async (id: string): Promise<EventOperationResult> => {
         const calendar = calendars.find(c => c.id === id);
