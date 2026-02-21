@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { X, PaperPlaneRight, Trash, CheckCircle } from '@phosphor-icons/react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { X, PaperPlaneRight, Trash, CheckCircle, CaretLeft, CaretRight } from '@phosphor-icons/react';
 import { useAuth } from '../context/AuthContext';
 import { useCalendar } from '../context/CalendarContext';
 import { useToast } from '../context/ToastContext';
@@ -37,6 +37,8 @@ export function ReportModal({ isOpen, onClose, onNotificationsChange }: ReportMo
     const [submitting, setSubmitting] = useState(false);
     const [finalizingId, setFinalizingId] = useState<string | null>(null);
     const [finalizingMsg, setFinalizingMsg] = useState('');
+    const [page, setPage] = useState(1);
+    const ITEMS_PER_PAGE = 5;
 
     const fetchReports = useCallback(async () => {
         try {
@@ -53,8 +55,12 @@ export function ReportModal({ isOpen, onClose, onNotificationsChange }: ReportMo
     useEffect(() => {
         if (isOpen) {
             fetchReports();
+            setPage(1);
         }
     }, [isOpen, fetchReports]);
+
+    const totalPages = useMemo(() => Math.max(1, Math.ceil(reports.length / ITEMS_PER_PAGE)), [reports.length, ITEMS_PER_PAGE]);
+    const paginatedReports = useMemo(() => reports.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE), [reports, page, ITEMS_PER_PAGE]);
 
     if (!isOpen) return null;
 
@@ -182,97 +188,119 @@ export function ReportModal({ isOpen, onClose, onNotificationsChange }: ReportMo
                 </div>
 
                 <div className={styles.tableWrapper}>
-                    <table className={styles.table}>
-                        <thead>
-                            <tr>
-                                <th>Data/Hora</th>
-                                {isAdmin && <th>Usuário</th>}
-                                <th>Sala</th>
-                                <th>Relato</th>
-                                <th>Status</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {reports.map(r => (
-                                <tr key={r.id}>
-                                    <td className={styles.dateCell} data-label="Data/Hora">
-                                        {format(new Date(r.criado_em), "dd/MM/yyyy HH:mm", { locale: ptBR })}
-                                    </td>
-                                    {isAdmin && <td className={styles.userCell} data-label="Usuário">{r.usuario_nome}</td>}
-                                    <td data-label="Sala">{r.sala_nome || '—'}</td>
-                                    <td className={styles.descCell} title={r.descricao} data-label="Relato">
-                                        {finalizingId === r.id ? (
-                                            <div className={styles.finalizeRow}>
-                                                <input
-                                                    type="text"
-                                                    className={styles.finalizeInput}
-                                                    value={finalizingMsg}
-                                                    onChange={e => setFinalizingMsg(e.target.value.slice(0, 120))}
-                                                    placeholder="Resposta ao usuário..."
-                                                    maxLength={120}
-                                                    autoFocus
-                                                    onKeyDown={e => {
-                                                        if (e.key === 'Enter') handleFinalize(r.id, finalizingMsg);
-                                                        if (e.key === 'Escape') { setFinalizingId(null); setFinalizingMsg(''); }
-                                                    }}
-                                                />
-                                                <span className={styles.finalizeCount}>{finalizingMsg.length}/120</span>
-                                                <button
-                                                    className={`${styles.actionBtn} ${styles.actionBtnFinalize}`}
-                                                    onClick={() => handleFinalize(r.id, finalizingMsg)}
-                                                    title="Confirmar"
-                                                >
-                                                    <CheckCircle size={18} />
-                                                </button>
-                                                <button
-                                                    className={styles.actionBtn}
-                                                    onClick={() => { setFinalizingId(null); setFinalizingMsg(''); }}
-                                                    title="Cancelar"
-                                                >
-                                                    <X size={18} />
-                                                </button>
-                                            </div>
-                                        ) : r.descricao}
-                                    </td>
-                                    <td data-label="Status">
-                                        <span className={`${styles.badge} ${r.status === 'finalizado' ? styles.badgeFinalizado : styles.badgeAberto}`}>
-                                            {r.status === 'finalizado' ? 'Finalizado' : 'Aberto'}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div className={styles.actions}>
-                                            {isAdmin && r.status === 'aberto' && finalizingId !== r.id && (
-                                                <button
-                                                    className={`${styles.actionBtn} ${styles.actionBtnFinalize}`}
-                                                    onClick={() => { setFinalizingId(r.id); setFinalizingMsg(''); }}
-                                                    title="Finalizar relato"
-                                                >
-                                                    <CheckCircle size={18} />
-                                                </button>
-                                            )}
-                                            {(r.usuario_id === user?.id || isAdmin) && (
-                                                <button
-                                                    className={`${styles.actionBtn} ${styles.actionBtnDelete}`}
-                                                    onClick={() => handleDelete(r.id)}
-                                                    title="Excluir relato"
-                                                >
-                                                    <Trash size={18} />
-                                                </button>
-                                            )}
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                    {reports.length === 0 && (
+                    {reports.length === 0 ? (
                         <div className={styles.empty}>Nenhum relato registrado</div>
+                    ) : (
+                        <table className={styles.table}>
+                            <thead>
+                                <tr>
+                                    <th>Data/Hora</th>
+                                    {isAdmin && <th>Usuário</th>}
+                                    <th>Sala</th>
+                                    <th>Relato</th>
+                                    <th>Status</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {paginatedReports.map(r => (
+                                    <tr key={r.id}>
+                                        <td className={styles.dateCell} data-label="Data/Hora">
+                                            {format(new Date(r.criado_em), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                                        </td>
+                                        {isAdmin && <td className={styles.userCell} data-label="Usuário">{r.usuario_nome}</td>}
+                                        <td data-label="Sala">{r.sala_nome || '—'}</td>
+                                        <td className={styles.descCell} title={r.descricao} data-label="Relato">
+                                            {finalizingId === r.id ? (
+                                                <div className={styles.finalizeRow}>
+                                                    <input
+                                                        type="text"
+                                                        className={styles.finalizeInput}
+                                                        value={finalizingMsg}
+                                                        onChange={e => setFinalizingMsg(e.target.value.slice(0, 120))}
+                                                        placeholder="Resposta ao usuário..."
+                                                        maxLength={120}
+                                                        autoFocus
+                                                        onKeyDown={e => {
+                                                            if (e.key === 'Enter') handleFinalize(r.id, finalizingMsg);
+                                                            if (e.key === 'Escape') { setFinalizingId(null); setFinalizingMsg(''); }
+                                                        }}
+                                                    />
+                                                    <span className={styles.finalizeCount}>{finalizingMsg.length}/120</span>
+                                                    <button
+                                                        className={`${styles.actionBtn} ${styles.actionBtnFinalize}`}
+                                                        onClick={() => handleFinalize(r.id, finalizingMsg)}
+                                                        title="Confirmar"
+                                                    >
+                                                        <CheckCircle size={18} />
+                                                    </button>
+                                                    <button
+                                                        className={styles.actionBtn}
+                                                        onClick={() => { setFinalizingId(null); setFinalizingMsg(''); }}
+                                                        title="Cancelar"
+                                                    >
+                                                        <X size={18} />
+                                                    </button>
+                                                </div>
+                                            ) : r.descricao}
+                                        </td>
+                                        <td data-label="Status">
+                                            <span className={`${styles.badge} ${r.status === 'finalizado' ? styles.badgeFinalizado : styles.badgeAberto}`}>
+                                                {r.status === 'finalizado' ? 'Finalizado' : 'Aberto'}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div className={styles.actions}>
+                                                {isAdmin && r.status === 'aberto' && finalizingId !== r.id && (
+                                                    <button
+                                                        className={`${styles.actionBtn} ${styles.actionBtnFinalize}`}
+                                                        onClick={() => { setFinalizingId(r.id); setFinalizingMsg(''); }}
+                                                        title="Finalizar relato"
+                                                    >
+                                                        <CheckCircle size={18} />
+                                                    </button>
+                                                )}
+                                                {(r.usuario_id === user?.id || isAdmin) && (
+                                                    <button
+                                                        className={`${styles.actionBtn} ${styles.actionBtnDelete}`}
+                                                        onClick={() => handleDelete(r.id)}
+                                                        title="Excluir relato"
+                                                    >
+                                                        <Trash size={18} />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
                     )}
                 </div>
 
                 <div className={styles.footer}>
-                    {reports.length} relato{reports.length !== 1 ? 's' : ''}
+                    <span className={styles.footerCount}>{reports.length} relato{reports.length !== 1 ? 's' : ''}</span>
+                    {reports.length > ITEMS_PER_PAGE && (
+                        <div className={styles.pagination}>
+                            <button
+                                className={styles.pageBtn}
+                                onClick={() => setPage(p => Math.max(1, p - 1))}
+                                disabled={page <= 1}
+                            >
+                                <CaretLeft size={14} />
+                            </button>
+                            <span className={styles.pageInfo}>
+                                {page} / {totalPages}
+                            </span>
+                            <button
+                                className={styles.pageBtn}
+                                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                                disabled={page >= totalPages}
+                            >
+                                <CaretRight size={14} />
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
