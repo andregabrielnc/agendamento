@@ -20,8 +20,7 @@ COPY api/ /usr/share/nginx/html/api/
 # Copy login PHP files (used by auth API for AD integration)
 COPY login/ /usr/share/nginx/html/login/
 
-# Copy .env for DB credentials (if present)
-COPY .env /usr/share/nginx/html/.env
+# DB credentials come from environment variables (set in Coolify)
 
 # Copy nginx config
 COPY nginx.conf /etc/nginx/conf.d/default.conf
