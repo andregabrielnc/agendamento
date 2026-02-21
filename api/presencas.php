@@ -423,7 +423,11 @@ function getPresencaStats($pdo) {
     $mes = $_GET['mes'] ?? date('Y-m');
     $ano = $_GET['ano'] ?? date('Y');
 
-    if ($periodo === 'mensal') {
+    if ($periodo === 'todos') {
+        $start = null;
+        $end = null;
+        $referencia = 'todos';
+    } elseif ($periodo === 'mensal') {
         $start = $mes . '-01';
         $end = date('Y-m-d', strtotime($start . ' +1 month'));
         $referencia = $mes;
@@ -434,27 +438,43 @@ function getPresencaStats($pdo) {
     }
 
     try {
-        $sql = "
-            SELECT
-                s.id AS sala_id,
-                s.nome AS sala_nome,
-                COUNT(DISTINCT e.id) AS total_eventos,
-                COUNT(DISTINCT p.id) AS total_presencas
-            FROM salas s
-            LEFT JOIN eventos e ON e.sala_id = s.id
-                AND e.data_inicio >= :start AND e.data_inicio < :end
-            LEFT JOIN presencas p ON p.evento_id = e.id::text
-                AND p.criado_em >= :start2 AND p.criado_em < :end2
-            GROUP BY s.id, s.nome
-            ORDER BY s.nome
-        ";
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute([
-            'start' => $start,
-            'end' => $end,
-            'start2' => $start,
-            'end2' => $end,
-        ]);
+        if ($start) {
+            $sql = "
+                SELECT
+                    s.id AS sala_id,
+                    s.nome AS sala_nome,
+                    COUNT(DISTINCT e.id) AS total_eventos,
+                    COUNT(DISTINCT p.id) AS total_presencas
+                FROM salas s
+                LEFT JOIN eventos e ON e.sala_id = s.id
+                    AND e.data_inicio >= :start AND e.data_inicio < :end
+                LEFT JOIN presencas p ON p.evento_id = e.id::text
+                    AND p.criado_em >= :start2 AND p.criado_em < :end2
+                GROUP BY s.id, s.nome
+                ORDER BY s.nome
+            ";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([
+                'start' => $start,
+                'end' => $end,
+                'start2' => $start,
+                'end2' => $end,
+            ]);
+        } else {
+            $sql = "
+                SELECT
+                    s.id AS sala_id,
+                    s.nome AS sala_nome,
+                    COUNT(DISTINCT e.id) AS total_eventos,
+                    COUNT(DISTINCT p.id) AS total_presencas
+                FROM salas s
+                LEFT JOIN eventos e ON e.sala_id = s.id
+                LEFT JOIN presencas p ON p.evento_id = e.id::text
+                GROUP BY s.id, s.nome
+                ORDER BY s.nome
+            ";
+            $stmt = $pdo->query($sql);
+        }
         $dados = $stmt->fetchAll();
 
         $totalEventos = 0;
@@ -487,7 +507,11 @@ function getPresencaNominal($pdo) {
     $mes = $_GET['mes'] ?? date('Y-m');
     $ano = $_GET['ano'] ?? date('Y');
 
-    if ($periodo === 'mensal') {
+    if ($periodo === 'todos') {
+        $start = null;
+        $end = null;
+        $referencia = 'todos';
+    } elseif ($periodo === 'mensal') {
         $start = $mes . '-01';
         $end = date('Y-m-d', strtotime($start . ' +1 month'));
         $referencia = $mes;
@@ -498,22 +522,36 @@ function getPresencaNominal($pdo) {
     }
 
     try {
-        $sql = "
-            SELECT
-                p.nome_completo,
-                p.email,
-                p.evento_titulo,
-                p.sala_nome,
-                p.criado_em
-            FROM presencas p
-            WHERE p.criado_em >= :start AND p.criado_em < :end
-            ORDER BY p.criado_em DESC
-        ";
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute([
-            'start' => $start,
-            'end' => $end,
-        ]);
+        if ($start) {
+            $sql = "
+                SELECT
+                    p.nome_completo,
+                    p.email,
+                    p.evento_titulo,
+                    p.sala_nome,
+                    p.criado_em
+                FROM presencas p
+                WHERE p.criado_em >= :start AND p.criado_em < :end
+                ORDER BY p.criado_em DESC
+            ";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([
+                'start' => $start,
+                'end' => $end,
+            ]);
+        } else {
+            $sql = "
+                SELECT
+                    p.nome_completo,
+                    p.email,
+                    p.evento_titulo,
+                    p.sala_nome,
+                    p.criado_em
+                FROM presencas p
+                ORDER BY p.criado_em DESC
+            ";
+            $stmt = $pdo->query($sql);
+        }
         $dados = $stmt->fetchAll();
 
         jsonResponse([

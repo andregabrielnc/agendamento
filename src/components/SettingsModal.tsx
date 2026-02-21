@@ -58,9 +58,9 @@ export function SettingsModal({ isOpen, onClose, initialCalendarId }: SettingsMo
 
     // Stats/Report State
     type StatsTab = 'resumo' | 'nominal';
-    type StatsPeriodo = 'mensal' | 'anual';
+    type StatsPeriodo = 'mensal' | 'anual' | 'todos';
     const [statsTab, setStatsTab] = useState<StatsTab>('resumo');
-    const [statsPeriodo, setStatsPeriodo] = useState<StatsPeriodo>('mensal');
+    const [statsPeriodo, setStatsPeriodo] = useState<StatsPeriodo>('todos');
     const now = new Date();
     const [statsMes, setStatsMes] = useState(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`);
     const [statsAno, setStatsAno] = useState(String(now.getFullYear()));
@@ -79,25 +79,28 @@ export function SettingsModal({ isOpen, onClose, initialCalendarId }: SettingsMo
         try {
             const params = statsPeriodo === 'mensal'
                 ? `periodo=mensal&mes=${statsMes}`
-                : `periodo=anual&ano=${statsAno}`;
+                : statsPeriodo === 'anual'
+                    ? `periodo=anual&ano=${statsAno}`
+                    : `periodo=todos`;
 
-            if (statsTab === 'resumo') {
-                const res = await fetch(`/api/router.php?route=presencas/stats&${params}`, { credentials: 'include' });
-                const json = await res.json();
-                setStatsData(json.dados || []);
-                setStatsTotais(json.totais || { total_eventos: 0, total_presencas: 0 });
-            } else {
-                const res = await fetch(`/api/router.php?route=presencas/nominal&${params}`, { credentials: 'include' });
-                const json = await res.json();
-                setNominalData(json.dados || []);
-            }
+            const [statsRes, nominalRes] = await Promise.all([
+                fetch(`/api/router.php?route=presencas/stats&${params}`, { credentials: 'include' }),
+                fetch(`/api/router.php?route=presencas/nominal&${params}`, { credentials: 'include' }),
+            ]);
+
+            const statsJson = await statsRes.json();
+            setStatsData(statsJson.dados || []);
+            setStatsTotais(statsJson.totais || { total_eventos: 0, total_presencas: 0 });
+
+            const nominalJson = await nominalRes.json();
+            setNominalData(nominalJson.dados || []);
         } catch {
             setStatsData([]);
             setNominalData([]);
         } finally {
             setStatsLoading(false);
         }
-    }, [isAdmin, statsTab, statsPeriodo, statsMes, statsAno]);
+    }, [isAdmin, statsPeriodo, statsMes, statsAno]);
 
     useEffect(() => {
         if (isOpen && activeView === 'general' && isAdmin) {
@@ -110,7 +113,7 @@ export function SettingsModal({ isOpen, onClose, initialCalendarId }: SettingsMo
             const [y, m] = statsMes.split('-').map(Number);
             const d = new Date(y, m - 1 + direction, 1);
             setStatsMes(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
-        } else {
+        } else if (statsPeriodo === 'anual') {
             setStatsAno(String(Number(statsAno) + direction));
         }
     };
@@ -165,7 +168,8 @@ export function SettingsModal({ isOpen, onClose, initialCalendarId }: SettingsMo
             const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
             return `${meses[m - 1]} ${y}`;
         }
-        return statsAno;
+        if (statsPeriodo === 'anual') return statsAno;
+        return 'Todos';
     };
 
     const handleExportResumo = () => {
@@ -321,16 +325,21 @@ export function SettingsModal({ isOpen, onClose, initialCalendarId }: SettingsMo
                                     value={statsPeriodo}
                                     onChange={e => setStatsPeriodo(e.target.value as StatsPeriodo)}
                                 >
+                                    <option value="todos">Todos</option>
                                     <option value="mensal">Mensal</option>
                                     <option value="anual">Anual</option>
                                 </select>
-                                <button className={styles.navArrow} onClick={() => navigatePeriod(-1)}>
-                                    <CaretLeft size={16} />
-                                </button>
-                                <span className={styles.periodLabel}>{getDisplayPeriod()}</span>
-                                <button className={styles.navArrow} onClick={() => navigatePeriod(1)}>
-                                    <CaretRight size={16} />
-                                </button>
+                                {statsPeriodo !== 'todos' && (
+                                    <>
+                                        <button className={styles.navArrow} onClick={() => navigatePeriod(-1)}>
+                                            <CaretLeft size={16} />
+                                        </button>
+                                        <span className={styles.periodLabel}>{getDisplayPeriod()}</span>
+                                        <button className={styles.navArrow} onClick={() => navigatePeriod(1)}>
+                                            <CaretRight size={16} />
+                                        </button>
+                                    </>
+                                )}
                                 <button
                                     className={styles.exportBtn}
                                     onClick={statsTab === 'resumo' ? handleExportResumo : handleExportNominal}
