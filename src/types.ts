@@ -37,6 +37,7 @@ export interface CalendarEvent {
     color?: string;
     calendarId: string;
     createdBy?: string;
+    createdByName?: string;
 }
 
 export interface Calendar {

@@ -327,6 +327,36 @@
     text-align: center;
 }
 
+.recoveryLink {
+    color: #1a73e8;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.recoveryLink:hover {
+    text-decoration: underline;
+}
+
+.copyright {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    color: #9aa0a6;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-top: 4px;
+}
+
+.copyright a {
+    color: #1a73e8;
+    text-decoration: none;
+}
+
+.copyright a:hover {
+    text-decoration: underline;
+}
+
 /* === Responsive === */
 
 @media (max-width: 768px) {

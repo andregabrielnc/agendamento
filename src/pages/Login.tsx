@@ -50,7 +50,7 @@ export function Login() {
                         </div>
                         <h1 className={styles.brandTitle}>Agendamento de Salas</h1>
                         <p className={styles.brandSubtitle}>
-                            Sistema de agendamento de salas de aula e ambientes de estudo
+                            Aplicativo de agendamento de espaços de Ensino
                         </p>
                         <div className={styles.brandFeatures}>
                             <div className={styles.featureItem}>
@@ -149,8 +149,16 @@ export function Login() {
                         </button>
 
                         <p className={styles.helpText}>
-                            Problemas para acessar? Contate o suporte de TI.
+                            <a href="https://servicosti.ebserh.gov.br/" target="_blank" rel="noopener noreferrer" className={styles.recoveryLink}>
+                                Recuperar minha senha
+                            </a>
                         </p>
+
+                        <div className={styles.copyright}>
+                            <span>Andre Gabriel N. Carvalho — UES/GEP</span>
+                            <span>Versão 3.1</span>
+                            <span>Contato Teams: <a href="mailto:andre.gabriel@ebserh.gov.br">andre.gabriel@ebserh.gov.br</a></span>
+                        </div>
                     </form>
                 </div>
             </div>

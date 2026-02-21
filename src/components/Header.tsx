@@ -12,7 +12,8 @@ import {
     ShieldCheck,
     Warning,
     Bell,
-    Check
+    Check,
+    GraduationCap
 } from '@phosphor-icons/react'
 import styles from './Header.module.css'
 import { useCalendar } from '../context/CalendarContext'
@@ -168,7 +169,7 @@ export function Header() {
                     <List size={24} weight="bold" />
                 </button>
                 <div className={styles.logo}>
-                    <img src="/calendar-icon.svg" alt="Logo" width={40} height={40} />
+                    <GraduationCap size={28} weight="duotone" />
                     <span>Salas de Aula</span>
                 </div>
             </div>

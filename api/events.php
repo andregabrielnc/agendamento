@@ -27,10 +27,12 @@ function getEvents($pdo) {
     $stmt = $pdo->query('
         SELECT e.id, e.titulo, e.descricao, e.data_inicio, e.data_fim, e.dia_inteiro,
                e.cor, e.sala_id, e.criado_por, e.telefone,
+               a.nome AS criador_nome,
                f.tipo AS freq_tipo, f.intervalo AS freq_intervalo, f.dias_semana AS freq_dias_semana,
                f.data_fim AS freq_data_fim, f.contagem AS freq_contagem, f.tipo_fim AS freq_tipo_fim,
                f.excecoes AS freq_excecoes
         FROM eventos e
+        LEFT JOIN administradores a ON a.id::text = e.criado_por::text
         LEFT JOIN frequencia f ON f.evento_id = e.id
         ORDER BY e.data_inicio
     ');
@@ -309,10 +311,12 @@ function fetchEventById($pdo, $id) {
     $stmt = $pdo->prepare('
         SELECT e.id, e.titulo, e.descricao, e.data_inicio, e.data_fim, e.dia_inteiro,
                e.cor, e.sala_id, e.criado_por, e.telefone,
+               a.nome AS criador_nome,
                f.tipo AS freq_tipo, f.intervalo AS freq_intervalo, f.dias_semana AS freq_dias_semana,
                f.data_fim AS freq_data_fim, f.contagem AS freq_contagem, f.tipo_fim AS freq_tipo_fim,
                f.excecoes AS freq_excecoes
         FROM eventos e
+        LEFT JOIN administradores a ON a.id::text = e.criado_por::text
         LEFT JOIN frequencia f ON f.evento_id = e.id
         WHERE e.id = :id
     ');
@@ -334,6 +338,7 @@ function mapDbEventToFrontend($row) {
         'color' => $row['cor'],
         'calendarId' => $row['sala_id'],
         'createdBy' => $row['criado_por'],
+        'createdByName' => $row['criador_nome'] ?? null,
         'phone' => $row['telefone'],
     ];
 

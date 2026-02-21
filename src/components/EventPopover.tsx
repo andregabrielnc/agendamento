@@ -18,10 +18,9 @@ interface EventPopoverProps {
 
 export function EventPopover({ event, anchorEl, onClose }: EventPopoverProps) {
     const { deleteEvent, openEditModal, events } = useCalendar();
-    const { canEditEvent, users } = useAuth();
+    const { canEditEvent } = useAuth();
     const { showToast } = useToast();
     const canEdit = canEditEvent(event.createdBy);
-    const creator = users.find(u => u.id === event.createdBy);
     const popoverRef = useRef<HTMLDivElement>(null);
     const [style, setStyle] = useState<React.CSSProperties>({});
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -146,7 +145,7 @@ export function EventPopover({ event, anchorEl, onClose }: EventPopoverProps) {
 
                         <div className={styles.footer}>
                             <div className={styles.owner}>
-                                Criado por: {creator?.name || 'Desconhecido'}
+                                Criado por: {event.createdByName || 'Desconhecido'}
                             </div>
                         </div>
                     </div>

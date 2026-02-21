@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, AlignLeft, CaretDown, Check, TextB, TextItalic, TextUnderline, ListNumbers, List, Link, TextStrikethrough, Lock, Phone } from '@phosphor-icons/react';
+import { X, AlignLeft, CaretDown, Check, Lock, Phone } from '@phosphor-icons/react';
 import { useCalendar } from '../context/CalendarContext';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -12,7 +12,7 @@ import type { RecurrenceEditMode } from '../types';
 
 export function EventModal() {
     const { modalState, closeModal, addEvent, updateEvent, calendars } = useCalendar();
-    const { user, canEditEvent, users } = useAuth();
+    const { user, canEditEvent } = useAuth();
     const { showToast } = useToast();
     const { isOpen, type, event, selectedDate } = modalState;
 
@@ -89,7 +89,7 @@ export function EventModal() {
     const isRecurringEvent = isEditing && event && event.recurrence && event.recurrence !== 'none';
 
     // Creator info
-    const creator = isEditing && event ? users.find(u => u.id === event.createdBy) : null;
+    const creatorName = isEditing && event ? event.createdByName : null;
 
     const buildEventData = () => {
         const startTime = allDay ? '07:00' : start;
@@ -401,28 +401,15 @@ export function EventModal() {
                     </div>
 
                     {/* Creator info */}
-                    {isEditing && creator && (
+                    {isEditing && creatorName && (
                         <div className={styles.creatorInfo}>
-                            Agendado por: {creator.name} — {creator.role === 'admin' ? 'Administrador' : 'Usuário'}
+                            Agendado por: {creatorName}
                         </div>
                     )}
                 </div>
 
                 {/* ===== Footer ===== */}
                 <div className={styles.modalFooter}>
-                    <div className={styles.footerLeft}>
-                        <div className={styles.formattingToolbar}>
-                            <button className={styles.toolbarBtn} title="Negrito"><TextB size={18} /></button>
-                            <button className={styles.toolbarBtn} title="Itálico"><TextItalic size={18} /></button>
-                            <button className={styles.toolbarBtn} title="Sublinhado"><TextUnderline size={18} /></button>
-                            <div className={styles.toolbarSeparator} />
-                            <button className={styles.toolbarBtn} title="Lista numerada"><ListNumbers size={18} /></button>
-                            <button className={styles.toolbarBtn} title="Lista com marcadores"><List size={18} /></button>
-                            <div className={styles.toolbarSeparator} />
-                            <button className={styles.toolbarBtn} title="Link"><Link size={18} /></button>
-                            <button className={styles.toolbarBtn} title="Tachado"><TextStrikethrough size={18} /></button>
-                        </div>
-                    </div>
                     <div className={styles.footerRight}>
                         {canEdit && (
                             <button className={styles.saveBtn} onClick={() => handleSubmit()}>
