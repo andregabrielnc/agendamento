@@ -71,7 +71,14 @@ export function ReportModal({ isOpen, onClose, onNotificationsChange }: ReportMo
                     descricao: descricao.trim(),
                 }),
             });
-            const data = await res.json();
+            const text = await res.text();
+            let data: any;
+            try {
+                data = JSON.parse(text);
+            } catch {
+                showToast('Erro no servidor: resposta inválida', 'error');
+                return;
+            }
             if (res.ok && !data.error) {
                 showToast('Relato enviado com sucesso', 'success');
                 setDescricao('');
@@ -135,16 +142,18 @@ export function ReportModal({ isOpen, onClose, onNotificationsChange }: ReportMo
                 </div>
 
                 <div className={styles.formSection}>
-                    <div className={styles.formField}>
-                        <label>Sala / Agenda</label>
-                        <select value={salaId} onChange={e => setSalaId(e.target.value)}>
-                            <option value="">Geral (nenhuma sala)</option>
-                            {calendars.map(c => (
-                                <option key={c.id} value={c.id}>{c.name}</option>
-                            ))}
-                        </select>
+                    <div className={styles.formRow}>
+                        <div className={styles.formField}>
+                            <label>Sala / Agenda</label>
+                            <select value={salaId} onChange={e => setSalaId(e.target.value)}>
+                                <option value="">Geral (nenhuma sala)</option>
+                                {calendars.map(c => (
+                                    <option key={c.id} value={c.id}>{c.name}</option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
-                    <div className={styles.formField} style={{ flex: 2 }}>
+                    <div className={styles.formFieldFull}>
                         <label>Relate o problema</label>
                         <div className={styles.textareaWrapper}>
                             <textarea
@@ -156,14 +165,16 @@ export function ReportModal({ isOpen, onClose, onNotificationsChange }: ReportMo
                             <span className={styles.charCount}>{descricao.length}/500</span>
                         </div>
                     </div>
-                    <button
-                        className={styles.submitBtn}
-                        onClick={handleSubmit}
-                        disabled={submitting || !descricao.trim()}
-                    >
-                        <PaperPlaneRight size={16} />
-                        Enviar
-                    </button>
+                    <div className={styles.formActions}>
+                        <button
+                            className={styles.submitBtn}
+                            onClick={handleSubmit}
+                            disabled={submitting || !descricao.trim()}
+                        >
+                            <PaperPlaneRight size={16} />
+                            Enviar
+                        </button>
+                    </div>
                 </div>
 
                 <div className={styles.tableWrapper}>

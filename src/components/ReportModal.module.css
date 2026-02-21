@@ -55,20 +55,31 @@
     padding: 20px 24px;
     border-bottom: 1px solid var(--border-color);
     display: flex;
-    align-items: flex-end;
+    flex-direction: column;
     gap: 12px;
-    flex-wrap: wrap;
+}
+
+.formRow {
+    display: flex;
+    gap: 12px;
 }
 
 .formField {
     display: flex;
     flex-direction: column;
     gap: 4px;
-    flex: 1;
-    min-width: 160px;
+    min-width: 220px;
 }
 
-.formField label {
+.formFieldFull {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+}
+
+.formField label,
+.formFieldFull label {
     font-size: 11px;
     font-weight: 600;
     text-transform: uppercase;
@@ -77,7 +88,7 @@
 }
 
 .formField select,
-.formField textarea {
+.formFieldFull textarea {
     padding: 8px 10px;
     border: 1px solid var(--border-color);
     border-radius: 6px;
@@ -86,17 +97,19 @@
     color: var(--text-primary);
     outline: none;
     font-family: inherit;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .formField select:focus,
-.formField textarea:focus {
+.formFieldFull textarea:focus {
     border-color: var(--primary);
 }
 
-.formField textarea {
+.formFieldFull textarea {
     resize: vertical;
-    min-height: 60px;
-    max-height: 120px;
+    min-height: 80px;
+    max-height: 160px;
 }
 
 .textareaWrapper {
@@ -112,6 +125,11 @@
     pointer-events: none;
 }
 
+.formActions {
+    display: flex;
+    justify-content: flex-end;
+}
+
 .submitBtn {
     display: flex;
     align-items: center;
@@ -124,8 +142,6 @@
     font-weight: 600;
     white-space: nowrap;
     transition: opacity 0.15s;
-    align-self: flex-end;
-    margin-bottom: 1px;
 }
 
 .submitBtn:hover {
@@ -283,9 +299,12 @@
         border-radius: 0;
     }
 
-    .formSection {
+    .formRow {
         flex-direction: column;
-        align-items: stretch;
+    }
+
+    .formField {
+        min-width: 0;
     }
 
     .table th:nth-child(1),
