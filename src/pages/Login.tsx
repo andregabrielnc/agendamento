@@ -72,9 +72,12 @@ export function Login({ onPresenca }: LoginProps) {
                         </div>
                     </div>
                     <div className={styles.brandFooter}>
-                        <span>EBSERH</span>
-                        <span className={styles.dot}>·</span>
-                        <span>Empresa Brasileira de Serviços Hospitalares</span>
+                        <img src="/logo_hc.png" alt="EBSERH — Empresa Brasileira de Serviços Hospitalares" className={styles.brandLogo} />
+                        <span className={styles.brandFooterText}>
+                            <span>EBSERH</span>
+                            <span className={styles.dot}>·</span>
+                            <span>Empresa Brasileira de Serviços Hospitalares</span>
+                        </span>
                     </div>
                 </div>
 

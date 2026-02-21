@@ -132,13 +132,24 @@
 }
 
 .brandFooter {
+    position: relative;
+    z-index: 1;
+}
+
+.brandLogo {
+    display: block;
+    max-width: 220px;
+    height: auto;
+    opacity: 0.85;
+}
+
+.brandFooterText {
+    display: none;
     font-family: 'DM Sans', sans-serif;
     font-size: 11px;
     color: rgba(248, 249, 250, 0.35);
     letter-spacing: 0.05em;
     text-transform: uppercase;
-    position: relative;
-    z-index: 1;
 }
 
 .dot {
@@ -440,6 +451,14 @@
     .brandSubtitle {
         margin-bottom: 0;
         font-size: 13px;
+    }
+
+    .brandLogo {
+        display: none;
+    }
+
+    .brandFooterText {
+        display: inline;
     }
 
     .formPanel {
