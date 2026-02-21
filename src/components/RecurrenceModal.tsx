@@ -66,13 +66,32 @@ export function RecurrenceModal({ isOpen, onClose, onSave, initialRule }: Recurr
     };
 
     const handleSave = () => {
+        const currentYear = new Date().getFullYear();
+        const yearEndDate = new Date(currentYear, 11, 31, 23, 59, 59);
+
+        let finalEndType = endType;
+        let finalEndDate: Date | undefined;
+
+        if (endType === 'never') {
+            // Force to year-end cap
+            finalEndType = 'date';
+            finalEndDate = yearEndDate;
+        } else if (endType === 'date' && endDate) {
+            const picked = new Date(endDate);
+            if (picked > yearEndDate) {
+                finalEndDate = yearEndDate;
+            } else {
+                finalEndDate = picked;
+            }
+        }
+
         onSave({
             frequency,
             interval,
             daysOfWeek: frequency === 'weekly' ? daysOfWeek : undefined,
-            endType,
-            endDate: endType === 'date' && endDate ? new Date(endDate) : undefined,
-            occurrenceCount: endType === 'count' ? occurrenceCount : undefined
+            endType: finalEndType,
+            endDate: finalEndType === 'date' ? finalEndDate : undefined,
+            occurrenceCount: finalEndType === 'count' ? occurrenceCount : undefined
         });
         onClose();
     };
@@ -173,6 +192,7 @@ export function RecurrenceModal({ isOpen, onClose, onSave, initialRule }: Recurr
                             <span>ocorrências</span>
                         </label>
                     </div>
+                    <p className={styles.hint}>A recorrência será limitada até o final do ano</p>
                 </div>
 
                 <div className={styles.footer}>

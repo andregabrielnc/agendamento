@@ -9,6 +9,7 @@ interface AuthContextType {
     login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
     logout: () => void;
     updateUser: (user: User) => Promise<{ success: boolean; error?: string }>;
+    createUser: (data: { name: string; email: string; role: string }) => Promise<{ success: boolean; error?: string }>;
     canEditEvent: (eventCreatedBy?: string) => boolean;
     canManageCalendars: () => boolean;
 }
@@ -139,6 +140,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     }, [user]);
 
+    const createUser = useCallback(async (data: { name: string; email: string; role: string }): Promise<{ success: boolean; error?: string }> => {
+        try {
+            const res = await fetch('/api/router.php?route=users', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+            });
+            const responseData = await res.json();
+
+            if (!res.ok || responseData.error) {
+                return { success: false, error: responseData.error || 'Erro ao cadastrar usuário' };
+            }
+
+            const mapped = parseUser(responseData);
+            setUsers(prev => [...prev, mapped]);
+
+            return { success: true };
+        } catch {
+            return { success: false, error: 'Erro ao cadastrar usuário' };
+        }
+    }, []);
+
     const isAdmin = user?.role === 'admin';
 
     const canEditEvent = useCallback((eventCreatedBy?: string) => {
@@ -158,9 +181,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         login,
         logout,
         updateUser,
+        createUser,
         canEditEvent,
         canManageCalendars,
-    }), [user, users, isAdmin, login, logout, updateUser, canEditEvent, canManageCalendars]);
+    }), [user, users, isAdmin, login, logout, updateUser, createUser, canEditEvent, canManageCalendars]);
 
     return (
         <AuthContext.Provider value={value}>

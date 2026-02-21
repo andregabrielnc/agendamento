@@ -63,7 +63,7 @@ function createEvent($pdo) {
         ':telefone' => $input['phone'] ?? null,
     ]);
 
-    saveRecurrence($pdo, $id, $input['recurrence'] ?? null);
+    saveRecurrence($pdo, $id, $input['recurrence'] ?? null, $input['start'] ?? null);
     logMovimento($pdo, $id, 'criacao', $user);
 
     $event = fetchEventById($pdo, $id);
@@ -137,7 +137,7 @@ function updateEvent($id, $pdo) {
             ':telefone' => $input['phone'] ?? null,
         ]);
 
-        saveRecurrence($pdo, $newId, $input['recurrence'] ?? null);
+        saveRecurrence($pdo, $newId, $input['recurrence'] ?? null, $input['start'] ?? null);
         logMovimento($pdo, $newId, 'criacao', $user);
         logMovimento($pdo, $id, 'edicao', $user);
 
@@ -175,7 +175,7 @@ function updateEvent($id, $pdo) {
 
     // Replace recurrence
     $pdo->prepare('DELETE FROM frequencia WHERE evento_id = :id')->execute([':id' => $id]);
-    saveRecurrence($pdo, $id, $input['recurrence'] ?? null);
+    saveRecurrence($pdo, $id, $input['recurrence'] ?? null, $input['start'] ?? null);
 
     logMovimento($pdo, $id, 'edicao', $user);
 
@@ -231,20 +231,31 @@ function addExceptionToEvent($pdo, $eventId, $dateStr) {
     ]);
 }
 
-function saveRecurrence($pdo, $eventId, $recurrence) {
+function saveRecurrence($pdo, $eventId, $recurrence, $eventStart = null) {
     if (!$recurrence || $recurrence === 'none') return;
+
+    // Compute year-end cap from event start date
+    $yearEndCap = null;
+    if ($eventStart) {
+        $startTs = strtotime($eventStart);
+        if ($startTs) {
+            $year = date('Y', $startTs);
+            $yearEndCap = $year . '-12-31T23:59:59';
+        }
+    }
 
     // Simple recurrence types (string values)
     if (is_string($recurrence)) {
         if (in_array($recurrence, ['daily', 'weekly', 'monthly', 'yearly'])) {
             $stmt = $pdo->prepare(
-                'INSERT INTO frequencia (evento_id, tipo, intervalo, tipo_fim, excecoes)
-                 VALUES (:evento_id, :tipo, 1, :tipo_fim, :excecoes)'
+                'INSERT INTO frequencia (evento_id, tipo, intervalo, tipo_fim, data_fim, excecoes)
+                 VALUES (:evento_id, :tipo, 1, :tipo_fim, :data_fim, :excecoes)'
             );
             $stmt->execute([
                 ':evento_id' => $eventId,
                 ':tipo' => $recurrence,
-                ':tipo_fim' => 'never',
+                ':tipo_fim' => $yearEndCap ? 'date' : 'never',
+                ':data_fim' => $yearEndCap,
                 ':excecoes' => '{}',
             ]);
         }
@@ -253,6 +264,21 @@ function saveRecurrence($pdo, $eventId, $recurrence) {
 
     // Full RecurrenceRule object
     if (is_array($recurrence)) {
+        $endType = $recurrence['endType'] ?? 'never';
+        $endDate = $recurrence['endDate'] ?? null;
+
+        // Enforce year-end cap
+        if ($yearEndCap) {
+            if ($endType === 'never') {
+                $endType = 'date';
+                $endDate = $yearEndCap;
+            } elseif ($endType === 'date' && $endDate) {
+                if (strtotime($endDate) > strtotime($yearEndCap)) {
+                    $endDate = $yearEndCap;
+                }
+            }
+        }
+
         $diasSemana = isset($recurrence['daysOfWeek'])
             ? '{' . implode(',', $recurrence['daysOfWeek']) . '}'
             : null;
@@ -271,9 +297,9 @@ function saveRecurrence($pdo, $eventId, $recurrence) {
             ':tipo' => $recurrence['frequency'] ?? 'daily',
             ':intervalo' => $recurrence['interval'] ?? 1,
             ':dias_semana' => $diasSemana,
-            ':data_fim' => $recurrence['endDate'] ?? null,
+            ':data_fim' => $endDate,
             ':contagem' => $recurrence['occurrenceCount'] ?? null,
-            ':tipo_fim' => $recurrence['endType'] ?? 'never',
+            ':tipo_fim' => $endType,
             ':excecoes' => $excecoes,
         ]);
     }

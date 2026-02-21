@@ -105,6 +105,30 @@ export function EventModal() {
         const endDate = new Date(`${endDateStr}T${endTime}`);
         const selectedCalendar = calendars.find(c => c.id === calendarId);
 
+        // Cap recurrence to year-end
+        const yearEndDate = new Date(startDate.getFullYear(), 11, 31, 23, 59, 59);
+        let finalRecurrence: any = recurrence === 'custom' && customRule ? customRule : recurrence;
+
+        if (typeof finalRecurrence === 'string' && finalRecurrence !== 'none') {
+            // Convert simple string recurrences to a full RecurrenceRule with year-end cap
+            finalRecurrence = {
+                frequency: finalRecurrence,
+                interval: 1,
+                endType: 'date' as const,
+                endDate: yearEndDate,
+            };
+        } else if (typeof finalRecurrence === 'object' && finalRecurrence !== null) {
+            // Cap custom rules to year-end
+            if (finalRecurrence.endType === 'never') {
+                finalRecurrence = { ...finalRecurrence, endType: 'date', endDate: yearEndDate };
+            } else if (finalRecurrence.endType === 'date' && finalRecurrence.endDate) {
+                const ruleEnd = finalRecurrence.endDate instanceof Date ? finalRecurrence.endDate : new Date(finalRecurrence.endDate);
+                if (ruleEnd > yearEndDate) {
+                    finalRecurrence = { ...finalRecurrence, endDate: yearEndDate };
+                }
+            }
+        }
+
         return {
             title: title || '(Sem título)',
             start: startDate,
@@ -114,7 +138,7 @@ export function EventModal() {
             calendarId,
             color: selectedCalendar?.color,
             allDay,
-            recurrence: recurrence === 'custom' && customRule ? customRule : (recurrence as any),
+            recurrence: finalRecurrence,
             createdBy: event?.createdBy || user?.id,
         };
     };

@@ -43,6 +43,9 @@ export function getRecurrenceInstances(
 
     const MAX_INSTANCES = 365;
 
+    // Hard year-end cap: recurrence must never extend beyond Dec 31 of the event's start year
+    const yearEnd = new Date(event.start.getFullYear(), 11, 31, 23, 59, 59);
+
     // Build set of exception dates to skip
     const exceptionDates = new Set<string>();
     if (rule.exceptions) {
@@ -52,6 +55,9 @@ export function getRecurrenceInstances(
     }
 
     while (count < MAX_INSTANCES) {
+        // Hard year-end cap
+        if (isAfter(currentStart, yearEnd)) break;
+
         // Safe check for endDate
         if (rule.endType === 'date' && rule.endDate) {
             const endDate = rule.endDate instanceof Date ? rule.endDate : new Date(rule.endDate);
@@ -123,6 +129,9 @@ export function getRecurrenceInstances(
                 const instanceStart = new Date(targetDate);
                 instanceStart.setHours(event.start.getHours(), event.start.getMinutes(), 0, 0);
                 const instanceEnd = new Date(instanceStart.getTime() + duration);
+
+                // Hard year-end cap
+                if (isAfter(instanceStart, yearEnd)) return instances;
 
                 if (rule.endType === 'date' && rule.endDate) {
                     const endDate = rule.endDate instanceof Date ? rule.endDate : new Date(rule.endDate);
