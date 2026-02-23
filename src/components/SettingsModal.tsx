@@ -199,6 +199,11 @@ export function SettingsModal({ isOpen, onClose, initialCalendarId }: SettingsMo
         ]);
     };
 
+    const selectedCalendarEventCount = useMemo(() => {
+        if (!selectedCalendar) return 0;
+        return events.filter(e => e.calendarId === selectedCalendar.id).length;
+    }, [events, selectedCalendar]);
+
     if (!isOpen) return null;
 
     const handleCalendarClick = (calendar: Calendar) => {
@@ -294,11 +299,6 @@ export function SettingsModal({ isOpen, onClose, initialCalendarId }: SettingsMo
         setIcsFile(null);
         setIcsEventCount(0);
     };
-
-    const selectedCalendarEventCount = useMemo(() => {
-        if (!selectedCalendar) return 0;
-        return events.filter(e => e.calendarId === selectedCalendar.id).length;
-    }, [events, selectedCalendar]);
 
     const handleDeleteClick = () => {
         setConfirmDeleteOpen(true);
