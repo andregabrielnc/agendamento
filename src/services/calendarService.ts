@@ -8,6 +8,35 @@ class ApiError extends Error {
     }
 }
 
+/**
+ * Convert a Date to a local ISO string (without Z suffix).
+ * PostgreSQL TIMESTAMP WITHOUT TIME ZONE ignores timezone info,
+ * so we must send local time, not UTC.
+ */
+function toLocalISOString(date: Date): string {
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+}
+
+/**
+ * Recursively convert Date objects to local ISO strings for API serialization.
+ */
+function prepareDatesForApi<T>(data: T): T {
+    if (data === null || data === undefined) return data;
+    if (data instanceof Date) return toLocalISOString(data) as unknown as T;
+    if (Array.isArray(data)) {
+        return data.map(item => prepareDatesForApi(item)) as unknown as T;
+    }
+    if (typeof data === 'object') {
+        const result: Record<string, unknown> = {};
+        for (const [key, value] of Object.entries(data as Record<string, unknown>)) {
+            result[key] = prepareDatesForApi(value);
+        }
+        return result as T;
+    }
+    return data;
+}
+
 const DATE_KEYS = new Set(['start', 'end', 'endDate', 'createdAt']);
 
 function reviveDates<T>(data: T): T {
@@ -59,14 +88,14 @@ class CalendarService {
     async createEvent(eventData: Omit<CalendarEvent, 'id'>): Promise<CalendarEvent> {
         return apiCall<CalendarEvent>('/api/router.php?route=events', {
             method: 'POST',
-            body: JSON.stringify(eventData),
+            body: JSON.stringify(prepareDatesForApi(eventData)),
         });
     }
 
     async updateEvent(event: CalendarEvent, mode?: RecurrenceEditMode, instanceDate?: string): Promise<CalendarEvent> {
         return apiCall<CalendarEvent>(`/api/router.php?route=events/${event.id}`, {
             method: 'PUT',
-            body: JSON.stringify({ ...event, _recurrenceMode: mode, _instanceDate: instanceDate }),
+            body: JSON.stringify(prepareDatesForApi({ ...event, _recurrenceMode: mode, _instanceDate: instanceDate })),
         });
     }
 
