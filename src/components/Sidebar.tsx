@@ -81,6 +81,34 @@ export function Sidebar() {
         setMenuOpenFor(null);
     };
 
+    // Non-admin: radio behavior — only one calendar visible at a time
+    const handleNonAdminToggle = (calendarId: string) => {
+        const target = calendars.find(c => c.id === calendarId);
+        if (!target) return;
+        // If already visible, do nothing (keep at least one selected)
+        if (target.visible) return;
+        // Show this one, hide all others
+        calendars.forEach(c => {
+            if (c.id === calendarId && !c.visible) {
+                toggleCalendar(c.id);
+            } else if (c.id !== calendarId && c.visible) {
+                toggleCalendar(c.id);
+            }
+        });
+    };
+
+    // Admin: toggle all calendars on/off
+    const allVisible = calendars.length > 0 && calendars.every(c => c.visible);
+    const handleToggleAll = () => {
+        if (allVisible) {
+            // Deselect all
+            calendars.forEach(c => { if (c.visible) toggleCalendar(c.id); });
+        } else {
+            // Select all
+            calendars.forEach(c => { if (!c.visible) toggleCalendar(c.id); });
+        }
+    };
+
     const handleHide = (calendarId: string) => {
         const calendar = calendars.find(c => c.id === calendarId);
         if (calendar && calendar.visible) {
@@ -121,6 +149,15 @@ export function Sidebar() {
             <div className={styles.section}>
                 <div className={styles.sectionHeader}>
                     <span>Minhas Agendas</span>
+                    {isAdmin && (
+                        <button
+                            className={styles.toggleAllBtn}
+                            onClick={handleToggleAll}
+                            title={allVisible ? 'Desmarcar todas' : 'Selecionar todas'}
+                        >
+                            {allVisible ? 'Desmarcar todas' : 'Selecionar todas'}
+                        </button>
+                    )}
                     <CaretDown size={14} />
                 </div>
                 <div className={styles.calendarList}>
@@ -132,7 +169,7 @@ export function Sidebar() {
                         >
                             <div
                                 className={styles.checkboxWrapper}
-                                onClick={() => toggleCalendar(calendar.id)}
+                                onClick={() => isAdmin ? toggleCalendar(calendar.id) : handleNonAdminToggle(calendar.id)}
                             >
                                 <span
                                     className={`${styles.checkbox} ${calendar.visible ? styles.checkboxChecked : ''}`}
