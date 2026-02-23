@@ -177,19 +177,45 @@ export function EventProvider({ children }: { children: ReactNode }) {
     }, []);
 
     const updateCalendar = useCallback(async (updatedCalendar: Calendar): Promise<EventOperationResult> => {
+        const currentCalendar = calendars.find(c => c.id === updatedCalendar.id);
+        const colorChanged = currentCalendar && currentCalendar.color !== updatedCalendar.color;
+
         const previousCalendars = calendars;
+        const previousEvents = events;
+
         setCalendars(prev => prev.map(c => (c.id === updatedCalendar.id ? updatedCalendar : c)));
+
+        if (colorChanged) {
+            setEvents(prev => prev.map(e =>
+                e.calendarId === updatedCalendar.id
+                    ? { ...e, color: updatedCalendar.color }
+                    : e
+            ));
+        }
 
         try {
             await calendarService.updateCalendar(updatedCalendar);
+
+            if (colorChanged) {
+                const affectedEvents = events.filter(e => e.calendarId === updatedCalendar.id);
+                await Promise.all(
+                    affectedEvents.map(e =>
+                        calendarService.updateEvent({ ...e, color: updatedCalendar.color })
+                    )
+                );
+            }
+
             return { success: true };
         } catch (error) {
             const message = error instanceof Error ? error.message : 'Failed to update calendar';
             console.error('Failed to update calendar:', error);
             setCalendars(previousCalendars);
+            if (colorChanged) {
+                setEvents(previousEvents);
+            }
             return { success: false, error: message };
         }
-    }, [calendars]);
+    }, [calendars, events]);
 
     const deleteCalendar = useCallback(async (id: string): Promise<EventOperationResult> => {
         const previousCalendars = calendars;

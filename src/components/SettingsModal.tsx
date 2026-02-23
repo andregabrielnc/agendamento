@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { parseICS } from '../utils/icsParser';
 import { exportToExcel } from '../utils/exportExcel';
+import { ConfirmDialog } from './ConfirmDialog';
 import styles from './SettingsModal.module.css';
 import type { Calendar } from '../types';
 
@@ -24,12 +25,13 @@ const PRESET_COLORS = [
 ];
 
 export function SettingsModal({ isOpen, onClose, initialCalendarId }: SettingsModalProps) {
-    const { calendars, addCalendar, updateCalendar, deleteCalendar, addEvent } = useCalendar();
+    const { calendars, events, addCalendar, updateCalendar, deleteCalendar, addEvent } = useCalendar();
     const { isAdmin } = useAuth();
     const { showToast } = useToast();
     const [activeView, setActiveView] = useState<View>('general');
     const [selectedCalendar, setSelectedCalendar] = useState<Calendar | null>(null);
     const [initializedFor, setInitializedFor] = useState<string | undefined>(undefined);
+    const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
     // Form State
     const [name, setName] = useState('');
@@ -55,6 +57,9 @@ export function SettingsModal({ isOpen, onClose, initialCalendarId }: SettingsMo
     // ICS Import State
     const [icsFile, setIcsFile] = useState<File | null>(null);
     const [icsEventCount, setIcsEventCount] = useState(0);
+    const [importing, setImporting] = useState(false);
+    const [importProgress, setImportProgress] = useState(0);
+    const [importTotal, setImportTotal] = useState(0);
 
     // Stats/Report State
     type StatsTab = 'resumo' | 'nominal';
@@ -241,6 +246,7 @@ export function SettingsModal({ isOpen, onClose, initialCalendarId }: SettingsMo
                 description,
                 color
             });
+            setActiveView('calendars');
         } else {
             const result = await addCalendar({
                 name,
@@ -254,7 +260,12 @@ export function SettingsModal({ isOpen, onClose, initialCalendarId }: SettingsMo
                 const text = await icsFile.text();
                 const parsedEvents = parseICS(text);
 
-                for (const evt of parsedEvents) {
+                setImporting(true);
+                setImportProgress(0);
+                setImportTotal(parsedEvents.length);
+
+                for (let i = 0; i < parsedEvents.length; i++) {
+                    const evt = parsedEvents[i];
                     await addEvent({
                         title: evt.title,
                         start: evt.start,
@@ -264,20 +275,41 @@ export function SettingsModal({ isOpen, onClose, initialCalendarId }: SettingsMo
                         color,
                         allDay: evt.allDay,
                     });
+                    setImportProgress(i + 1);
                 }
+
+                setImporting(false);
+                setImportProgress(0);
+                setImportTotal(0);
+                setIcsFile(null);
+                setIcsEventCount(0);
+                onClose();
                 showToast(`${parsedEvents.length} evento${parsedEvents.length !== 1 ? 's' : ''} importado${parsedEvents.length !== 1 ? 's' : ''}`, 'success');
+                return;
             }
+
+            setActiveView('calendars');
         }
 
         setIcsFile(null);
         setIcsEventCount(0);
-        setActiveView('calendars');
     };
 
-    const handleDelete = async () => {
+    const selectedCalendarEventCount = useMemo(() => {
+        if (!selectedCalendar) return 0;
+        return events.filter(e => e.calendarId === selectedCalendar.id).length;
+    }, [events, selectedCalendar]);
+
+    const handleDeleteClick = () => {
+        setConfirmDeleteOpen(true);
+    };
+
+    const handleDeleteConfirm = async () => {
+        setConfirmDeleteOpen(false);
         if (selectedCalendar && isAdmin) {
             const result = await deleteCalendar(selectedCalendar.id);
             if (result.success) {
+                showToast('Agenda excluída com sucesso', 'success');
                 setActiveView('calendars');
             } else {
                 showToast(result.error || 'Erro ao excluir sala', 'error');
@@ -488,7 +520,10 @@ export function SettingsModal({ isOpen, onClose, initialCalendarId }: SettingsMo
             case 'calendar-details':
                 return (
                     <div className={styles.body}>
-                        <div className={styles.formGrid}>
+                        <div
+                            className={styles.formGrid}
+                            style={importing ? { opacity: 0.5, pointerEvents: 'none' } : undefined}
+                        >
                             <div className={styles.formLeft}>
                                 <div className={styles.formGroup}>
                                     <label>Nome da Sala / Agenda</label>
@@ -559,13 +594,27 @@ export function SettingsModal({ isOpen, onClose, initialCalendarId }: SettingsMo
                                 </div>
                             </div>
                         </div>
-                        <div className={styles.buttonGroup}>
-                            <button className={styles.saveBtn} onClick={handleSave}>Salvar</button>
-                            <button className={styles.cancelBtn} onClick={() => setActiveView('calendars')}>Cancelar</button>
-                            {selectedCalendar && (
-                                <button className={styles.deleteBtn} onClick={handleDelete}>Excluir</button>
-                            )}
-                        </div>
+                        {importing ? (
+                            <div className={styles.importProgressWrapper}>
+                                <span className={styles.importProgressLabel}>
+                                    Importando eventos... {importProgress}/{importTotal}
+                                </span>
+                                <div className={styles.importProgressTrack}>
+                                    <div
+                                        className={styles.importProgressBar}
+                                        style={{ width: importTotal > 0 ? `${(importProgress / importTotal) * 100}%` : '0%' }}
+                                    />
+                                </div>
+                            </div>
+                        ) : (
+                            <div className={styles.buttonGroup}>
+                                <button className={styles.saveBtn} onClick={handleSave}>Salvar</button>
+                                <button className={styles.cancelBtn} onClick={() => setActiveView('calendars')}>Cancelar</button>
+                                {selectedCalendar && (
+                                    <button className={styles.deleteBtn} onClick={handleDeleteClick}>Excluir</button>
+                                )}
+                            </div>
+                        )}
                     </div>
                 );
         }
@@ -622,6 +671,20 @@ export function SettingsModal({ isOpen, onClose, initialCalendarId }: SettingsMo
                     {renderContent()}
                 </div>
             </div>
+            <ConfirmDialog
+                isOpen={confirmDeleteOpen}
+                title="Excluir agenda"
+                message={
+                    selectedCalendarEventCount > 0
+                        ? `Esta agenda possui ${selectedCalendarEventCount} evento${selectedCalendarEventCount !== 1 ? 's' : ''}. Ao excluir, todos os eventos serão removidos permanentemente.`
+                        : 'Tem certeza que deseja excluir esta agenda?'
+                }
+                confirmLabel="Excluir"
+                cancelLabel="Cancelar"
+                destructive
+                onConfirm={handleDeleteConfirm}
+                onCancel={() => setConfirmDeleteOpen(false)}
+            />
         </div>
     );
 }
