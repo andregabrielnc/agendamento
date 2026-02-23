@@ -59,10 +59,10 @@ export function getRecurrenceInstances(
         // Hard year-end cap
         if (isAfter(currentStart, yearEnd)) break;
 
-        // Safe check for endDate
+        // Safe check for endDate — compare at date level so the last day is included
         if (rule.endType === 'date' && rule.endDate) {
             const endDate = rule.endDate instanceof Date ? rule.endDate : new Date(rule.endDate);
-            if (isValid(endDate) && isAfter(currentStart, endDate)) break;
+            if (isValid(endDate) && isAfter(startOfDay(currentStart), startOfDay(endDate))) break;
         }
         if (rule.endType === 'count' && rule.occurrenceCount && count >= rule.occurrenceCount) break;
 
@@ -136,7 +136,7 @@ export function getRecurrenceInstances(
 
                 if (rule.endType === 'date' && rule.endDate) {
                     const endDate = rule.endDate instanceof Date ? rule.endDate : new Date(rule.endDate);
-                    if (isValid(endDate) && isAfter(instanceStart, endDate)) return instances;
+                    if (isValid(endDate) && isAfter(startOfDay(instanceStart), startOfDay(endDate))) return instances;
                 }
                 if (rule.endType === 'count' && specializedCount >= rule.occurrenceCount!) return instances;
 

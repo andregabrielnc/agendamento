@@ -64,6 +64,7 @@ interface CalendarContextType {
         isOpen: boolean;
         type: 'create' | 'edit' | null;
         selectedDate?: Date;
+        selectedEndDate?: Date;
         event?: CalendarEvent;
         instanceDate?: Date;
     };
@@ -72,7 +73,7 @@ interface CalendarContextType {
         event: CalendarEvent | null;
         anchorEl: HTMLElement | null;
     };
-    openCreateModal: (date?: Date) => void;
+    openCreateModal: (date?: Date, endDate?: Date) => void;
     openEditModal: (event: CalendarEvent, instanceDate?: Date) => void;
     closeModal: () => void;
     openPopover: (event: CalendarEvent, anchorEl: HTMLElement) => void;

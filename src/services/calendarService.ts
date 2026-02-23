@@ -48,7 +48,11 @@ function reviveDates<T>(data: T): T {
         const result: Record<string, unknown> = {};
         for (const [key, value] of Object.entries(data as Record<string, unknown>)) {
             if (DATE_KEYS.has(key) && typeof value === 'string') {
-                result[key] = new Date(value);
+                // Date-only strings (YYYY-MM-DD) are parsed as UTC by JS,
+                // which shifts the date in negative-offset timezones. Force local time.
+                result[key] = /^\d{4}-\d{2}-\d{2}$/.test(value)
+                    ? new Date(value + 'T00:00:00')
+                    : new Date(value);
             } else if (typeof value === 'object' && value !== null) {
                 result[key] = reviveDates(value);
             } else {

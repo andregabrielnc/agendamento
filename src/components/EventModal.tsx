@@ -14,7 +14,7 @@ export function EventModal() {
     const { modalState, closeModal, addEvent, updateEvent, calendars } = useCalendar();
     const { user, canEditEvent } = useAuth();
     const { showToast } = useToast();
-    const { isOpen, type, event, selectedDate } = modalState;
+    const { isOpen, type, event, selectedDate, selectedEndDate } = modalState;
 
     const isEditing = type === 'edit';
     const canEdit = !isEditing || canEditEvent(event?.createdBy, event?.start);
@@ -42,13 +42,15 @@ export function EventModal() {
     useEffect(() => {
         if (isOpen) {
             if (type === 'create' && selectedDate) {
+                const effectiveEnd = selectedEndDate || new Date(selectedDate.getTime() + 60 * 60 * 1000);
                 setTitle('');
                 setDescription('');
                 setDate(format(selectedDate, 'yyyy-MM-dd'));
-                setEndDateStr(format(selectedDate, 'yyyy-MM-dd'));
-                setStart(format(new Date(), 'HH:mm'));
-                setEnd(format(new Date(new Date().getTime() + 60 * 60 * 1000), 'HH:mm'));
-                setCalendarId(calendars[0]?.id || '');
+                setEndDateStr(format(effectiveEnd, 'yyyy-MM-dd'));
+                setStart(format(selectedDate, 'HH:mm'));
+                setEnd(format(effectiveEnd, 'HH:mm'));
+                const firstVisible = calendars.find(c => c.visible);
+                setCalendarId(firstVisible?.id || calendars[0]?.id || '');
                 setAllDay(false);
                 setPhone('');
                 setRecurrence('none');

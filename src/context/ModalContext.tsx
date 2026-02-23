@@ -6,6 +6,7 @@ interface ModalState {
     isOpen: boolean;
     type: 'create' | 'edit' | null;
     selectedDate?: Date;
+    selectedEndDate?: Date;
     event?: CalendarEvent;
     instanceDate?: Date;
 }
@@ -19,7 +20,7 @@ interface PopoverState {
 interface ModalContextType {
     modalState: ModalState;
     popoverState: PopoverState;
-    openCreateModal: (date?: Date) => void;
+    openCreateModal: (date?: Date, endDate?: Date) => void;
     openEditModal: (event: CalendarEvent, instanceDate?: Date) => void;
     closeModal: () => void;
     openPopover: (event: CalendarEvent, anchorEl: HTMLElement) => void;
@@ -43,12 +44,13 @@ export function ModalProvider({ children }: { children: ReactNode }) {
         setModalState(INITIAL_MODAL_STATE);
     }, []);
 
-    const openCreateModal = useCallback((date?: Date) => {
+    const openCreateModal = useCallback((date?: Date, endDate?: Date) => {
         setPopoverState(INITIAL_POPOVER_STATE);
         setModalState({
             isOpen: true,
             type: 'create',
             selectedDate: date ?? new Date(),
+            selectedEndDate: endDate,
         });
     }, []);
 

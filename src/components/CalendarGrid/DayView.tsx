@@ -96,7 +96,7 @@ export function DayView() {
 
         const handleWindowMouseUp = () => {
             if (isDraggingCreate && draftEvent) {
-                openCreateModal(draftEvent.start);
+                openCreateModal(draftEvent.start, draftEvent.end);
             }
 
             if (resizeEventId && draftEndTime) {
