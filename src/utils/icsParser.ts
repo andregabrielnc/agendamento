@@ -1,9 +1,12 @@
+import type { RecurrenceRule } from '../types';
+
 export interface ParsedEvent {
     title: string;
     start: Date;
     end: Date;
     description?: string;
     allDay?: boolean;
+    recurrence?: RecurrenceRule;
 }
 
 export function parseICS(icsText: string): ParsedEvent[] {
@@ -19,11 +22,13 @@ export function parseICS(icsText: string): ParsedEvent[] {
         const dtstart = extractField(unfolded, 'DTSTART');
         const dtend = extractField(unfolded, 'DTEND');
         const desc = extractField(unfolded, 'DESCRIPTION');
+        const rrule = extractField(unfolded, 'RRULE');
 
         if (dtstart) {
             const start = parseICSDate(dtstart);
             const end = dtend ? parseICSDate(dtend) : new Date(start.getTime() + 3600000);
             const allDay = dtstart.length === 8;
+            const recurrence = rrule ? parseRRule(rrule, start) : undefined;
 
             events.push({
                 title: unescapeICS(title),
@@ -31,11 +36,68 @@ export function parseICS(icsText: string): ParsedEvent[] {
                 end,
                 description: desc ? unescapeICS(desc).substring(0, 500) : undefined,
                 allDay: allDay || undefined,
+                recurrence,
             });
         }
     }
 
     return events;
+}
+
+const DAY_MAP: Record<string, number> = {
+    SU: 0, MO: 1, TU: 2, WE: 3, TH: 4, FR: 5, SA: 6,
+};
+
+function parseRRule(rruleStr: string, eventStart: Date): RecurrenceRule | undefined {
+    const parts: Record<string, string> = {};
+    for (const part of rruleStr.split(';')) {
+        const [key, value] = part.split('=');
+        if (key && value) parts[key] = value;
+    }
+
+    const freq = (parts['FREQ'] || '').toLowerCase();
+    if (!['daily', 'weekly', 'monthly', 'yearly'].includes(freq)) return undefined;
+
+    const frequency = freq as RecurrenceRule['frequency'];
+    const interval = parts['INTERVAL'] ? parseInt(parts['INTERVAL'], 10) : 1;
+
+    // Cap recurrence to year-end
+    const yearEnd = new Date(eventStart.getFullYear(), 11, 31, 23, 59, 59);
+
+    let endType: RecurrenceRule['endType'] = 'date';
+    let endDate: Date | undefined = yearEnd;
+    let occurrenceCount: number | undefined;
+
+    if (parts['UNTIL']) {
+        const untilDate = parseICSDate(parts['UNTIL']);
+        endType = 'date';
+        endDate = untilDate > yearEnd ? yearEnd : untilDate;
+    } else if (parts['COUNT']) {
+        endType = 'count';
+        occurrenceCount = parseInt(parts['COUNT'], 10);
+        endDate = yearEnd;
+    } else {
+        endType = 'date';
+        endDate = yearEnd;
+    }
+
+    let daysOfWeek: number[] | undefined;
+    if (parts['BYDAY']) {
+        daysOfWeek = parts['BYDAY']
+            .split(',')
+            .map(d => d.replace(/[^A-Z]/g, ''))
+            .filter(d => d in DAY_MAP)
+            .map(d => DAY_MAP[d]);
+    }
+
+    return {
+        frequency,
+        interval,
+        endType,
+        endDate,
+        occurrenceCount,
+        daysOfWeek,
+    };
 }
 
 function extractField(block: string, fieldName: string): string | null {
@@ -44,6 +106,9 @@ function extractField(block: string, fieldName: string): string | null {
     if (!match) return null;
 
     let value = match[1];
+    // RRULE has no parameters before colon — the value IS after RRULE:
+    if (fieldName === 'RRULE') return value.trim();
+
     // If there are parameters (e.g. DTSTART;TZID=...:20240115T090000), take the part after the last colon
     const colonIdx = value.lastIndexOf(':');
     if (colonIdx !== -1) {

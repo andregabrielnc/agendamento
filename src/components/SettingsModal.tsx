@@ -279,6 +279,7 @@ export function SettingsModal({ isOpen, onClose, initialCalendarId }: SettingsMo
                         calendarId: newCalId,
                         color,
                         allDay: evt.allDay,
+                        recurrence: evt.recurrence,
                     });
                     setImportProgress(i + 1);
                 }
