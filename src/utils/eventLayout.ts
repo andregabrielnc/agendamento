@@ -158,7 +158,7 @@ export function computeEventLayout(events: LayoutEvent[]): Map<string, EventLayo
  * - Columns > 0 overlap the previous column slightly (layered look)
  * - Visual separation comes from the event's left border (CSS)
  */
-const OVERLAP_PX = 8;
+const OVERLAP_PX = 12;
 
 export function getEventColumnStyle(layout: EventLayout | undefined): { left: string; width: string } {
     if (!layout || layout.totalColumns <= 1) {

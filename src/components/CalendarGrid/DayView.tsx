@@ -315,7 +315,7 @@ export function DayView() {
                                     >
                                         <div className={styles.eventTitle}>{event.title}</div>
                                         <div className={styles.eventTime}>
-                                            {format(event.start, 'H:mm')} - {format(resizeEventId === event.id && draftEndTime ? draftEndTime : event.end, 'H:mm')}
+                                            {format(event.start, 'HH:mm')} – {format(resizeEventId === event.id && draftEndTime ? draftEndTime : event.end, 'HH:mm')}
                                         </div>
 
                                         {/* Resize Handle */}
@@ -346,7 +346,7 @@ export function DayView() {
                             >
                                 <div className={styles.eventTitle}>(Sem titulo)</div>
                                 <div className={styles.eventTime}>
-                                    {format(draftEvent.start, 'H:mm')} - {format(draftEvent.end, 'H:mm')}
+                                    {format(draftEvent.start, 'HH:mm')} – {format(draftEvent.end, 'HH:mm')}
                                 </div>
                             </div>
                         )}
