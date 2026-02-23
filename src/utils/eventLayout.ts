@@ -160,9 +160,9 @@ export function computeEventLayout(events: LayoutEvent[]): Map<string, EventLayo
  */
 const OVERLAP_PX = 12;
 
-export function getEventColumnStyle(layout: EventLayout | undefined): { left: string; width: string } {
+export function getEventColumnStyle(layout: EventLayout | undefined): { left: string; width: string; zIndex: number } {
     if (!layout || layout.totalColumns <= 1) {
-        return { left: '1px', width: 'calc(100% - 2px)' };
+        return { left: '1px', width: 'calc(100% - 2px)', zIndex: 1 };
     }
 
     const { column, totalColumns, span } = layout;
@@ -170,11 +170,16 @@ export function getEventColumnStyle(layout: EventLayout | undefined): { left: st
     const leftPct = column * colPct;
     const widthPct = span * colPct;
 
+    // Higher columns render on top (shorter/later events in front,
+    // longer background events behind) — like Google Calendar.
+    const zIndex = column + 1;
+
     // Column 0: flush to left edge
     if (column === 0) {
         return {
             left: '1px',
             width: `calc(${widthPct}% - 2px)`,
+            zIndex,
         };
     }
 
@@ -182,5 +187,6 @@ export function getEventColumnStyle(layout: EventLayout | undefined): { left: st
     return {
         left: `calc(${leftPct}% - ${OVERLAP_PX}px)`,
         width: `calc(${widthPct}% + ${OVERLAP_PX}px - 2px)`,
+        zIndex,
     };
 }

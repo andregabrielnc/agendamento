@@ -328,7 +328,7 @@ export function WeekView({ dayCount }: WeekViewProps) {
                                                 left: colStyle.left,
                                                 width: colStyle.width,
                                                 backgroundColor: event.color,
-                                                zIndex: resizeEventId === event.id ? 10 : 1,
+                                                zIndex: resizeEventId === event.id ? 10 : colStyle.zIndex,
                                                 opacity: dragEventId === event.id ? 0.5 : 1
                                             }}
                                             draggable={!resizeEventId}
