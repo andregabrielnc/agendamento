@@ -137,7 +137,7 @@ export function EventModal() {
         };
     };
 
-    const handleSubmit = (e?: React.FormEvent) => {
+    const handleSubmit = async (e?: React.FormEvent) => {
         if (e) e.preventDefault();
 
         const startTime = allDay ? '07:00' : start;
@@ -160,22 +160,30 @@ export function EventModal() {
         const eventData = buildEventData();
 
         if (type === 'create') {
-            addEvent(eventData);
-            showToast('Evento criado', 'success');
-            closeModal();
+            const result = await addEvent(eventData);
+            if (result.success) {
+                showToast('Evento criado', 'success');
+                closeModal();
+            } else {
+                showToast(result.error || 'Erro ao criar evento', 'error');
+            }
         } else if (type === 'edit' && event) {
             if (isRecurringEvent) {
                 setPendingEventData(eventData);
                 setShowRecurrenceDialog(true);
             } else {
-                updateEvent({ ...event, ...eventData });
-                showToast('Evento atualizado', 'success');
-                closeModal();
+                const result = await updateEvent({ ...event, ...eventData });
+                if (result.success) {
+                    showToast('Evento atualizado', 'success');
+                    closeModal();
+                } else {
+                    showToast(result.error || 'Erro ao atualizar evento', 'error');
+                }
             }
         }
     };
 
-    const handleRecurrenceDialogConfirm = (mode: RecurrenceEditMode) => {
+    const handleRecurrenceDialogConfirm = async (mode: RecurrenceEditMode) => {
         setShowRecurrenceDialog(false);
 
         const instanceDate = modalState.instanceDate
@@ -183,9 +191,13 @@ export function EventModal() {
             : undefined;
 
         if (event && pendingEventData) {
-            updateEvent({ ...event, ...pendingEventData }, mode, instanceDate);
-            showToast('Evento atualizado', 'success');
-            closeModal();
+            const result = await updateEvent({ ...event, ...pendingEventData }, mode, instanceDate);
+            if (result.success) {
+                showToast('Evento atualizado', 'success');
+                closeModal();
+            } else {
+                showToast(result.error || 'Erro ao atualizar evento', 'error');
+            }
         }
 
         setPendingEventData(null);
