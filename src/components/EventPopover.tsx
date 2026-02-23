@@ -25,6 +25,7 @@ export function EventPopover({ event, anchorEl, onClose }: EventPopoverProps) {
     const [style, setStyle] = useState<React.CSSProperties>({});
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [showRecurrenceDialog, setShowRecurrenceDialog] = useState(false);
+    const [deleting, setDeleting] = useState(false);
 
     const isRecurringEvent = event.recurrence && event.recurrence !== 'none';
 
@@ -61,19 +62,29 @@ export function EventPopover({ event, anchorEl, onClose }: EventPopoverProps) {
         }
     };
 
-    const confirmDelete = () => {
-        deleteEvent(event.id);
-        onClose();
-        showToast('Evento excluído', 'info');
-        setShowDeleteConfirm(false);
+    const confirmDelete = async () => {
+        setDeleting(true);
+        try {
+            await deleteEvent(event.id);
+            onClose();
+            showToast('Evento excluído', 'info');
+            setShowDeleteConfirm(false);
+        } finally {
+            setDeleting(false);
+        }
     };
 
-    const handleRecurrenceDeleteConfirm = (mode: RecurrenceEditMode) => {
+    const handleRecurrenceDeleteConfirm = async (mode: RecurrenceEditMode) => {
         setShowRecurrenceDialog(false);
-        const instanceDate = format(event.start, 'yyyy-MM-dd');
-        deleteEvent(event.id, mode, instanceDate);
-        onClose();
-        showToast('Evento excluído', 'info');
+        setDeleting(true);
+        try {
+            const instanceDate = format(event.start, 'yyyy-MM-dd');
+            await deleteEvent(event.id, mode, instanceDate);
+            onClose();
+            showToast('Evento excluído', 'info');
+        } finally {
+            setDeleting(false);
+        }
     };
 
     const handleEdit = () => {
@@ -99,18 +110,20 @@ export function EventPopover({ event, anchorEl, onClose }: EventPopoverProps) {
                     <div className={styles.actionsHeader}>
                         <div className={styles.actionGroup}>
                             <button
-                                onClick={canEdit ? handleEdit : undefined}
-                                className={`${styles.iconBtn} ${!canEdit ? styles.iconBtnDisabled : ''}`}
+                                onClick={canEdit && !deleting ? handleEdit : undefined}
+                                className={`${styles.iconBtn} ${!canEdit || deleting ? styles.iconBtnDisabled : ''}`}
                                 title={canEdit ? 'Editar evento' : 'Sem permissão para editar'}
-                                disabled={!canEdit}
+                                disabled={!canEdit || deleting}
+                                style={deleting ? { opacity: 0.6, cursor: 'not-allowed' } : undefined}
                             >
                                 <PencilSimple size={18} />
                             </button>
                             <button
-                                onClick={canEdit ? handleDelete : undefined}
-                                className={`${styles.iconBtn} ${!canEdit ? styles.iconBtnDisabled : ''}`}
-                                title={canEdit ? 'Excluir evento' : 'Sem permissão para excluir'}
-                                disabled={!canEdit}
+                                onClick={canEdit && !deleting ? handleDelete : undefined}
+                                className={`${styles.iconBtn} ${!canEdit || deleting ? styles.iconBtnDisabled : ''}`}
+                                title={canEdit ? (deleting ? 'Excluindo...' : 'Excluir evento') : 'Sem permissão para excluir'}
+                                disabled={!canEdit || deleting}
+                                style={deleting ? { opacity: 0.6, cursor: 'not-allowed' } : undefined}
                             >
                                 <Trash size={18} />
                             </button>

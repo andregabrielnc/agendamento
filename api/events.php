@@ -32,7 +32,7 @@ function getEvents($pdo) {
                f.data_fim AS freq_data_fim, f.contagem AS freq_contagem, f.tipo_fim AS freq_tipo_fim,
                f.excecoes AS freq_excecoes
         FROM eventos e
-        LEFT JOIN administradores a ON a.id::text = e.criado_por::text
+        LEFT JOIN administradores a ON a.id = e.criado_por
         LEFT JOIN frequencia f ON f.evento_id = e.id
         ORDER BY e.data_inicio
     ');
@@ -57,25 +57,33 @@ function createEvent($pdo) {
 
     $id = generateUuid();
 
-    $stmt = $pdo->prepare('
-        INSERT INTO eventos (id, titulo, descricao, data_inicio, data_fim, dia_inteiro, cor, sala_id, criado_por, telefone)
-        VALUES (:id, :titulo, :descricao, :data_inicio, :data_fim, :dia_inteiro, :cor, :sala_id, :criado_por, :telefone)
-    ');
-    $stmt->execute([
-        ':id' => $id,
-        ':titulo' => $input['title'] ?? '',
-        ':descricao' => $input['description'] ?? null,
-        ':data_inicio' => $input['start'] ?? null,
-        ':data_fim' => $input['end'] ?? null,
-        ':dia_inteiro' => (!empty($input['allDay'])) ? 'true' : 'false',
-        ':cor' => $input['color'] ?? null,
-        ':sala_id' => $input['calendarId'] ?? null,
-        ':criado_por' => $input['createdBy'] ?? $user['id'],
-        ':telefone' => $input['phone'] ?? null,
-    ]);
+    $pdo->beginTransaction();
+    try {
+        $stmt = $pdo->prepare('
+            INSERT INTO eventos (id, titulo, descricao, data_inicio, data_fim, dia_inteiro, cor, sala_id, criado_por, telefone)
+            VALUES (:id, :titulo, :descricao, :data_inicio, :data_fim, :dia_inteiro, :cor, :sala_id, :criado_por, :telefone)
+        ');
+        $stmt->execute([
+            ':id' => $id,
+            ':titulo' => $input['title'] ?? '',
+            ':descricao' => $input['description'] ?? null,
+            ':data_inicio' => $input['start'] ?? null,
+            ':data_fim' => $input['end'] ?? null,
+            ':dia_inteiro' => (!empty($input['allDay'])) ? 'true' : 'false',
+            ':cor' => $input['color'] ?? null,
+            ':sala_id' => $input['calendarId'] ?? null,
+            ':criado_por' => $user['id'],
+            ':telefone' => $input['phone'] ?? null,
+        ]);
 
-    saveRecurrence($pdo, $id, $input['recurrence'] ?? null, $input['start'] ?? null);
-    logMovimento($pdo, $id, 'criacao', $user);
+        saveRecurrence($pdo, $id, $input['recurrence'] ?? null, $input['start'] ?? null);
+        logMovimento($pdo, $id, 'criacao', $user);
+
+        $pdo->commit();
+    } catch (Exception $e) {
+        $pdo->rollBack();
+        throw $e;
+    }
 
     $event = fetchEventById($pdo, $id);
     jsonResponse($event, 201);
@@ -105,30 +113,39 @@ function updateEvent($id, $pdo) {
     }
 
     if ($mode === 'single' && $instanceDate) {
-        // Add exception to the original event's recurrence
-        addExceptionToEvent($pdo, $id, $instanceDate);
-
-        // Create a new standalone event for this single date
         $newId = generateUuid();
-        $stmt = $pdo->prepare('
-            INSERT INTO eventos (id, titulo, descricao, data_inicio, data_fim, dia_inteiro, cor, sala_id, criado_por, telefone)
-            VALUES (:id, :titulo, :descricao, :data_inicio, :data_fim, :dia_inteiro, :cor, :sala_id, :criado_por, :telefone)
-        ');
-        $stmt->execute([
-            ':id' => $newId,
-            ':titulo' => $input['title'] ?? '',
-            ':descricao' => $input['description'] ?? null,
-            ':data_inicio' => $input['start'] ?? null,
-            ':data_fim' => $input['end'] ?? null,
-            ':dia_inteiro' => (!empty($input['allDay'])) ? 'true' : 'false',
-            ':cor' => $input['color'] ?? null,
-            ':sala_id' => $input['calendarId'] ?? null,
-            ':criado_por' => $input['createdBy'] ?? $user['id'],
-            ':telefone' => $input['phone'] ?? null,
-        ]);
-        // No recurrence for the standalone event
-        logMovimento($pdo, $newId, 'criacao', $user);
-        logMovimento($pdo, $id, 'edicao', $user);
+
+        $pdo->beginTransaction();
+        try {
+            // Add exception to the original event's recurrence
+            addExceptionToEvent($pdo, $id, $instanceDate);
+
+            // Create a new standalone event for this single date
+            $stmt = $pdo->prepare('
+                INSERT INTO eventos (id, titulo, descricao, data_inicio, data_fim, dia_inteiro, cor, sala_id, criado_por, telefone)
+                VALUES (:id, :titulo, :descricao, :data_inicio, :data_fim, :dia_inteiro, :cor, :sala_id, :criado_por, :telefone)
+            ');
+            $stmt->execute([
+                ':id' => $newId,
+                ':titulo' => $input['title'] ?? '',
+                ':descricao' => $input['description'] ?? null,
+                ':data_inicio' => $input['start'] ?? null,
+                ':data_fim' => $input['end'] ?? null,
+                ':dia_inteiro' => (!empty($input['allDay'])) ? 'true' : 'false',
+                ':cor' => $input['color'] ?? null,
+                ':sala_id' => $input['calendarId'] ?? null,
+                ':criado_por' => $user['id'],
+                ':telefone' => $input['phone'] ?? null,
+            ]);
+            // No recurrence for the standalone event
+            logMovimento($pdo, $newId, 'criacao', $user);
+            logMovimento($pdo, $id, 'edicao', $user);
+
+            $pdo->commit();
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            throw $e;
+        }
 
         $event = fetchEventById($pdo, $newId);
         jsonResponse($event);
@@ -136,37 +153,46 @@ function updateEvent($id, $pdo) {
     }
 
     if ($mode === 'thisAndFollowing' && $instanceDate) {
-        // Set original event's recurrence endDate to day before instanceDate
-        $dayBefore = date('Y-m-d', strtotime($instanceDate . ' -1 day'));
-        $stmt = $pdo->prepare('UPDATE frequencia SET data_fim = :data_fim, tipo_fim = :tipo_fim WHERE evento_id = :id');
-        $stmt->execute([
-            ':data_fim' => $dayBefore . 'T23:59:59',
-            ':tipo_fim' => 'date',
-            ':id' => $id,
-        ]);
-
-        // Create a new event with recurrence starting from instanceDate
         $newId = generateUuid();
-        $stmt = $pdo->prepare('
-            INSERT INTO eventos (id, titulo, descricao, data_inicio, data_fim, dia_inteiro, cor, sala_id, criado_por, telefone)
-            VALUES (:id, :titulo, :descricao, :data_inicio, :data_fim, :dia_inteiro, :cor, :sala_id, :criado_por, :telefone)
-        ');
-        $stmt->execute([
-            ':id' => $newId,
-            ':titulo' => $input['title'] ?? '',
-            ':descricao' => $input['description'] ?? null,
-            ':data_inicio' => $input['start'] ?? null,
-            ':data_fim' => $input['end'] ?? null,
-            ':dia_inteiro' => (!empty($input['allDay'])) ? 'true' : 'false',
-            ':cor' => $input['color'] ?? null,
-            ':sala_id' => $input['calendarId'] ?? null,
-            ':criado_por' => $input['createdBy'] ?? $user['id'],
-            ':telefone' => $input['phone'] ?? null,
-        ]);
 
-        saveRecurrence($pdo, $newId, $input['recurrence'] ?? null, $input['start'] ?? null);
-        logMovimento($pdo, $newId, 'criacao', $user);
-        logMovimento($pdo, $id, 'edicao', $user);
+        $pdo->beginTransaction();
+        try {
+            // Set original event's recurrence endDate to day before instanceDate
+            $dayBefore = date('Y-m-d', strtotime($instanceDate . ' -1 day'));
+            $stmt = $pdo->prepare('UPDATE frequencia SET data_fim = :data_fim, tipo_fim = :tipo_fim WHERE evento_id = :id');
+            $stmt->execute([
+                ':data_fim' => $dayBefore . 'T23:59:59',
+                ':tipo_fim' => 'date',
+                ':id' => $id,
+            ]);
+
+            // Create a new event with recurrence starting from instanceDate
+            $stmt = $pdo->prepare('
+                INSERT INTO eventos (id, titulo, descricao, data_inicio, data_fim, dia_inteiro, cor, sala_id, criado_por, telefone)
+                VALUES (:id, :titulo, :descricao, :data_inicio, :data_fim, :dia_inteiro, :cor, :sala_id, :criado_por, :telefone)
+            ');
+            $stmt->execute([
+                ':id' => $newId,
+                ':titulo' => $input['title'] ?? '',
+                ':descricao' => $input['description'] ?? null,
+                ':data_inicio' => $input['start'] ?? null,
+                ':data_fim' => $input['end'] ?? null,
+                ':dia_inteiro' => (!empty($input['allDay'])) ? 'true' : 'false',
+                ':cor' => $input['color'] ?? null,
+                ':sala_id' => $input['calendarId'] ?? null,
+                ':criado_por' => $user['id'],
+                ':telefone' => $input['phone'] ?? null,
+            ]);
+
+            saveRecurrence($pdo, $newId, $input['recurrence'] ?? null, $input['start'] ?? null);
+            logMovimento($pdo, $newId, 'criacao', $user);
+            logMovimento($pdo, $id, 'edicao', $user);
+
+            $pdo->commit();
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            throw $e;
+        }
 
         $event = fetchEventById($pdo, $newId);
         jsonResponse($event);
@@ -174,37 +200,45 @@ function updateEvent($id, $pdo) {
     }
 
     // mode === 'all' — current behavior: update everything
-    $stmt = $pdo->prepare('
-        UPDATE eventos SET
-            titulo = :titulo,
-            descricao = :descricao,
-            data_inicio = :data_inicio,
-            data_fim = :data_fim,
-            dia_inteiro = :dia_inteiro,
-            cor = :cor,
-            sala_id = :sala_id,
-            criado_por = :criado_por,
-            telefone = :telefone
-        WHERE id = :id
-    ');
-    $stmt->execute([
-        ':id' => $id,
-        ':titulo' => $input['title'] ?? '',
-        ':descricao' => $input['description'] ?? null,
-        ':data_inicio' => $input['start'] ?? null,
-        ':data_fim' => $input['end'] ?? null,
-        ':dia_inteiro' => (!empty($input['allDay'])) ? 'true' : 'false',
-        ':cor' => $input['color'] ?? null,
-        ':sala_id' => $input['calendarId'] ?? null,
-        ':criado_por' => $input['createdBy'] ?? $user['id'],
-        ':telefone' => $input['phone'] ?? null,
-    ]);
+    $pdo->beginTransaction();
+    try {
+        $stmt = $pdo->prepare('
+            UPDATE eventos SET
+                titulo = :titulo,
+                descricao = :descricao,
+                data_inicio = :data_inicio,
+                data_fim = :data_fim,
+                dia_inteiro = :dia_inteiro,
+                cor = :cor,
+                sala_id = :sala_id,
+                criado_por = :criado_por,
+                telefone = :telefone
+            WHERE id = :id
+        ');
+        $stmt->execute([
+            ':id' => $id,
+            ':titulo' => $input['title'] ?? '',
+            ':descricao' => $input['description'] ?? null,
+            ':data_inicio' => $input['start'] ?? null,
+            ':data_fim' => $input['end'] ?? null,
+            ':dia_inteiro' => (!empty($input['allDay'])) ? 'true' : 'false',
+            ':cor' => $input['color'] ?? null,
+            ':sala_id' => $input['calendarId'] ?? null,
+            ':criado_por' => $user['id'],
+            ':telefone' => $input['phone'] ?? null,
+        ]);
 
-    // Replace recurrence
-    $pdo->prepare('DELETE FROM frequencia WHERE evento_id = :id')->execute([':id' => $id]);
-    saveRecurrence($pdo, $id, $input['recurrence'] ?? null, $input['start'] ?? null);
+        // Replace recurrence
+        $pdo->prepare('DELETE FROM frequencia WHERE evento_id = :id')->execute([':id' => $id]);
+        saveRecurrence($pdo, $id, $input['recurrence'] ?? null, $input['start'] ?? null);
 
-    logMovimento($pdo, $id, 'edicao', $user);
+        logMovimento($pdo, $id, 'edicao', $user);
+
+        $pdo->commit();
+    } catch (Exception $e) {
+        $pdo->rollBack();
+        throw $e;
+    }
 
     $event = fetchEventById($pdo, $id);
     jsonResponse($event);
@@ -225,32 +259,60 @@ function deleteEvent($id, $pdo) {
     }
 
     if ($mode === 'single' && $instanceDate) {
-        // Just add an exception date — the instance disappears
-        addExceptionToEvent($pdo, $id, $instanceDate);
-        logMovimento($pdo, $id, 'edicao', $user);
+        $pdo->beginTransaction();
+        try {
+            // Just add an exception date — the instance disappears
+            addExceptionToEvent($pdo, $id, $instanceDate);
+            logMovimento($pdo, $id, 'edicao', $user);
+
+            $pdo->commit();
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            throw $e;
+        }
+
         jsonResponse(['success' => true]);
         return;
     }
 
     if ($mode === 'thisAndFollowing' && $instanceDate) {
-        // Set recurrence endDate to day before instanceDate
-        $dayBefore = date('Y-m-d', strtotime($instanceDate . ' -1 day'));
-        $stmt = $pdo->prepare('UPDATE frequencia SET data_fim = :data_fim, tipo_fim = :tipo_fim WHERE evento_id = :id');
-        $stmt->execute([
-            ':data_fim' => $dayBefore . 'T23:59:59',
-            ':tipo_fim' => 'date',
-            ':id' => $id,
-        ]);
-        logMovimento($pdo, $id, 'edicao', $user);
+        $pdo->beginTransaction();
+        try {
+            // Set recurrence endDate to day before instanceDate
+            $dayBefore = date('Y-m-d', strtotime($instanceDate . ' -1 day'));
+            $stmt = $pdo->prepare('UPDATE frequencia SET data_fim = :data_fim, tipo_fim = :tipo_fim WHERE evento_id = :id');
+            $stmt->execute([
+                ':data_fim' => $dayBefore . 'T23:59:59',
+                ':tipo_fim' => 'date',
+                ':id' => $id,
+            ]);
+            logMovimento($pdo, $id, 'edicao', $user);
+
+            $pdo->commit();
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            throw $e;
+        }
+
         jsonResponse(['success' => true]);
         return;
     }
 
     // mode === 'all' — current behavior: delete everything
-    logMovimento($pdo, $id, 'exclusao', $user);
+    $pdo->beginTransaction();
+    try {
+        logMovimento($pdo, $id, 'exclusao', $user);
 
-    $pdo->prepare('DELETE FROM frequencia WHERE evento_id = :id')->execute([':id' => $id]);
-    $pdo->prepare('DELETE FROM eventos WHERE id = :id')->execute([':id' => $id]);
+        $pdo->prepare('DELETE FROM frequencia WHERE evento_id = :id')->execute([':id' => $id]);
+        $pdo->prepare('DELETE FROM presencas WHERE evento_id = :id')->execute([':id' => $id]);
+        $pdo->prepare('DELETE FROM movimentos WHERE evento_id = :id')->execute([':id' => $id]);
+        $pdo->prepare('DELETE FROM eventos WHERE id = :id')->execute([':id' => $id]);
+
+        $pdo->commit();
+    } catch (Exception $e) {
+        $pdo->rollBack();
+        throw $e;
+    }
 
     jsonResponse(['success' => true]);
 }
@@ -350,7 +412,7 @@ function fetchEventById($pdo, $id) {
                f.data_fim AS freq_data_fim, f.contagem AS freq_contagem, f.tipo_fim AS freq_tipo_fim,
                f.excecoes AS freq_excecoes
         FROM eventos e
-        LEFT JOIN administradores a ON a.id::text = e.criado_por::text
+        LEFT JOIN administradores a ON a.id = e.criado_por
         LEFT JOIN frequencia f ON f.evento_id = e.id
         WHERE e.id = :id
     ');

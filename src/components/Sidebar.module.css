@@ -161,12 +161,12 @@
     left: 0;
     right: 0;
     bottom: 0;
-    z-index: 1500;
+    z-index: 1400;
 }
 
 .contextMenu {
     position: fixed;
-    z-index: 1501;
+    z-index: 1400;
     background: var(--bg-surface);
     border: 1px solid var(--border-color);
     border-radius: 8px;

@@ -47,7 +47,7 @@ function createCalendar($pdo) {
         ':descricao' => $input['description'] ?? null,
         ':cor' => $input['color'] ?? '#3b82f6',
         ':visivel' => (!empty($input['visible']) || !isset($input['visible'])) ? 'true' : 'false',
-        ':criado_por' => $input['createdBy'] ?? $user['id'],
+        ':criado_por' => $user['id'],
     ]);
 
     $calendar = [
@@ -56,14 +56,14 @@ function createCalendar($pdo) {
         'description' => $input['description'] ?? null,
         'color' => $input['color'] ?? '#3b82f6',
         'visible' => $input['visible'] ?? true,
-        'createdBy' => $input['createdBy'] ?? $user['id'],
+        'createdBy' => $user['id'],
     ];
 
     jsonResponse($calendar, 201);
 }
 
 function updateCalendar($id, $pdo) {
-    requireAdmin();
+    $user = requireAdmin();
     $input = getJsonInput();
 
     $stmt = $pdo->prepare('
@@ -81,7 +81,7 @@ function updateCalendar($id, $pdo) {
         ':descricao' => $input['description'] ?? null,
         ':cor' => $input['color'] ?? '#3b82f6',
         ':visivel' => isset($input['visible']) ? ($input['visible'] ? 'true' : 'false') : 'true',
-        ':criado_por' => $input['createdBy'] ?? null,
+        ':criado_por' => $user['id'],
     ]);
 
     $calendar = [
@@ -90,7 +90,7 @@ function updateCalendar($id, $pdo) {
         'description' => $input['description'] ?? null,
         'color' => $input['color'] ?? '#3b82f6',
         'visible' => $input['visible'] ?? true,
-        'createdBy' => $input['createdBy'] ?? null,
+        'createdBy' => $user['id'],
     ];
 
     jsonResponse($calendar);
@@ -99,9 +99,40 @@ function updateCalendar($id, $pdo) {
 function deleteCalendar($id, $pdo) {
     requireAdmin();
 
-    // Delete all events linked to this sala first, then delete the sala
-    $pdo->prepare('DELETE FROM eventos WHERE sala_id = :id')->execute([':id' => $id]);
-    $pdo->prepare('DELETE FROM salas WHERE id = :id')->execute([':id' => $id]);
+    $pdo->beginTransaction();
+    try {
+        // Get all event IDs for this calendar
+        $stmt = $pdo->prepare('SELECT id FROM eventos WHERE sala_id = :id');
+        $stmt->execute([':id' => $id]);
+        $eventIds = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+        if (!empty($eventIds)) {
+            $placeholders = implode(',', array_fill(0, count($eventIds), '?'));
+
+            // Delete from frequencia
+            $stmt = $pdo->prepare("DELETE FROM frequencia WHERE evento_id IN ($placeholders)");
+            $stmt->execute($eventIds);
+
+            // Delete from presencas
+            $stmt = $pdo->prepare("DELETE FROM presencas WHERE evento_id IN ($placeholders)");
+            $stmt->execute($eventIds);
+
+            // Delete from movimentos
+            $stmt = $pdo->prepare("DELETE FROM movimentos WHERE evento_id IN ($placeholders)");
+            $stmt->execute($eventIds);
+        }
+
+        // Delete events
+        $pdo->prepare('DELETE FROM eventos WHERE sala_id = :id')->execute([':id' => $id]);
+
+        // Delete the calendar itself
+        $pdo->prepare('DELETE FROM salas WHERE id = :id')->execute([':id' => $id]);
+
+        $pdo->commit();
+    } catch (Exception $e) {
+        $pdo->rollBack();
+        throw $e;
+    }
 
     jsonResponse(['success' => true]);
 }

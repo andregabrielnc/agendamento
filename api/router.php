@@ -1,5 +1,18 @@
 <?php
-header('Access-Control-Allow-Origin: *');
+$allowedOrigins = [
+    'http://localhost:4200',
+    'http://localhost:5173',
+    'http://10.50.0.3',
+    'http://10.50.0.3:4200',
+    'https://10.50.0.3',
+];
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+if (in_array($origin, $allowedOrigins)) {
+    header('Access-Control-Allow-Origin: ' . $origin);
+    header('Access-Control-Allow-Credentials: true');
+} else {
+    header('Access-Control-Allow-Origin: http://10.50.0.3');
+}
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
 

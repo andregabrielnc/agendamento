@@ -7,7 +7,7 @@
     right: 0;
     bottom: 0;
     background-color: rgba(0, 0, 0, 0.3);
-    z-index: 1200;
+    z-index: 1300;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -59,7 +59,7 @@
 }
 
 .numberInput:focus {
-    border-color: #1a73e8;
+    border-color: var(--primary);
 }
 
 .select {
@@ -74,7 +74,7 @@
 }
 
 .select:focus {
-    border-color: #1a73e8;
+    border-color: var(--primary);
 }
 
 .section {
@@ -110,13 +110,13 @@
 }
 
 .selectedDay {
-    background-color: #1a73e8;
-    border-color: #1a73e8;
+    background-color: var(--primary);
+    border-color: var(--primary);
     color: white;
 }
 
 .selectedDay:hover {
-    background-color: #1557b0;
+    background-color: var(--primary-dark);
 }
 
 .radioGroup {
@@ -135,7 +135,7 @@
 }
 
 .radioRow input[type="radio"] {
-    accent-color: #1a73e8;
+    accent-color: var(--primary);
     width: 18px;
     height: 18px;
 }
@@ -151,7 +151,7 @@
 }
 
 .dateInput:focus {
-    border-color: #1a73e8;
+    border-color: var(--primary);
 }
 
 .hint {
@@ -171,7 +171,7 @@
 .cancelBtn {
     background: transparent;
     border: none;
-    color: #1a73e8;
+    color: var(--primary);
     padding: 8px 16px;
     cursor: pointer;
     border-radius: 4px;
@@ -185,7 +185,7 @@
 }
 
 .saveBtn {
-    background-color: #1a73e8;
+    background-color: var(--primary);
     color: white;
     border: none;
     padding: 8px 24px;
@@ -197,7 +197,7 @@
 }
 
 .saveBtn:hover {
-    background-color: #1557b0;
+    background-color: var(--primary-dark);
 }
 
 /* ===== Responsive ===== */

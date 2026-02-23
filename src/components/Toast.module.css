@@ -5,7 +5,7 @@
     bottom: 0;
     left: 50%;
     transform: translateX(-50%);
-    z-index: 9999;
+    z-index: 3000;
     display: flex;
     flex-direction: column-reverse;
     align-items: center;
@@ -22,7 +22,7 @@
     max-width: 568px;
     padding: 14px 16px;
     border-radius: 8px;
-    background-color: #323232;
+    background-color: var(--toast-bg);
     color: #ffffff;
     font-family: 'Google Sans', Roboto, Arial, sans-serif;
     font-size: 14px;
@@ -42,15 +42,15 @@
 /* ===== Type Variants ===== */
 
 .success {
-    border-left: 4px solid #0f9d58;
+    border-left: 4px solid var(--success);
 }
 
 .error {
-    border-left: 4px solid #d93025;
+    border-left: 4px solid var(--error);
 }
 
 .info {
-    border-left: 4px solid #1a73e8;
+    border-left: 4px solid var(--primary);
 }
 
 /* ===== Icon ===== */
@@ -65,11 +65,11 @@
 }
 
 .success .icon {
-    color: #0f9d58;
+    color: var(--success);
 }
 
 .error .icon {
-    color: #d93025;
+    color: var(--error);
 }
 
 .info .icon {

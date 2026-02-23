@@ -11,6 +11,7 @@ import { EventPopover } from './components/EventPopover'
 import { KeyboardShortcuts } from './components/KeyboardShortcuts'
 import { Login } from './pages/Login'
 import { Presenca } from './pages/Presenca'
+import { ErrorBoundary } from './components/ErrorBoundary'
 
 function CalendarApp() {
   const { popoverState, closePopover, sidebarOpen, toggleSidebar } = useCalendar();
@@ -63,9 +64,11 @@ function AppContent() {
 function App() {
   return (
     <AuthProvider>
-      <ToastProvider>
-        <AppContent />
-      </ToastProvider>
+      <ErrorBoundary>
+        <ToastProvider>
+          <AppContent />
+        </ToastProvider>
+      </ErrorBoundary>
     </AuthProvider>
   )
 }

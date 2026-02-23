@@ -38,6 +38,7 @@ export function EventModal() {
     // Recurrence action dialog state
     const [showRecurrenceDialog, setShowRecurrenceDialog] = useState(false);
     const [pendingEventData, setPendingEventData] = useState<any>(null);
+    const [saving, setSaving] = useState(false);
 
     useEffect(() => {
         if (isOpen) {
@@ -162,27 +163,32 @@ export function EventModal() {
 
         const eventData = buildEventData();
 
-        if (type === 'create') {
-            const result = await addEvent(eventData);
-            if (result.success) {
-                showToast('Evento criado', 'success');
-                closeModal();
-            } else {
-                showToast(result.error || 'Erro ao criar evento', 'error');
-            }
-        } else if (type === 'edit' && event) {
-            if (isRecurringEvent) {
-                setPendingEventData(eventData);
-                setShowRecurrenceDialog(true);
-            } else {
-                const result = await updateEvent({ ...event, ...eventData });
+        setSaving(true);
+        try {
+            if (type === 'create') {
+                const result = await addEvent(eventData);
                 if (result.success) {
-                    showToast('Evento atualizado', 'success');
+                    showToast('Evento criado', 'success');
                     closeModal();
                 } else {
-                    showToast(result.error || 'Erro ao atualizar evento', 'error');
+                    showToast(result.error || 'Erro ao criar evento', 'error');
+                }
+            } else if (type === 'edit' && event) {
+                if (isRecurringEvent) {
+                    setPendingEventData(eventData);
+                    setShowRecurrenceDialog(true);
+                } else {
+                    const result = await updateEvent({ ...event, ...eventData });
+                    if (result.success) {
+                        showToast('Evento atualizado', 'success');
+                        closeModal();
+                    } else {
+                        showToast(result.error || 'Erro ao atualizar evento', 'error');
+                    }
                 }
             }
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -193,17 +199,21 @@ export function EventModal() {
             ? format(modalState.instanceDate, 'yyyy-MM-dd')
             : undefined;
 
-        if (event && pendingEventData) {
-            const result = await updateEvent({ ...event, ...pendingEventData }, mode, instanceDate);
-            if (result.success) {
-                showToast('Evento atualizado', 'success');
-                closeModal();
-            } else {
-                showToast(result.error || 'Erro ao atualizar evento', 'error');
+        setSaving(true);
+        try {
+            if (event && pendingEventData) {
+                const result = await updateEvent({ ...event, ...pendingEventData }, mode, instanceDate);
+                if (result.success) {
+                    showToast('Evento atualizado', 'success');
+                    closeModal();
+                } else {
+                    showToast(result.error || 'Erro ao atualizar evento', 'error');
+                }
             }
+        } finally {
+            setSaving(false);
+            setPendingEventData(null);
         }
-
-        setPendingEventData(null);
     };
 
     const getRecurrenceLabel = (currentRecurrence: string) => {
@@ -427,8 +437,13 @@ export function EventModal() {
                 <div className={styles.modalFooter}>
                     <div className={styles.footerRight}>
                         {canEdit && (
-                            <button className={styles.saveBtn} onClick={() => handleSubmit()}>
-                                Salvar
+                            <button
+                                className={styles.saveBtn}
+                                onClick={() => handleSubmit()}
+                                disabled={saving}
+                                style={saving ? { opacity: 0.6, cursor: 'not-allowed' } : undefined}
+                            >
+                                {saving ? 'Salvando...' : 'Salvar'}
                             </button>
                         )}
                     </div>

@@ -12,7 +12,12 @@
 
   --primary: #1a73e8;
   --primary-hover: #1557b0;
+  --primary-dark: #1557b0;
   --primary-light: #e8f0fe;
+
+  --error: #d93025;
+  --success: #0f9d58;
+  --toast-bg: #323232;
 
   --border-color: #dadce0;
   --input-bg: #ffffff;
@@ -54,7 +59,12 @@
 
   --primary: #8ab4f8;
   --primary-hover: #aecbfa;
+  --primary-dark: #4a9eff;
   --primary-light: #174ea6;
+
+  --error: #f28b82;
+  --success: #81c995;
+  --toast-bg: #424242;
 
   --border-color: #5f6368;
   --input-bg: #292a2d;

@@ -23,86 +23,108 @@ export interface EventLayout {
     span: number;
 }
 
+/**
+ * Minimum effective duration (1 minute in ms) for zero-duration events.
+ * Events with start === end are treated as having this duration so that
+ * overlap detection works correctly.
+ */
+const MIN_DURATION_MS = 60_000;
+
+/** Return an effective end time that is at least MIN_DURATION_MS after start. */
+function effectiveEnd(event: LayoutEvent): number {
+    const s = event.start.getTime();
+    const e = event.end.getTime();
+    return e > s ? e : s + MIN_DURATION_MS;
+}
+
+/** Check whether two events overlap (inclusive bounds handle zero-duration). */
+function eventsOverlap(a: LayoutEvent, b: LayoutEvent): boolean {
+    return a.start.getTime() <= effectiveEnd(b) - 1 && effectiveEnd(a) > b.start.getTime();
+}
+
 export function computeEventLayout(events: LayoutEvent[]): Map<string, EventLayout> {
     if (events.length === 0) return new Map();
 
-    // Sort by start time, then longer events first
+    // 1. Sort by start time, then by duration descending (longer events first)
+    //    O(n log n)
     const sorted = [...events].sort((a, b) => {
         const diff = a.start.getTime() - b.start.getTime();
         if (diff !== 0) return diff;
-        return (b.end.getTime() - b.start.getTime()) - (a.end.getTime() - a.start.getTime());
+        return (effectiveEnd(b) - b.start.getTime()) - (effectiveEnd(a) - a.start.getTime());
     });
 
-    // Build clusters of transitively overlapping events
+    // 2. Build clusters in a single pass using max-end tracking  O(n)
+    //    Because events are sorted by start time, a new event can only
+    //    belong to the current cluster if its start < cluster's max end.
+    //    Once it doesn't overlap, we close the current cluster and start
+    //    a new one. This replaces the previous O(n^4) merge loop.
     const clusters: LayoutEvent[][] = [];
+    let clusterStart = 0;
+    let clusterMaxEnd = effectiveEnd(sorted[0]);
 
-    for (const event of sorted) {
-        let merged = false;
-        for (const cluster of clusters) {
-            const overlaps = cluster.some(
-                e => event.start.getTime() < e.end.getTime() && event.end.getTime() > e.start.getTime()
-            );
-            if (overlaps) {
-                cluster.push(event);
-                merged = true;
-                break;
-            }
-        }
-        if (!merged) {
-            clusters.push([event]);
-        }
-    }
-
-    // Merge clusters that became connected via intermediate events
-    let changed = true;
-    while (changed) {
-        changed = false;
-        for (let i = 0; i < clusters.length; i++) {
-            for (let j = i + 1; j < clusters.length; j++) {
-                const overlaps = clusters[i].some(a =>
-                    clusters[j].some(
-                        b => a.start.getTime() < b.end.getTime() && a.end.getTime() > b.start.getTime()
-                    )
-                );
-                if (overlaps) {
-                    clusters[i].push(...clusters[j]);
-                    clusters.splice(j, 1);
-                    changed = true;
-                    break;
-                }
-            }
-            if (changed) break;
+    for (let i = 1; i < sorted.length; i++) {
+        const ev = sorted[i];
+        if (ev.start.getTime() < clusterMaxEnd) {
+            // Overlaps with current cluster — extend max end
+            const end = effectiveEnd(ev);
+            if (end > clusterMaxEnd) clusterMaxEnd = end;
+        } else {
+            // No overlap — close current cluster, start a new one
+            clusters.push(sorted.slice(clusterStart, i));
+            clusterStart = i;
+            clusterMaxEnd = effectiveEnd(ev);
         }
     }
+    // Push the last cluster
+    clusters.push(sorted.slice(clusterStart));
 
+    // 3. Within each cluster assign columns and compute layout
     const layoutMap = new Map<string, EventLayout>();
 
     for (const cluster of clusters) {
-        // Re-sort within cluster
-        cluster.sort((a, b) => {
-            const diff = a.start.getTime() - b.start.getTime();
-            if (diff !== 0) return diff;
-            return (b.end.getTime() - b.start.getTime()) - (a.end.getTime() - a.start.getTime());
-        });
+        // Cluster is already sorted from the global sort above.
 
-        // Greedy column assignment
+        // Greedy column assignment — for each event, place it in the
+        // first column where it doesn't overlap any existing event.
+        // Track per-column end times for fast non-overlap checks.
+        const columnEnds: number[] = [];           // max effective-end per column
         const columns: LayoutEvent[][] = [];
 
         for (const event of cluster) {
+            const evStart = event.start.getTime();
             let placed = false;
+
             for (let col = 0; col < columns.length; col++) {
+                // Fast check: if the column's latest end is at or before
+                // this event's start, the event fits without scanning all
+                // events in the column.
+                if (columnEnds[col] <= evStart) {
+                    columns[col].push(event);
+                    const end = effectiveEnd(event);
+                    if (end > columnEnds[col]) columnEnds[col] = end;
+                    layoutMap.set(event.id, { column: col, totalColumns: 0, span: 1 });
+                    placed = true;
+                    break;
+                }
+
+                // Slower path: column end extends past event start, but
+                // there may still be a gap.  Check all events in column.
                 const fits = columns[col].every(
-                    e => event.start.getTime() >= e.end.getTime() || event.end.getTime() <= e.start.getTime()
+                    e => !eventsOverlap(event, e)
                 );
                 if (fits) {
                     columns[col].push(event);
+                    const end = effectiveEnd(event);
+                    if (end > columnEnds[col]) columnEnds[col] = end;
                     layoutMap.set(event.id, { column: col, totalColumns: 0, span: 1 });
                     placed = true;
                     break;
                 }
             }
+
             if (!placed) {
                 columns.push([event]);
+                columnEnds.push(effectiveEnd(event));
                 layoutMap.set(event.id, { column: columns.length - 1, totalColumns: 0, span: 1 });
             }
         }
@@ -117,7 +139,7 @@ export function computeEventLayout(events: LayoutEvent[]): Map<string, EventLayo
             let span = 1;
             for (let nextCol = layout.column + 1; nextCol < totalCols; nextCol++) {
                 const blocked = columns[nextCol].some(
-                    e => event.start.getTime() < e.end.getTime() && event.end.getTime() > e.start.getTime()
+                    e => eventsOverlap(event, e)
                 );
                 if (blocked) break;
                 span++;

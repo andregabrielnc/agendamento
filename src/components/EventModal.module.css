@@ -7,7 +7,7 @@
     right: 0;
     bottom: 0;
     background-color: rgba(0, 0, 0, 0.3);
-    z-index: 1100;
+    z-index: 1200;
     display: flex;
     align-items: flex-start;
     justify-content: center;
@@ -68,7 +68,7 @@
 }
 
 .saveBtn {
-    background-color: #1a73e8;
+    background-color: var(--primary);
     color: white;
     border: none;
     padding: 8px 24px;
@@ -80,14 +80,14 @@
 }
 
 .saveBtn:hover {
-    background-color: #1557b0;
+    background-color: var(--primary-dark);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .moreActionsBtn {
     background: transparent;
     border: none;
-    color: #1a73e8;
+    color: var(--primary);
     padding: 8px 12px;
     font-size: 14px;
     cursor: pointer;
@@ -164,7 +164,7 @@
 }
 
 .titleInput:focus {
-    border-bottom-color: #1a73e8;
+    border-bottom-color: var(--primary);
 }
 
 .titleInput::placeholder {
@@ -234,7 +234,7 @@
 .allDayGroup input[type="checkbox"] {
     width: 18px;
     height: 18px;
-    accent-color: #1a73e8;
+    accent-color: var(--primary);
     cursor: pointer;
 }
 
@@ -324,8 +324,8 @@
 }
 
 .activeTab {
-    color: #1a73e8;
-    border-bottom-color: #1a73e8;
+    color: var(--primary);
+    border-bottom-color: var(--primary);
 }
 
 /* ===== Content Fields ===== */

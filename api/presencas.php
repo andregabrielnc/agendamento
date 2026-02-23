@@ -11,6 +11,7 @@ function handlePresencas($method, $id, $pdo) {
     } elseif ($method === 'GET' && $id === 'nominal') {
         getPresencaNominal($pdo);
     } elseif ($method === 'GET' && $id === 'debug') {
+        requireAdmin();
         debugActiveEvents($pdo);
     } elseif ($method === 'GET' && $id) {
         getPresencasByEvento($id, $pdo);
@@ -112,7 +113,8 @@ function getActiveEvents($pdo) {
         $stmt = $pdo->query($sqlRecurring);
         $recurringEvents = $stmt->fetchAll();
     } catch (PDOException $e) {
-        jsonResponse(['error' => 'Erro ao buscar eventos: ' . $e->getMessage()], 500);
+        error_log('Erro ao buscar eventos: ' . $e->getMessage());
+        jsonResponse(['error' => 'Erro ao buscar eventos'], 500);
     }
 
     $activeEvents = [];
@@ -187,7 +189,7 @@ function registerPresenca($pdo) {
             FROM eventos e
             LEFT JOIN salas s ON s.id = e.sala_id
             LEFT JOIN frequencia f ON f.evento_id = e.id
-            WHERE e.id::text = :eventoId
+            WHERE e.id = :eventoId
               AND f.evento_id IS NULL
               AND e.data_inicio <= NOW() + INTERVAL '15 minutes'
               AND e.data_fim >= NOW() - INTERVAL '15 minutes'
@@ -205,7 +207,7 @@ function registerPresenca($pdo) {
                 FROM eventos e
                 LEFT JOIN salas s ON s.id = e.sala_id
                 INNER JOIN frequencia f ON f.evento_id = e.id
-                WHERE e.id::text = :eventoId
+                WHERE e.id = :eventoId
             ";
             $stmt = $pdo->prepare($sqlRecCheck);
             $stmt->execute(['eventoId' => $eventoId]);
@@ -228,7 +230,7 @@ function registerPresenca($pdo) {
             $sqlOverlap = "
                 SELECT p.evento_titulo
                 FROM presencas p
-                INNER JOIN eventos e ON e.id::text = p.evento_id
+                INNER JOIN eventos e ON e.id = p.evento_id
                 WHERE p.evento_id != :eventoId
                   AND (p.email = :email OR p.fingerprint = :fingerprint)
                   AND e.data_inicio < :event_end
@@ -283,9 +285,11 @@ function registerPresenca($pdo) {
             }
             jsonResponse(['error' => 'Presença já registrada'], 409);
         }
-        jsonResponse(['error' => 'Erro interno: ' . $e->getMessage()], 500);
+        error_log('Erro interno ao registrar presença: ' . $e->getMessage());
+        jsonResponse(['error' => 'Erro interno ao processar a solicitação'], 500);
     } catch (\Throwable $e) {
-        jsonResponse(['error' => 'Erro interno: ' . $e->getMessage()], 500);
+        error_log('Erro interno ao registrar presença: ' . $e->getMessage());
+        jsonResponse(['error' => 'Erro interno ao processar a solicitação'], 500);
     }
 }
 
@@ -448,7 +452,7 @@ function getPresencaStats($pdo) {
                 FROM salas s
                 LEFT JOIN eventos e ON e.sala_id = s.id
                     AND e.data_inicio >= :start AND e.data_inicio < :end
-                LEFT JOIN presencas p ON p.evento_id = e.id::text
+                LEFT JOIN presencas p ON p.evento_id = e.id
                     AND p.criado_em >= :start2 AND p.criado_em < :end2
                 GROUP BY s.id, s.nome
                 ORDER BY s.nome
@@ -469,7 +473,7 @@ function getPresencaStats($pdo) {
                     COUNT(DISTINCT p.id) AS total_presencas
                 FROM salas s
                 LEFT JOIN eventos e ON e.sala_id = s.id
-                LEFT JOIN presencas p ON p.evento_id = e.id::text
+                LEFT JOIN presencas p ON p.evento_id = e.id
                 GROUP BY s.id, s.nome
                 ORDER BY s.nome
             ";
@@ -496,7 +500,8 @@ function getPresencaStats($pdo) {
             ],
         ]);
     } catch (PDOException $e) {
-        jsonResponse(['error' => 'Erro ao buscar estatísticas: ' . $e->getMessage()], 500);
+        error_log('Erro ao buscar estatísticas: ' . $e->getMessage());
+        jsonResponse(['error' => 'Erro ao buscar estatísticas'], 500);
     }
 }
 
@@ -560,6 +565,7 @@ function getPresencaNominal($pdo) {
             'dados' => $dados,
         ]);
     } catch (PDOException $e) {
-        jsonResponse(['error' => 'Erro ao buscar presenças nominais: ' . $e->getMessage()], 500);
+        error_log('Erro ao buscar presenças nominais: ' . $e->getMessage());
+        jsonResponse(['error' => 'Erro ao buscar presenças nominais'], 500);
     }
 }

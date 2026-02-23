@@ -32,6 +32,7 @@ export function SettingsModal({ isOpen, onClose, initialCalendarId }: SettingsMo
     const [selectedCalendar, setSelectedCalendar] = useState<Calendar | null>(null);
     const [initializedFor, setInitializedFor] = useState<string | undefined>(undefined);
     const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+    const [saving, setSaving] = useState(false);
 
     // Form State
     const [name, setName] = useState('');
@@ -244,61 +245,66 @@ export function SettingsModal({ isOpen, onClose, initialCalendarId }: SettingsMo
     const handleSave = async () => {
         if (!name.trim() || !isAdmin) return;
 
-        if (selectedCalendar) {
-            updateCalendar({
-                ...selectedCalendar,
-                name,
-                description,
-                color
-            });
-            setActiveView('calendars');
-        } else {
-            const result = await addCalendar({
-                name,
-                description,
-                color,
-                visible: true
-            });
+        setSaving(true);
+        try {
+            if (selectedCalendar) {
+                updateCalendar({
+                    ...selectedCalendar,
+                    name,
+                    description,
+                    color
+                });
+                setActiveView('calendars');
+            } else {
+                const result = await addCalendar({
+                    name,
+                    description,
+                    color,
+                    visible: true
+                });
 
-            if (icsFile && result.success && result.data) {
-                const newCalId = result.data.id;
-                const text = await icsFile.text();
-                const parsedEvents = parseICS(text);
+                if (icsFile && result.success && result.data) {
+                    const newCalId = result.data.id;
+                    const text = await icsFile.text();
+                    const parsedEvents = parseICS(text);
 
-                setImporting(true);
-                setImportProgress(0);
-                setImportTotal(parsedEvents.length);
+                    setImporting(true);
+                    setImportProgress(0);
+                    setImportTotal(parsedEvents.length);
 
-                for (let i = 0; i < parsedEvents.length; i++) {
-                    const evt = parsedEvents[i];
-                    await addEvent({
-                        title: evt.title,
-                        start: evt.start,
-                        end: evt.end,
-                        description: evt.description,
-                        calendarId: newCalId,
-                        color,
-                        allDay: evt.allDay,
-                        recurrence: evt.recurrence,
-                    });
-                    setImportProgress(i + 1);
+                    for (let i = 0; i < parsedEvents.length; i++) {
+                        const evt = parsedEvents[i];
+                        await addEvent({
+                            title: evt.title,
+                            start: evt.start,
+                            end: evt.end,
+                            description: evt.description,
+                            calendarId: newCalId,
+                            color,
+                            allDay: evt.allDay,
+                            recurrence: evt.recurrence,
+                        });
+                        setImportProgress(i + 1);
+                    }
+
+                    setImporting(false);
+                    setImportProgress(0);
+                    setImportTotal(0);
+                    setIcsFile(null);
+                    setIcsEventCount(0);
+                    onClose();
+                    showToast(`${parsedEvents.length} evento${parsedEvents.length !== 1 ? 's' : ''} importado${parsedEvents.length !== 1 ? 's' : ''}`, 'success');
+                    return;
                 }
 
-                setImporting(false);
-                setImportProgress(0);
-                setImportTotal(0);
-                setIcsFile(null);
-                setIcsEventCount(0);
-                onClose();
-                showToast(`${parsedEvents.length} evento${parsedEvents.length !== 1 ? 's' : ''} importado${parsedEvents.length !== 1 ? 's' : ''}`, 'success');
-                return;
+                setActiveView('calendars');
             }
 
-            setActiveView('calendars');
+            setIcsFile(null);
+            setIcsEventCount(0);
+        } finally {
+            setSaving(false);
         }
-
-        setIcsFile(null);
-        setIcsEventCount(0);
     };
 
     const handleDeleteClick = () => {
@@ -308,12 +314,17 @@ export function SettingsModal({ isOpen, onClose, initialCalendarId }: SettingsMo
     const handleDeleteConfirm = async () => {
         setConfirmDeleteOpen(false);
         if (selectedCalendar && isAdmin) {
-            const result = await deleteCalendar(selectedCalendar.id);
-            if (result.success) {
-                showToast('Agenda excluída com sucesso', 'success');
-                setActiveView('calendars');
-            } else {
-                showToast(result.error || 'Erro ao excluir sala', 'error');
+            setSaving(true);
+            try {
+                const result = await deleteCalendar(selectedCalendar.id);
+                if (result.success) {
+                    showToast('Agenda excluída com sucesso', 'success');
+                    setActiveView('calendars');
+                } else {
+                    showToast(result.error || 'Erro ao excluir sala', 'error');
+                }
+            } finally {
+                setSaving(false);
             }
         }
     };
@@ -609,10 +620,24 @@ export function SettingsModal({ isOpen, onClose, initialCalendarId }: SettingsMo
                             </div>
                         ) : (
                             <div className={styles.buttonGroup}>
-                                <button className={styles.saveBtn} onClick={handleSave}>Salvar</button>
-                                <button className={styles.cancelBtn} onClick={() => setActiveView('calendars')}>Cancelar</button>
+                                <button
+                                    className={styles.saveBtn}
+                                    onClick={handleSave}
+                                    disabled={saving}
+                                    style={saving ? { opacity: 0.6, cursor: 'not-allowed' } : undefined}
+                                >
+                                    {saving ? 'Salvando...' : 'Salvar'}
+                                </button>
+                                <button className={styles.cancelBtn} onClick={() => setActiveView('calendars')} disabled={saving}>Cancelar</button>
                                 {selectedCalendar && (
-                                    <button className={styles.deleteBtn} onClick={handleDeleteClick}>Excluir</button>
+                                    <button
+                                        className={styles.deleteBtn}
+                                        onClick={handleDeleteClick}
+                                        disabled={saving}
+                                        style={saving ? { opacity: 0.6, cursor: 'not-allowed' } : undefined}
+                                    >
+                                        Excluir
+                                    </button>
                                 )}
                             </div>
                         )}

@@ -6,6 +6,7 @@ import {
     isBefore,
     isAfter,
     getDay,
+    getDaysInMonth,
     startOfDay,
     isValid,
     format
@@ -54,6 +55,16 @@ export function getRecurrenceInstances(
             exceptionDates.add(ex);
         }
     }
+
+    // Capture original time components to fix recurrence edge cases:
+    // - Monthly day 31 stickiness (Jan 31 -> Feb 28 -> Mar 28 instead of Mar 31)
+    // - Yearly Feb 29 stickiness (Feb 29 -> Feb 28 in non-leap, then stuck on 28)
+    // - DST hour shifts (+/- 1 hour after crossing DST boundary)
+    const originalDay = event.start.getDate();
+    const originalHours = event.start.getHours();
+    const originalMinutes = event.start.getMinutes();
+    const originalEndHours = event.end.getHours();
+    const originalEndMinutes = event.end.getMinutes();
 
     while (count < MAX_INSTANCES) {
         // Hard year-end cap
@@ -108,6 +119,19 @@ export function getRecurrenceInstances(
                 currentEnd = addYears(currentEnd, rule.interval);
                 break;
         }
+
+        // Fix monthly day-31 stickiness and yearly Feb-29 stickiness:
+        // Restore the original day-of-month, capped to the last day of the target month.
+        if (rule.frequency === 'monthly' || rule.frequency === 'yearly') {
+            const cappedStartDay = Math.min(originalDay, getDaysInMonth(currentStart));
+            currentStart.setDate(cappedStartDay);
+            const cappedEndDay = Math.min(originalDay, getDaysInMonth(currentEnd));
+            currentEnd.setDate(cappedEndDay);
+        }
+
+        // Fix DST normalization: restore original hours/minutes after every increment
+        currentStart.setHours(originalHours, originalMinutes, 0, 0);
+        currentEnd.setHours(originalEndHours, originalEndMinutes, 0, 0);
     }
 
     // specialized logic for Weekly with Days
