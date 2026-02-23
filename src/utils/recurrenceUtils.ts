@@ -43,8 +43,9 @@ export function getRecurrenceInstances(
 
     const MAX_INSTANCES = 365;
 
-    // Hard year-end cap: recurrence must never extend beyond Dec 31 of the event's start year
-    const yearEnd = new Date(event.start.getFullYear(), 11, 31, 23, 59, 59);
+    // Year-end cap: use the later of event start year or current year
+    const capYear = Math.max(event.start.getFullYear(), new Date().getFullYear());
+    const yearEnd = new Date(capYear, 11, 31, 23, 59, 59);
 
     // Build set of exception dates to skip
     const exceptionDates = new Set<string>();

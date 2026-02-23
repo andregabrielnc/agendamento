@@ -99,8 +99,9 @@ export function EventModal() {
         const endDate = new Date(`${endDateStr}T${endTime}`);
         const selectedCalendar = calendars.find(c => c.id === calendarId);
 
-        // Cap recurrence to year-end
-        const yearEndDate = new Date(startDate.getFullYear(), 11, 31, 23, 59, 59);
+        // Cap recurrence to year-end (use the later of start year or current year)
+        const capYear = Math.max(startDate.getFullYear(), new Date().getFullYear());
+        const yearEndDate = new Date(capYear, 11, 31, 23, 59, 59);
         let finalRecurrence: any = recurrence === 'custom' && customRule ? customRule : recurrence;
 
         if (typeof finalRecurrence === 'string' && finalRecurrence !== 'none') {
