@@ -268,13 +268,15 @@ function addExceptionToEvent($pdo, $eventId, $dateStr) {
 function saveRecurrence($pdo, $eventId, $recurrence, $eventStart = null) {
     if (!$recurrence || $recurrence === 'none') return;
 
-    // Compute year-end cap from event start date
+    // Compute year-end cap (use the later of event start year or current year)
     $yearEndCap = null;
     if ($eventStart) {
         $startTs = strtotime($eventStart);
         if ($startTs) {
-            $year = date('Y', $startTs);
-            $yearEndCap = $year . '-12-31T23:59:59';
+            $startYear = (int)date('Y', $startTs);
+            $currentYear = (int)date('Y');
+            $capYear = max($startYear, $currentYear);
+            $yearEndCap = $capYear . '-12-31T23:59:59';
         }
     }
 

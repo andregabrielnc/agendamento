@@ -64,8 +64,9 @@ function parseRRule(rruleStr: string, eventStart: Date): RecurrenceRule | undefi
     const frequency = freq as RecurrenceRule['frequency'];
     const interval = parts['INTERVAL'] ? parseInt(parts['INTERVAL'], 10) : 1;
 
-    // Cap recurrence to year-end
-    const yearEnd = new Date(eventStart.getFullYear(), 11, 31, 23, 59, 59);
+    // Cap recurrence to year-end (use the later of start year or current year)
+    const capYear = Math.max(eventStart.getFullYear(), new Date().getFullYear());
+    const yearEnd = new Date(capYear, 11, 31, 23, 59, 59);
 
     let endType: RecurrenceRule['endType'] = 'date';
     let endDate: Date | undefined = yearEnd;
