@@ -12,7 +12,7 @@ interface WeekViewProps {
 }
 
 export function WeekView({ dayCount }: WeekViewProps) {
-    const { currentDate, filteredEvents: events, openPopover, openCreateModal, updateEvent } = useCalendar();
+    const { currentDate, filteredEvents: events, openPopover, openCreateModal, updateEvent, modalState } = useCalendar();
     const days = dayCount ? getNDayViewDays(currentDate, dayCount) : getWeekViewDays(currentDate);
     const hours = Array.from({ length: 24 }, (_, i) => i);
     const scrollRef = useRef<HTMLDivElement>(null);
@@ -129,7 +129,8 @@ export function WeekView({ dayCount }: WeekViewProps) {
 
             if (isDraggingCreate || resizeEventId || dragEventId) {
                 setIsDraggingCreate(false);
-                setDraftEvent(null);
+                // Keep draftEvent visible while create modal is open
+                if (!isDraggingCreate) setDraftEvent(null);
                 setResizeEventId(null);
                 setDraftEndTime(null);
                 setDragEventId(null);
@@ -147,6 +148,13 @@ export function WeekView({ dayCount }: WeekViewProps) {
             window.removeEventListener('mouseup', handleWindowMouseUp);
         };
     }, [isDraggingCreate, draftEvent, resizeEventId, draftEndTime, dragEventId, events]);
+
+    // Clear draft when create modal closes (save or cancel)
+    useEffect(() => {
+        if (!modalState.isOpen && draftEvent && !isDraggingCreate) {
+            setDraftEvent(null);
+        }
+    }, [modalState.isOpen]);
 
     // --- Handlers ---
 
@@ -355,8 +363,8 @@ export function WeekView({ dayCount }: WeekViewProps) {
                                 })
                             }
 
-                            {/* Draft Event (Creation) */}
-                            {isDraggingCreate && draftEvent && isSameDay(day, draftEvent.date) && (
+                            {/* Draft Event (Creation) — persists while modal is open */}
+                            {draftEvent && isSameDay(day, draftEvent.date) && (
                                 <div
                                     className={`${styles.eventCard} ${styles.draftEvent}`}
                                     style={{
