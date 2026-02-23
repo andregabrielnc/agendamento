@@ -18,6 +18,9 @@ export function parseICS(icsText: string): ParsedEvent[] {
         // Unfold lines (RFC 5545: lines starting with space/tab are continuations)
         const unfolded = block.replace(/\r?\n[ \t]/g, '');
 
+        // Skip RECURRENCE-ID entries (instance modifications of recurring events)
+        if (extractField(unfolded, 'RECURRENCE-ID') !== null) continue;
+
         const title = extractField(unfolded, 'SUMMARY') || '(Sem título)';
         const dtstart = extractField(unfolded, 'DTSTART');
         const dtend = extractField(unfolded, 'DTEND');
