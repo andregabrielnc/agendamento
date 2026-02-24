@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Eye, EyeSlash, CircleNotch, GraduationCap, CalendarBlank, ListChecks } from '@phosphor-icons/react';
 import { useAuth } from '../context/AuthContext';
 import styles from './Login.module.css';
@@ -14,6 +14,13 @@ export function Login({ onPresenca }: LoginProps) {
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth <= 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -82,7 +89,9 @@ export function Login({ onPresenca }: LoginProps) {
                 <div className={styles.formPanel}>
                     <form className={styles.form} onSubmit={handleSubmit}>
                         <div className={styles.formHeader}>
-                            <h2 className={styles.formTitle}>Entrar</h2>
+                            <h2 className={styles.formTitle}>
+                                {isMobile ? 'Agendamento de Salas de Ensino' : 'Entrar'}
+                            </h2>
                             <p className={styles.formDescription}>
                                 Use suas credenciais
                             </p>

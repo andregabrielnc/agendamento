@@ -265,6 +265,16 @@ export function EventModal() {
                         )}
                     </div>
                     <div className={styles.headerRight}>
+                        {canEdit && (
+                            <button
+                                className={`${styles.saveBtn} ${styles.headerSaveBtn}`}
+                                onClick={() => handleSubmit()}
+                                disabled={saving}
+                                style={saving ? { opacity: 0.6, cursor: 'not-allowed' } : undefined}
+                            >
+                                {saving ? 'Salvando...' : 'Salvar'}
+                            </button>
+                        )}
                         <button onClick={closeModal} className={styles.iconBtn} title="Fechar">
                             <X size={20} />
                         </button>

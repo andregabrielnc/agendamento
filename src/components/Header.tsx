@@ -228,11 +228,11 @@ export function Header() {
                     />
                 </div>
 
-                <button className={styles.iconBtn} onClick={toggleTheme} title="Alternar tema">
+                <button className={`${styles.iconBtn} ${styles.themeToggle}`} onClick={toggleTheme} title="Alternar tema">
                     {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
                 </button>
 
-                <button className={styles.iconBtn} onClick={() => setIsReportOpen(true)} title="Informar Problema">
+                <button className={`${styles.iconBtn} ${styles.reportToggle}`} onClick={() => setIsReportOpen(true)} title="Informar Problema">
                     <Warning size={22} />
                 </button>
 
@@ -272,7 +272,7 @@ export function Header() {
                     )}
                 </div>
 
-                <button className={styles.iconBtn} onClick={() => setIsSettingsOpen(true)} title="Configurações">
+                <button className={`${styles.iconBtn} ${styles.settingsToggle}`} onClick={() => setIsSettingsOpen(true)} title="Configurações">
                     <Gear size={24} />
                 </button>
 
@@ -299,6 +299,27 @@ export function Header() {
                                 </div>
                             </div>
                             <div className={styles.userMenuDivider} />
+                            <button
+                                className={styles.userMenuItem}
+                                onClick={() => { setShowUserMenu(false); toggleTheme(); }}
+                            >
+                                {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+                                Alternar tema
+                            </button>
+                            <button
+                                className={styles.userMenuItem}
+                                onClick={() => { setShowUserMenu(false); setIsReportOpen(true); }}
+                            >
+                                <Warning size={18} />
+                                Informar Problema
+                            </button>
+                            <button
+                                className={styles.userMenuItem}
+                                onClick={() => { setShowUserMenu(false); setIsSettingsOpen(true); }}
+                            >
+                                <Gear size={18} />
+                                Configurações
+                            </button>
                             {isAdmin && (
                                 <button
                                     className={styles.userMenuItem}
@@ -308,6 +329,7 @@ export function Header() {
                                     Gerenciar Usuários
                                 </button>
                             )}
+                            <div className={styles.userMenuDivider} />
                             <button className={styles.userMenuItem} onClick={() => { setShowUserMenu(false); logout(); }}>
                                 <SignOut size={18} />
                                 Sair

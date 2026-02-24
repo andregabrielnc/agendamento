@@ -549,6 +549,12 @@
     padding: 8px 24px;
 }
 
+/* ===== Header Save Button (mobile only) ===== */
+
+.headerSaveBtn {
+    display: none;
+}
+
 /* ===== Animation ===== */
 
 @keyframes scaleUp {
@@ -597,12 +603,15 @@
     }
 
     .modalFooter {
-        padding: 8px 12px;
-        flex-wrap: wrap;
+        display: none;
     }
 
     .footerLeft {
         display: none;
+    }
+
+    .headerSaveBtn {
+        display: inline-flex;
     }
 }
 

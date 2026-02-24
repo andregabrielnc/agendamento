@@ -17,10 +17,11 @@ interface ViewContextType {
 const ViewContext = createContext<ViewContextType | undefined>(undefined);
 
 export function ViewProvider({ children }: { children: ReactNode }) {
+    const isMobile = window.innerWidth <= 768;
     const [currentDate, setCurrentDate] = useState<Date>(startOfToday);
-    const [view, setView] = useState<ViewType>('week');
+    const [view, setView] = useState<ViewType>(isMobile ? '4day' : 'week');
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-    const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
+    const [sidebarOpen, setSidebarOpen] = useState<boolean>(!isMobile);
 
     const selectDate = useCallback((date: Date) => {
         setSelectedDate(date);

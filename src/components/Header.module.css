@@ -451,11 +451,20 @@
         font-size: 13px;
     }
     .iconBtn {
-        width: 36px;
-        height: 36px;
+        width: 34px;
+        height: 34px;
+    }
+    .themeToggle,
+    .reportToggle,
+    .settingsToggle {
+        display: none;
     }
     .avatarBtn {
-        display: none;
+        display: flex;
+    }
+    .viewSwitcher {
+        padding: 4px 8px;
+        font-size: 12px;
     }
     .notifDropdown {
         right: -60px;
