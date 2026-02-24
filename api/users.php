@@ -10,6 +10,7 @@ function handleUsers($method, $id, $pdo) {
             break;
         case 'PUT':
             if (!$id) jsonResponse(['error' => 'User ID required'], 400);
+            requireValidUUID($id, 'User ID');
             updateUserRole($id, $pdo);
             break;
         default:
@@ -75,7 +76,7 @@ function createUser($pdo) {
 
     $name = trim($input['name'] ?? '');
     $email = trim($input['email'] ?? '');
-    $role = $input['role'] ?? 'admin';
+    $role = $input['role'] ?? 'user';
 
     if (!$name || !$email) {
         jsonResponse(['error' => 'Nome e e-mail são obrigatórios'], 400);

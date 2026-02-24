@@ -10,10 +10,12 @@ function handleCalendars($method, $id, $pdo) {
             break;
         case 'PUT':
             if (!$id) jsonResponse(['error' => 'Calendar ID required'], 400);
+            requireValidUUID($id, 'Calendar ID');
             updateCalendar($id, $pdo);
             break;
         case 'DELETE':
             if (!$id) jsonResponse(['error' => 'Calendar ID required'], 400);
+            requireValidUUID($id, 'Calendar ID');
             deleteCalendar($id, $pdo);
             break;
         default:
@@ -71,8 +73,7 @@ function updateCalendar($id, $pdo) {
             nome = :nome,
             descricao = :descricao,
             cor = :cor,
-            visivel = :visivel,
-            criado_por = :criado_por
+            visivel = :visivel
         WHERE id = :id
     ');
     $stmt->execute([
@@ -81,19 +82,14 @@ function updateCalendar($id, $pdo) {
         ':descricao' => $input['description'] ?? null,
         ':cor' => $input['color'] ?? '#3b82f6',
         ':visivel' => isset($input['visible']) ? ($input['visible'] ? 'true' : 'false') : 'true',
-        ':criado_por' => $user['id'],
     ]);
 
-    $calendar = [
-        'id' => $id,
-        'name' => $input['name'] ?? '',
-        'description' => $input['description'] ?? null,
-        'color' => $input['color'] ?? '#3b82f6',
-        'visible' => $input['visible'] ?? true,
-        'createdBy' => $user['id'],
-    ];
-
-    jsonResponse($calendar);
+    // Fetch updated calendar from DB to return accurate criado_por
+    $stmt = $pdo->prepare('SELECT id, nome, descricao, cor, visivel, criado_por FROM salas WHERE id = :id');
+    $stmt->execute([':id' => $id]);
+    $row = $stmt->fetch();
+    if (!$row) jsonResponse(['error' => 'Calendar not found'], 404);
+    jsonResponse(mapDbCalendarToFrontend($row));
 }
 
 function deleteCalendar($id, $pdo) {

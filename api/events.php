@@ -10,10 +10,12 @@ function handleEvents($method, $id, $pdo) {
             break;
         case 'PUT':
             if (!$id) jsonResponse(['error' => 'Event ID required'], 400);
+            requireValidUUID($id, 'Event ID');
             updateEvent($id, $pdo);
             break;
         case 'DELETE':
             if (!$id) jsonResponse(['error' => 'Event ID required'], 400);
+            requireValidUUID($id, 'Event ID');
             deleteEvent($id, $pdo);
             break;
         default:
@@ -222,7 +224,6 @@ function updateEvent($id, $pdo) {
                 dia_inteiro = :dia_inteiro,
                 cor = :cor,
                 sala_id = :sala_id,
-                criado_por = :criado_por,
                 telefone = :telefone
             WHERE id = :id
         ');
@@ -235,7 +236,6 @@ function updateEvent($id, $pdo) {
             ':dia_inteiro' => (!empty($input['allDay'])) ? 'true' : 'false',
             ':cor' => $input['color'] ?? null,
             ':sala_id' => $input['calendarId'] ?? null,
-            ':criado_por' => $user['id'],
             ':telefone' => $input['phone'] ?? null,
         ]);
 

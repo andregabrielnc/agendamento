@@ -14,6 +14,7 @@ function handlePresencas($method, $id, $pdo) {
         // Debug endpoint disabled in production
         jsonResponse(['error' => 'Not found'], 404);
     } elseif ($method === 'GET' && $id) {
+        requireValidUUID($id, 'Evento ID');
         getPresencasByEvento($id, $pdo);
     } elseif ($method === 'GET') {
         getActiveEvents($pdo);
@@ -169,16 +170,29 @@ function registerPresenca($pdo) {
         $eventoId = trim($input['eventoId'] ?? '');
         $nomeCompleto = trim($input['nomeCompleto'] ?? '');
         $email = trim(strtolower($input['email'] ?? ''));
-        $fingerprint = trim($input['fingerprint'] ?? '');
+        $clientFingerprint = trim($input['fingerprint'] ?? '');
 
         // Validation
-        if (!$eventoId || !$nomeCompleto || !$email || !$fingerprint) {
+        if (!$eventoId || !$nomeCompleto || !$email || !$clientFingerprint) {
             jsonResponse(['error' => 'Todos os campos são obrigatórios'], 400);
+        }
+
+        if (!isValidUUID($eventoId)) {
+            jsonResponse(['error' => 'ID de evento inválido'], 400);
+        }
+
+        if (mb_strlen($nomeCompleto) > 255) {
+            jsonResponse(['error' => 'Nome muito longo'], 400);
         }
 
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             jsonResponse(['error' => 'E-mail inválido'], 400);
         }
+
+        // Combine client fingerprint with server-side signals to prevent manipulation
+        $ipAddress = $_SERVER['REMOTE_ADDR'] ?? '';
+        $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? '';
+        $fingerprint = hash('sha256', $clientFingerprint . '|' . $ipAddress . '|' . $userAgent);
 
         // Verify event is currently active
         $now = new DateTime();
@@ -252,8 +266,6 @@ function registerPresenca($pdo) {
         }
 
         $id = generateUuid();
-        $ipAddress = $_SERVER['REMOTE_ADDR'] ?? null;
-        $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? null;
 
         $sql = "
             INSERT INTO presencas (id, evento_id, evento_titulo, sala_nome, nome_completo, email, ip_address, user_agent, fingerprint)

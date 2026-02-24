@@ -16,8 +16,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const SESSION_KEY = 'calendar_auth_session';
-
 function parseUser(data: Record<string, unknown>): User {
     return {
         id: data.id as string,
@@ -30,16 +28,7 @@ function parseUser(data: Record<string, unknown>): User {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-    const [user, setUser] = useState<User | null>(() => {
-        const saved = sessionStorage.getItem(SESSION_KEY);
-        if (saved) {
-            return JSON.parse(saved, (key, value) => {
-                if (key === 'createdAt') return new Date(value);
-                return value;
-            });
-        }
-        return null;
-    });
+    const [user, setUser] = useState<User | null>(null);
     const [users, setUsers] = useState<User[]>([]);
 
     // Restore session from API on mount
@@ -50,18 +39,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             .then(res => res.json())
             .then(data => {
                 if (data && !data.error && data.id) {
-                    const u = parseUser(data);
-                    setUser(u);
-                    sessionStorage.setItem(SESSION_KEY, JSON.stringify(u));
+                    setUser(parseUser(data));
                 } else {
-                    // Server session expired — clear local state
                     setUser(null);
-                    sessionStorage.removeItem(SESSION_KEY);
                 }
             })
             .catch(() => {
                 setUser(null);
-                sessionStorage.removeItem(SESSION_KEY);
             });
     }, []);
 
@@ -96,9 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 return { success: false, error: data.error || 'Erro no login' };
             }
 
-            const u = parseUser(data);
-            setUser(u);
-            sessionStorage.setItem(SESSION_KEY, JSON.stringify(u));
+            setUser(parseUser(data));
             return { success: true };
         } catch {
             return { success: false, error: 'Erro ao conectar com o servidor' };
@@ -113,7 +95,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         setUser(null);
         setUsers([]);
-        sessionStorage.removeItem(SESSION_KEY);
     }, []);
 
     const updateUser = useCallback(async (updatedUser: User): Promise<{ success: boolean; error?: string }> => {
@@ -138,7 +119,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
             if (user?.id === mapped.id) {
                 setUser(mapped);
-                sessionStorage.setItem(SESSION_KEY, JSON.stringify(mapped));
             }
 
             return { success: true };

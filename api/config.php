@@ -105,6 +105,16 @@ function mapDbUserToFrontend($row) {
     ];
 }
 
+function isValidUUID($uuid) {
+    return is_string($uuid) && preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $uuid);
+}
+
+function requireValidUUID($id, $label = 'ID') {
+    if (!isValidUUID($id)) {
+        jsonResponse(['error' => "$label inválido"], 400);
+    }
+}
+
 function generateUuid() {
     $data = random_bytes(16);
     $data[6] = chr(ord($data[6]) & 0x0f | 0x40); // version 4
