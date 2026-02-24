@@ -149,18 +149,14 @@
     font-size: 13px;
     font-weight: 400;
     color: var(--text-primary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    word-break: break-word;
 }
 
 .calendarDescription {
     font-size: 11px;
     color: var(--text-muted);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
     line-height: 1.3;
+    word-break: break-word;
 }
 
 /* ===== Three-dot menu button ===== */
