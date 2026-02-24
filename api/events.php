@@ -93,6 +93,17 @@ function updateEvent($id, $pdo) {
     $user = requireAuth();
     $input = getJsonInput();
 
+    // Non-admin: only allow editing own events
+    if ($user['role'] !== 'admin') {
+        $stmt = $pdo->prepare('SELECT criado_por FROM eventos WHERE id = :id');
+        $stmt->execute([':id' => $id]);
+        $row = $stmt->fetch();
+        if (!$row) jsonResponse(['error' => 'Evento não encontrado'], 404);
+        if ($row['criado_por'] !== $user['id']) {
+            jsonResponse(['error' => 'Sem permissão para editar este evento'], 403);
+        }
+    }
+
     $mode = $input['_recurrenceMode'] ?? 'all';
     $instanceDate = $input['_instanceDate'] ?? null;
 
@@ -247,6 +258,17 @@ function updateEvent($id, $pdo) {
 function deleteEvent($id, $pdo) {
     $user = requireAuth();
     $input = getJsonInput();
+
+    // Non-admin: only allow deleting own events
+    if ($user['role'] !== 'admin') {
+        $stmt = $pdo->prepare('SELECT criado_por FROM eventos WHERE id = :id');
+        $stmt->execute([':id' => $id]);
+        $row = $stmt->fetch();
+        if (!$row) jsonResponse(['error' => 'Evento não encontrado'], 404);
+        if ($row['criado_por'] !== $user['id']) {
+            jsonResponse(['error' => 'Sem permissão para excluir este evento'], 403);
+        }
+    }
 
     $mode = $input['_recurrenceMode'] ?? 'all';
     $instanceDate = $input['_instanceDate'] ?? null;

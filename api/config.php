@@ -189,8 +189,8 @@ function ensurePresencaTables($pdo) {
 
     $pdo->exec("
         CREATE TABLE IF NOT EXISTS presencas (
-            id VARCHAR(36) PRIMARY KEY,
-            evento_id VARCHAR(36) NOT NULL,
+            id UUID PRIMARY KEY,
+            evento_id UUID NOT NULL,
             evento_titulo VARCHAR(255),
             sala_nome VARCHAR(255),
             nome_completo VARCHAR(255) NOT NULL,
@@ -205,6 +205,14 @@ function ensurePresencaTables($pdo) {
     ");
     $pdo->exec("CREATE INDEX IF NOT EXISTS idx_presencas_evento ON presencas(evento_id)");
     $pdo->exec("CREATE INDEX IF NOT EXISTS idx_presencas_email ON presencas(email)");
+
+    // Migration: convert existing VARCHAR columns to UUID for installations that already have the table
+    try {
+        $pdo->exec("ALTER TABLE presencas ALTER COLUMN id TYPE UUID USING id::uuid");
+        $pdo->exec("ALTER TABLE presencas ALTER COLUMN evento_id TYPE UUID USING evento_id::uuid");
+    } catch (\Throwable $e) {
+        // Ignore — columns are already UUID
+    }
 }
 
 function ensureReportTables($pdo) {

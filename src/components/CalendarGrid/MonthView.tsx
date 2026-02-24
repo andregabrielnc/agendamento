@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useCalendar } from '../../context/CalendarContext';
+import { useAuth } from '../../context/AuthContext';
 import { getMonthViewDays, isToday } from '../../utils/dateUtils';
 import { format, isSameMonth, isSameDay, startOfDay, endOfDay } from 'date-fns';
 import styles from './MonthView.module.css';
@@ -7,6 +8,7 @@ import { getRecurrenceInstances } from '../../utils/recurrenceUtils';
 
 export function MonthView() {
     const { currentDate, filteredEvents: events, openPopover, updateEvent, openCreateModal } = useCalendar();
+    const { canEditEvent } = useAuth();
     const days = getMonthViewDays(currentDate);
 
     // Generate expanded events for the visible range
@@ -18,7 +20,11 @@ export function MonthView() {
         return events.flatMap(event => getRecurrenceInstances(event, start, end));
     }, [events, days]);
 
-    const handleDragStart = (e: React.DragEvent, eventId: string) => {
+    const handleDragStart = (e: React.DragEvent, eventId: string, event: { createdBy?: string; start: Date }) => {
+        if (!canEditEvent(event.createdBy, event.start)) {
+            e.preventDefault();
+            return;
+        }
         e.dataTransfer.setData('text/plain', eventId);
         e.dataTransfer.effectAllowed = 'move';
     };
@@ -80,12 +86,11 @@ export function MonthView() {
                                             const originalId = event.id.split('_')[0];
                                             const originalEvent = events.find(ev => ev.id === originalId);
                                             if (originalEvent) {
-                                                // Pass the instance for context (date), but actions act on original
                                                 openPopover(event, e.currentTarget);
                                             }
                                         }}
-                                        draggable
-                                        onDragStart={(e) => handleDragStart(e, event.id)}
+                                        draggable={canEditEvent(event.createdBy, event.start)}
+                                        onDragStart={(e) => handleDragStart(e, event.id, event)}
                                     >
                                         <span className={styles.eventTime}>{format(event.start, 'HH:mm')}</span>
                                         <span className={styles.eventTitle}>{event.title}</span>

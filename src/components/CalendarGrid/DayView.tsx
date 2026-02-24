@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState, useMemo } from 'react';
 import { useCalendar } from '../../context/CalendarContext';
+import { useAuth } from '../../context/AuthContext';
 import { isToday } from '../../utils/dateUtils';
 import { format, isSameDay, addMinutes, startOfDay, endOfDay, roundToNearestMinutes, differenceInMinutes } from 'date-fns';
 import styles from './DayView.module.css';
@@ -9,6 +10,7 @@ import { computeEventLayout, getEventColumnStyle } from '../../utils/eventLayout
 
 export function DayView() {
     const { currentDate, filteredEvents: events, openPopover, openCreateModal, updateEvent, modalState } = useCalendar();
+    const { canEditEvent } = useAuth();
     const day = currentDate;
     const hours = Array.from({ length: 24 }, (_, i) => i);
     const scrollRef = useRef<HTMLDivElement>(null);
@@ -182,7 +184,11 @@ export function DayView() {
         }
     };
 
-    const handleDragStart = (e: React.DragEvent, eventId: string) => {
+    const handleDragStart = (e: React.DragEvent, eventId: string, event: { createdBy?: string; start: Date }) => {
+        if (!canEditEvent(event.createdBy, event.start)) {
+            e.preventDefault();
+            return;
+        }
         setDragEventId(eventId);
         e.dataTransfer.effectAllowed = 'move';
         e.dataTransfer.setData('text/plain', eventId);
@@ -288,6 +294,7 @@ export function DayView() {
 
                                 const height = Math.max(20, endY - startY);
                                 const colStyle = getEventColumnStyle(dayLayout.get(event.id));
+                                const editable = canEditEvent(event.createdBy, event.start);
 
                                 return (
                                     <div
@@ -302,10 +309,10 @@ export function DayView() {
                                             zIndex: resizeEventId === event.id ? 10 : colStyle.zIndex,
                                             opacity: dragEventId === event.id ? 0.5 : 1,
                                         }}
-                                        draggable={!resizeEventId}
+                                        draggable={editable && !resizeEventId}
                                         onDragStart={(e) => {
-                                            if (resizeEventId) { e.preventDefault(); return; }
-                                            handleDragStart(e, event.id);
+                                            if (resizeEventId || !editable) { e.preventDefault(); return; }
+                                            handleDragStart(e, event.id, event);
                                         }}
                                         onClick={(e) => {
                                             e.stopPropagation();
@@ -318,16 +325,18 @@ export function DayView() {
                                             {format(event.start, 'HH:mm')} – {format(resizeEventId === event.id && draftEndTime ? draftEndTime : event.end, 'HH:mm')}
                                         </div>
 
-                                        {/* Resize Handle */}
-                                        <div
-                                            className={styles.resizeHandle}
-                                            onMouseDown={(e) => {
-                                                e.stopPropagation();
-                                                e.preventDefault();
-                                                setResizeEventId(event.id);
-                                                setDraftEndTime(event.end);
-                                            }}
-                                        />
+                                        {/* Resize Handle — only for editable events */}
+                                        {editable && (
+                                            <div
+                                                className={styles.resizeHandle}
+                                                onMouseDown={(e) => {
+                                                    e.stopPropagation();
+                                                    e.preventDefault();
+                                                    setResizeEventId(event.id);
+                                                    setDraftEndTime(event.end);
+                                                }}
+                                            />
+                                        )}
                                     </div>
                                 );
                             })

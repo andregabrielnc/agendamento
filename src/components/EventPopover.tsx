@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState } from 'react';
-import { X, Trash, PencilSimple, Phone } from '@phosphor-icons/react';
+import { X, Trash, PencilSimple, Phone, UsersThree } from '@phosphor-icons/react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import type { CalendarEvent, RecurrenceEditMode } from '../types';
@@ -9,6 +9,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { ConfirmDialog } from './ConfirmDialog';
 import { RecurrenceActionDialog } from './RecurrenceActionDialog';
+import { AttendanceModal } from './AttendanceModal';
 
 interface EventPopoverProps {
     event: CalendarEvent;
@@ -18,7 +19,7 @@ interface EventPopoverProps {
 
 export function EventPopover({ event, anchorEl, onClose }: EventPopoverProps) {
     const { deleteEvent, openEditModal, events } = useCalendar();
-    const { canEditEvent } = useAuth();
+    const { canEditEvent, user, isAdmin } = useAuth();
     const { showToast } = useToast();
     const canEdit = canEditEvent(event.createdBy, event.start);
     const popoverRef = useRef<HTMLDivElement>(null);
@@ -26,6 +27,10 @@ export function EventPopover({ event, anchorEl, onClose }: EventPopoverProps) {
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [showRecurrenceDialog, setShowRecurrenceDialog] = useState(false);
     const [deleting, setDeleting] = useState(false);
+    const [showAttendance, setShowAttendance] = useState(false);
+
+    const isPastEvent = event.end < new Date();
+    const canViewAttendance = isPastEvent && (isAdmin || event.createdBy === user?.id);
 
     const isRecurringEvent = event.recurrence && event.recurrence !== 'none';
 
@@ -118,6 +123,15 @@ export function EventPopover({ event, anchorEl, onClose }: EventPopoverProps) {
                             >
                                 <PencilSimple size={18} />
                             </button>
+                            {canViewAttendance && (
+                                <button
+                                    onClick={() => setShowAttendance(true)}
+                                    className={styles.iconBtn}
+                                    title="Ver presenças"
+                                >
+                                    <UsersThree size={18} />
+                                </button>
+                            )}
                             <button
                                 onClick={canEdit && !deleting ? handleDelete : undefined}
                                 className={`${styles.iconBtn} ${!canEdit || deleting ? styles.iconBtnDisabled : ''}`}
@@ -181,6 +195,14 @@ export function EventPopover({ event, anchorEl, onClose }: EventPopoverProps) {
                 onConfirm={handleRecurrenceDeleteConfirm}
                 onCancel={() => setShowRecurrenceDialog(false)}
             />
+
+            {showAttendance && (
+                <AttendanceModal
+                    isOpen={showAttendance}
+                    event={event}
+                    onClose={() => setShowAttendance(false)}
+                />
+            )}
         </>
     );
 }

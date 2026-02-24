@@ -230,7 +230,7 @@ function registerPresenca($pdo) {
             $sqlOverlap = "
                 SELECT p.evento_titulo
                 FROM presencas p
-                INNER JOIN eventos e ON e.id = p.evento_id
+                INNER JOIN eventos e ON e.id = p.evento_id::uuid
                 WHERE p.evento_id != :eventoId
                   AND (p.email = :email OR p.fingerprint = :fingerprint)
                   AND e.data_inicio < :event_end
@@ -294,7 +294,17 @@ function registerPresenca($pdo) {
 }
 
 function getPresencasByEvento($eventoId, $pdo) {
-    requireAdmin();
+    $user = requireAuth();
+
+    // Admin pode ver qualquer evento; usuário normal só se for criador
+    if ($user['role'] !== 'admin') {
+        $stmt = $pdo->prepare('SELECT criado_por FROM eventos WHERE id = :id');
+        $stmt->execute([':id' => $eventoId]);
+        $row = $stmt->fetch();
+        if (!$row || $row['criado_por'] !== $user['id']) {
+            jsonResponse(['error' => 'Sem permissão'], 403);
+        }
+    }
 
     $stmt = $pdo->prepare("
         SELECT id, evento_id, evento_titulo, sala_nome, nome_completo, email, ip_address, user_agent, fingerprint, criado_em
@@ -452,7 +462,7 @@ function getPresencaStats($pdo) {
                 FROM salas s
                 LEFT JOIN eventos e ON e.sala_id = s.id
                     AND e.data_inicio >= :start AND e.data_inicio < :end
-                LEFT JOIN presencas p ON p.evento_id = e.id
+                LEFT JOIN presencas p ON p.evento_id::uuid = e.id
                     AND p.criado_em >= :start2 AND p.criado_em < :end2
                 GROUP BY s.id, s.nome
                 ORDER BY s.nome
@@ -473,7 +483,7 @@ function getPresencaStats($pdo) {
                     COUNT(DISTINCT p.id) AS total_presencas
                 FROM salas s
                 LEFT JOIN eventos e ON e.sala_id = s.id
-                LEFT JOIN presencas p ON p.evento_id = e.id
+                LEFT JOIN presencas p ON p.evento_id::uuid = e.id
                 GROUP BY s.id, s.nome
                 ORDER BY s.nome
             ";

@@ -149,19 +149,10 @@ export function EventProvider({ children }: { children: ReactNode }) {
             return { success: false, error: `Calendar with id ${id} not found` };
         }
 
-        const updatedCalendar = { ...calendar, visible: !calendar.visible };
-        const previousCalendars = calendars;
-        setCalendars(prev => prev.map(c => (c.id === id ? updatedCalendar : c)));
-
-        try {
-            await calendarService.updateCalendar(updatedCalendar);
-            return { success: true };
-        } catch (error) {
-            const message = error instanceof Error ? error.message : 'Failed to toggle calendar';
-            console.error('Failed to toggle calendar:', error);
-            setCalendars(previousCalendars);
-            return { success: false, error: message };
-        }
+        // Visibility toggle is a local viewing preference — no API call needed.
+        // The DB 'visivel' column stores the admin-configured default, not the user's session toggle.
+        setCalendars(prev => prev.map(c => (c.id === id ? { ...c, visible: !c.visible } : c)));
+        return { success: true };
     }, [calendars]);
 
     const addCalendar = useCallback(async (calendarData: Omit<Calendar, 'id'>): Promise<EventOperationResult> => {

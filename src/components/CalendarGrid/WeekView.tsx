@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState, useMemo } from 'react';
 import { useCalendar } from '../../context/CalendarContext'
+import { useAuth } from '../../context/AuthContext'
 import { getWeekViewDays, getNDayViewDays, isToday } from '../../utils/dateUtils'
 import { format, isSameDay, addMinutes, startOfDay, roundToNearestMinutes, differenceInMinutes, endOfDay } from 'date-fns'
 import styles from './WeekView.module.css'
@@ -13,6 +14,7 @@ interface WeekViewProps {
 
 export function WeekView({ dayCount }: WeekViewProps) {
     const { currentDate, filteredEvents: events, openPopover, openCreateModal, updateEvent, modalState } = useCalendar();
+    const { canEditEvent } = useAuth();
     const days = dayCount ? getNDayViewDays(currentDate, dayCount) : getWeekViewDays(currentDate);
     const hours = Array.from({ length: 24 }, (_, i) => i);
     const scrollRef = useRef<HTMLDivElement>(null);
@@ -205,7 +207,11 @@ export function WeekView({ dayCount }: WeekViewProps) {
         }
     };
 
-    const handleDragStart = (e: React.DragEvent, eventId: string) => {
+    const handleDragStart = (e: React.DragEvent, eventId: string, event: { createdBy?: string; start: Date }) => {
+        if (!canEditEvent(event.createdBy, event.start)) {
+            e.preventDefault();
+            return;
+        }
         setDragEventId(eventId);
         e.dataTransfer.effectAllowed = 'move';
         e.dataTransfer.setData('text/plain', eventId);
@@ -318,6 +324,8 @@ export function WeekView({ dayCount }: WeekViewProps) {
                                     const dayLayout = layoutsByDay.get(day.toISOString());
                                     const colStyle = getEventColumnStyle(dayLayout?.get(event.id));
 
+                                    const editable = canEditEvent(event.createdBy, event.start);
+
                                     return (
                                         <div
                                             key={event.id}
@@ -331,10 +339,10 @@ export function WeekView({ dayCount }: WeekViewProps) {
                                                 zIndex: resizeEventId === event.id ? 10 : colStyle.zIndex,
                                                 opacity: dragEventId === event.id ? 0.5 : 1
                                             }}
-                                            draggable={!resizeEventId}
+                                            draggable={editable && !resizeEventId}
                                             onDragStart={(e) => {
-                                                if (resizeEventId) { e.preventDefault(); return; }
-                                                handleDragStart(e, event.id);
+                                                if (resizeEventId || !editable) { e.preventDefault(); return; }
+                                                handleDragStart(e, event.id, event);
                                             }}
                                             onClick={(e) => {
                                                 e.stopPropagation();
@@ -348,16 +356,18 @@ export function WeekView({ dayCount }: WeekViewProps) {
                                                 {format(event.start, 'HH:mm')} – {format(resizeEventId === event.id && draftEndTime ? draftEndTime : event.end, 'HH:mm')}
                                             </div>
 
-                                            {/* Resize Handle */}
-                                            <div
-                                                className={styles.resizeHandle}
-                                                onMouseDown={(e) => {
-                                                    e.stopPropagation();
-                                                    e.preventDefault();
-                                                    setResizeEventId(event.id);
-                                                    setDraftEndTime(event.end);
-                                                }}
-                                            />
+                                            {/* Resize Handle — only for editable events */}
+                                            {editable && (
+                                                <div
+                                                    className={styles.resizeHandle}
+                                                    onMouseDown={(e) => {
+                                                        e.stopPropagation();
+                                                        e.preventDefault();
+                                                        setResizeEventId(event.id);
+                                                        setDraftEndTime(event.end);
+                                                    }}
+                                                />
+                                            )}
                                         </div>
                                     )
                                 })

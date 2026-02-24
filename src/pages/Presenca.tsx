@@ -168,8 +168,8 @@ export function Presenca({ onBack }: PresencaProps) {
                                     {events.map(event => (
                                         <div
                                             key={event.id}
-                                            className={`${styles.eventCard} ${selectedEvent?.id === event.id ? styles.eventCardSelected : ''}`}
-                                            onClick={() => setSelectedEvent(event)}
+                                            className={styles.eventCard}
+                                            onClick={() => { setSelectedEvent(event); setStep(2); }}
                                         >
                                             <div className={styles.eventTitle}>{event.title}</div>
                                             <div className={styles.eventMeta}>
@@ -190,13 +190,6 @@ export function Presenca({ onBack }: PresencaProps) {
                                         </div>
                                     ))}
                                 </div>
-                                <button
-                                    className={styles.primaryBtn}
-                                    disabled={!selectedEvent}
-                                    onClick={() => setStep(2)}
-                                >
-                                    Próximo
-                                </button>
                             </>
                         )}
 

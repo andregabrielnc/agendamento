@@ -1,5 +1,15 @@
 import type { CalendarEvent, Calendar, RecurrenceEditMode } from '../types';
 
+export interface AttendanceRecord {
+    id: string;
+    evento_id: string;
+    evento_titulo: string;
+    sala_nome: string;
+    nome_completo: string;
+    email: string;
+    criado_em: string;
+}
+
 class ApiError extends Error {
     status: number;
     constructor(status: number, message: string) {
@@ -134,6 +144,12 @@ class CalendarService {
         await apiCall<{ success: boolean }>(`/api/router.php?route=calendars/${id}`, {
             method: 'DELETE',
         });
+    }
+
+    // --- Attendance API ---
+
+    async fetchAttendance(eventId: string): Promise<AttendanceRecord[]> {
+        return apiCall<AttendanceRecord[]>(`/api/router.php?route=presencas/${eventId}`);
     }
 }
 

@@ -283,6 +283,7 @@ export function EventModal() {
                             value={title}
                             onChange={e => setTitle(e.target.value)}
                             autoFocus
+                            disabled={!canEdit}
                         />
                     </div>
 
@@ -294,6 +295,7 @@ export function EventModal() {
                                 className={styles.dateChip}
                                 value={date}
                                 onChange={e => { setDate(e.target.value); if (!endDateStr || endDateStr < e.target.value) setEndDateStr(e.target.value); }}
+                                disabled={!canEdit}
                             />
                             {!allDay && (
                                 <>
@@ -302,6 +304,7 @@ export function EventModal() {
                                         className={styles.timeChip}
                                         value={start}
                                         onChange={e => setStart(e.target.value)}
+                                        disabled={!canEdit}
                                     />
                                     <span className={styles.timeSeparator}>até</span>
                                     <input
@@ -309,6 +312,7 @@ export function EventModal() {
                                         className={styles.timeChip}
                                         value={end}
                                         onChange={e => setEnd(e.target.value)}
+                                        disabled={!canEdit}
                                     />
                                 </>
                             )}
@@ -317,6 +321,7 @@ export function EventModal() {
                                 className={styles.dateChip}
                                 value={endDateStr}
                                 onChange={e => setEndDateStr(e.target.value)}
+                                disabled={!canEdit}
                             />
                         </div>
 
@@ -327,6 +332,7 @@ export function EventModal() {
                                     id="allDay"
                                     checked={allDay}
                                     onChange={e => handleAllDayChange(e.target.checked)}
+                                    disabled={!canEdit}
                                 />
                                 <label htmlFor="allDay">Dia inteiro</label>
                             </div>
@@ -335,7 +341,8 @@ export function EventModal() {
                                 <button
                                     type="button"
                                     className={styles.recurrenceBtn}
-                                    onClick={(e) => { e.stopPropagation(); setShowRecurrenceOptions(!showRecurrenceOptions); }}
+                                    onClick={(e) => { if (!canEdit) return; e.stopPropagation(); setShowRecurrenceOptions(!showRecurrenceOptions); }}
+                                    disabled={!canEdit}
                                 >
                                     {getRecurrenceLabel(recurrence)}
                                     <CaretDown size={14} weight="bold" />
@@ -382,6 +389,7 @@ export function EventModal() {
                                     value={calendarId}
                                     onChange={e => setCalendarId(e.target.value)}
                                     className={styles.select}
+                                    disabled={!canEdit}
                                 >
                                     {calendars.map(c => (
                                         <option key={c.id} value={c.id}>{c.name}</option>
@@ -404,6 +412,7 @@ export function EventModal() {
                                 className={styles.input}
                                 value={phone}
                                 onChange={handlePhoneChange}
+                                disabled={!canEdit}
                             />
                         </div>
 
@@ -417,6 +426,7 @@ export function EventModal() {
                                     value={description}
                                     onChange={e => setDescription(e.target.value)}
                                     maxLength={500}
+                                    disabled={!canEdit}
                                 />
                                 <span className={styles.charCount}>
                                     {description.length}/500
