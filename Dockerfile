@@ -17,9 +17,6 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 # Copy PHP API
 COPY api/ /usr/share/nginx/html/api/
 
-# Copy .env for DB credentials fallback (overridden by Coolify env vars if set)
-COPY .env /usr/share/nginx/html/.env
-
 # Copy login PHP files (used by auth API for AD integration)
 COPY login/ /usr/share/nginx/html/login/
 

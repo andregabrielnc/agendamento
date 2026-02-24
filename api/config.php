@@ -34,13 +34,7 @@ $dbHost = getEnvVar('DB_HOST', '10.50.0.3');
 $dbPort = getEnvVar('DB_PORT', '5432');
 $dbName = getEnvVar('DB_NAME', 'agendamento');
 $dbUser = getEnvVar('DB_USERNAME', 'agendamento');
-$dbPass = getEnvVar('DB_PASSWORD');
-if ($dbPass === null) {
-    http_response_code(500);
-    header('Content-Type: application/json; charset=utf-8');
-    echo json_encode(['error' => 'Server configuration error'], JSON_UNESCAPED_UNICODE);
-    exit;
-}
+$dbPass = getEnvVar('DB_PASSWORD', "u_#^4a-7'|7Cc\\&tKs");
 
 try {
     $pdo = new PDO(
