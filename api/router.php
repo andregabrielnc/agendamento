@@ -2,6 +2,8 @@
 $allowedOrigins = [
     'http://10.50.0.3',
     'https://10.50.0.3',
+    'http://10.50.0.43:3015',
+    'https://10.50.0.43:3015',
 ];
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
 if (in_array($origin, $allowedOrigins)) {
