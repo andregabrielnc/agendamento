@@ -19,7 +19,7 @@ import styles from './Header.module.css'
 import { useCalendar } from '../context/CalendarContext'
 import { useAuth } from '../context/AuthContext'
 import { ptBR } from 'date-fns/locale';
-import { format, addMonths, subMonths, addWeeks, subWeeks, addDays, subDays, addYears, subYears, startOfWeek, endOfWeek } from 'date-fns';
+import { format, addMonths, subMonths, addWeeks, subWeeks, addDays, subDays, addYears, subYears, startOfWeek, endOfWeek, setMonth as setDateMonth } from 'date-fns';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { SettingsModal } from './SettingsModal';
 import { AdminUsers } from '../pages/AdminUsers';
@@ -48,6 +48,7 @@ export function Header() {
     const { user, isAdmin, logout } = useAuth();
     const [showViewMenu, setShowViewMenu] = useState(false);
     const [showUserMenu, setShowUserMenu] = useState(false);
+    const [showMonthMenu, setShowMonthMenu] = useState(false);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [isUsersOpen, setIsUsersOpen] = useState(false);
     const [isReportOpen, setIsReportOpen] = useState(false);
@@ -56,6 +57,7 @@ export function Header() {
     const viewMenuRef = useRef<HTMLDivElement>(null);
     const userMenuRef = useRef<HTMLDivElement>(null);
     const notifRef = useRef<HTMLDivElement>(null);
+    const monthMenuRef = useRef<HTMLDivElement>(null);
 
     const fetchNotifications = useCallback(async () => {
         try {
@@ -77,7 +79,7 @@ export function Header() {
     }, [user, fetchNotifications]);
 
     useEffect(() => {
-        if (!showViewMenu && !showUserMenu && !showNotifications) return;
+        if (!showViewMenu && !showUserMenu && !showNotifications && !showMonthMenu) return;
         const handleClickOutside = (e: MouseEvent) => {
             if (showViewMenu && viewMenuRef.current && !viewMenuRef.current.contains(e.target as Node)) {
                 setShowViewMenu(false);
@@ -88,10 +90,13 @@ export function Header() {
             if (showNotifications && notifRef.current && !notifRef.current.contains(e.target as Node)) {
                 setShowNotifications(false);
             }
+            if (showMonthMenu && monthMenuRef.current && !monthMenuRef.current.contains(e.target as Node)) {
+                setShowMonthMenu(false);
+            }
         };
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [showViewMenu, showUserMenu, showNotifications]);
+    }, [showViewMenu, showUserMenu, showNotifications, showMonthMenu]);
 
     const handlePrev = () => {
         switch (view) {
@@ -143,6 +148,16 @@ export function Header() {
         }
     };
 
+    const MONTH_NAMES = [
+        'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+        'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+    ];
+
+    const handleSelectMonth = (monthIndex: number) => {
+        setCurrentDate(setDateMonth(currentDate, monthIndex));
+        setShowMonthMenu(false);
+    };
+
     const selectView = (v: string) => {
         setView(v as any);
         setShowViewMenu(false);
@@ -176,6 +191,25 @@ export function Header() {
 
             <div className={styles.middle}>
                 <button className={styles.todayBtn} onClick={handleToday}>Hoje</button>
+                <div className={styles.monthPicker} ref={monthMenuRef}>
+                    <button className={styles.monthBtn} onClick={() => setShowMonthMenu(!showMonthMenu)}>
+                        Mês
+                        <CaretDown size={12} />
+                    </button>
+                    {showMonthMenu && (
+                        <div className={styles.monthMenu} onClick={e => e.stopPropagation()}>
+                            {MONTH_NAMES.map((name, i) => (
+                                <div
+                                    key={i}
+                                    className={currentDate.getMonth() === i ? styles.monthMenuActive : ''}
+                                    onClick={() => handleSelectMonth(i)}
+                                >
+                                    {name}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
                 <div className={styles.navigation}>
                     <button className={styles.iconBtn} onClick={handlePrev} title="Anterior">
                         <CaretLeft size={20} weight="bold" />

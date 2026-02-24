@@ -73,6 +73,67 @@
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
+/* ===== Month Picker (mobile only) ===== */
+
+.monthPicker {
+    position: relative;
+    display: none;
+}
+
+.monthBtn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    border: 1px solid var(--border-color);
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-weight: 500;
+    font-size: 13px;
+    color: var(--text-primary);
+    background: transparent;
+    cursor: pointer;
+    transition: background 0.2s;
+    white-space: nowrap;
+}
+
+.monthBtn:hover {
+    background-color: var(--bg-hover);
+}
+
+.monthMenu {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    min-width: 150px;
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    z-index: 200;
+    overflow: hidden;
+    padding: 4px 0;
+    max-height: 280px;
+    overflow-y: auto;
+}
+
+.monthMenu div {
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: background-color 0.15s;
+    font-size: 13px;
+    color: var(--text-primary);
+}
+
+.monthMenu div:hover {
+    background-color: var(--bg-hover);
+}
+
+.monthMenuActive {
+    background-color: var(--primary-light, rgba(26, 115, 232, 0.08));
+    color: var(--primary) !important;
+    font-weight: 600;
+}
+
 .dateTitle {
     font-size: 22px;
     font-weight: 400;
@@ -449,6 +510,9 @@
     .todayBtn {
         padding: 4px 10px;
         font-size: 13px;
+    }
+    .monthPicker {
+        display: block;
     }
     .iconBtn {
         width: 34px;
