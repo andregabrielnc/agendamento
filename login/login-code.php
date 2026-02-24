@@ -216,56 +216,30 @@ try {
         error_log("Departamento: " . $localUserData['departamento']);
     }
     
-    // === AUTENTICAÇÃO OBRIGATÓRIA ===
-    
-    // CORREÇÃO DE SEGURANÇA: Usuários de teste EXPLÍCITOS apenas para desenvolvimento
-    $testUsers = [
-        'admin' => 'admin123',
-        'teste' => 'teste123',
-        'user' => 'user123'
-    ];
-    
-    $isTestUser = false;
+    // === AUTENTICAÇÃO OBRIGATÓRIA VIA ACTIVE DIRECTORY ===
+
     $adUserData = null;
-    
-    // Verificar se é usuário de teste (apenas para desenvolvimento)
-    if (isset($testUsers[$username]) && $testUsers[$username] === $password) {
-        $isTestUser = true;
-        $adUserData = [
-            'name' => 'Usuário ' . ucfirst($username),
-            'email' => $email,
-            'department' => 'TI - Desenvolvimento',
-            'phone' => '(62) 9999-9999',
-            'cargo' => $username === 'admin' ? 'Administrador' : 'Usuário',
-            'company' => 'EBSERH',
-            'avatar' => 'admin/assets/img/unset.svg'
-        ];
-        error_log("USUÁRIO DE TESTE AUTENTICADO: $username");
-    } else {
-        // === CORREÇÃO PRINCIPAL: SEMPRE AUTENTICAR COM AD ===
-        error_log("=== AUTENTICAÇÃO AD OBRIGATÓRIA ===");
-        
-        if (function_exists('validaLoginAD')) {
-            error_log("Iniciando autenticação AD para: $username");
-            
-            // SEMPRE chamar a função de autenticação AD com usuário E senha
-            $adUserData = validaLoginAD($username, $password);
-            
-            if ($adUserData) {
-                error_log("AUTENTICAÇÃO AD SUCESSO: $username");
-                error_log("Dados AD recebidos: " . json_encode($adUserData, JSON_UNESCAPED_UNICODE));
-            } else {
-                error_log("AUTENTICAÇÃO AD FALHOU: $username");
-                
-                // Registrar tentativa falhada por credenciais inválidas
-                logLoginAttempt($email, false, $clientIp, $userAgent);
-                
-                redirectToLogin('Credenciais inválidas! Verifique seu usuário e senha no Active Directory.');
-            }
+
+    error_log("=== AUTENTICAÇÃO AD OBRIGATÓRIA ===");
+
+    if (function_exists('validaLoginAD')) {
+        error_log("Iniciando autenticação AD para: $username");
+
+        $adUserData = validaLoginAD($username, $password);
+
+        if ($adUserData) {
+            error_log("AUTENTICAÇÃO AD SUCESSO: $username");
         } else {
-            error_log("ERRO CRÍTICO: Função validaLoginAD não disponível");
-            redirectToLogin('Erro de configuração do sistema. Contate o administrador.');
+            error_log("AUTENTICAÇÃO AD FALHOU: $username");
+
+            // Registrar tentativa falhada por credenciais inválidas
+            logLoginAttempt($email, false, $clientIp, $userAgent);
+
+            redirectToLogin('Credenciais inválidas! Verifique seu usuário e senha no Active Directory.');
         }
+    } else {
+        error_log("ERRO CRÍTICO: Função validaLoginAD não disponível");
+        redirectToLogin('Erro de configuração do sistema. Contate o administrador.');
     }
     
     // === VERIFICAÇÃO FINAL: AUTENTICAÇÃO OBRIGATÓRIA ===
@@ -279,7 +253,7 @@ try {
     }
     
     error_log("=== AUTENTICAÇÃO APROVADA ===");
-    error_log("Usuário: $username | Método: " . ($isTestUser ? 'teste' : 'AD'));
+    error_log("Usuário: $username | Método: AD");
     
     // === CRIAR SESSÃO COM DADOS CORRETOS ===
     error_log("Criando sessão do usuário...");
@@ -303,7 +277,7 @@ try {
         'company' => $adUserData['company'] ?? 'EBSERH',
         'ad_username' => $username,
         'observacoes' => $localUserData['observacoes'] ?? null,
-        'authenticated_method' => $isTestUser ? 'test_user' : 'active_directory' // Para auditoria
+        'authenticated_method' => 'active_directory'
     ];
     
     // Log dos dados finais

@@ -69,20 +69,27 @@ export function AttendanceModal({ isOpen, event, onClose }: AttendanceModalProps
         );
     };
 
+    const escapeHtml = (text: string): string => {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    };
+
     const handleExportPdf = () => {
+        const safeTitle = escapeHtml(event.title);
         const rows = records.map((r, i) =>
             `<tr>
                 <td style="padding:6px 10px;border-bottom:1px solid #ddd;text-align:center">${i + 1}</td>
-                <td style="padding:6px 10px;border-bottom:1px solid #ddd">${r.nome_completo}</td>
-                <td style="padding:6px 10px;border-bottom:1px solid #ddd">${r.email}</td>
-                <td style="padding:6px 10px;border-bottom:1px solid #ddd">${formatDateTime(r.criado_em)}</td>
+                <td style="padding:6px 10px;border-bottom:1px solid #ddd">${escapeHtml(r.nome_completo)}</td>
+                <td style="padding:6px 10px;border-bottom:1px solid #ddd">${escapeHtml(r.email)}</td>
+                <td style="padding:6px 10px;border-bottom:1px solid #ddd">${escapeHtml(formatDateTime(r.criado_em))}</td>
             </tr>`
         ).join('');
 
         const html = `
             <html>
             <head>
-                <title>Presenças - ${event.title}</title>
+                <title>Presenças - ${safeTitle}</title>
                 <style>
                     body { font-family: Arial, sans-serif; padding: 24px; color: #333; }
                     h2 { margin-bottom: 4px; }
@@ -93,7 +100,7 @@ export function AttendanceModal({ isOpen, event, onClose }: AttendanceModalProps
                 </style>
             </head>
             <body>
-                <h2>${event.title}</h2>
+                <h2>${safeTitle}</h2>
                 <p>${records.length} pessoa(s) registraram presença</p>
                 <table>
                     <thead>
