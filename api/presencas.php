@@ -448,6 +448,7 @@ function getPresencaNominal($pdo) {
                     p.sala_nome,
                     p.criado_em
                 FROM presencas p
+                INNER JOIN eventos e ON e.id = p.evento_id::uuid
                 WHERE p.criado_em >= :start AND p.criado_em < :end
                 ORDER BY p.criado_em DESC
             ";
@@ -465,6 +466,7 @@ function getPresencaNominal($pdo) {
                     p.sala_nome,
                     p.criado_em
                 FROM presencas p
+                INNER JOIN eventos e ON e.id = p.evento_id::uuid
                 ORDER BY p.criado_em DESC
             ";
             $stmt = $pdo->query($sql);

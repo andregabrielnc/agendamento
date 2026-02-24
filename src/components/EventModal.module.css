@@ -581,8 +581,10 @@
         width: 100%;
         max-width: 100%;
         max-height: 100vh;
+        max-height: 100dvh;
         border-radius: 0;
         height: 100vh;
+        height: 100dvh;
     }
 
     .titleSection {
