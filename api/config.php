@@ -34,7 +34,7 @@ $dbHost = getEnvVar('DB_HOST', '10.50.0.3');
 $dbPort = getEnvVar('DB_PORT', '5432');
 $dbName = getEnvVar('DB_NAME', 'agendamento');
 $dbUser = getEnvVar('DB_USERNAME', 'agendamento');
-$dbPass = getEnvVar('DB_PASSWORD', "u_#^4a-7'|7Cc\\&tKs");
+$dbPass = getEnvVar('DB_PASSWORD', '1r585%sV$g5');
 
 try {
     $pdo = new PDO(
@@ -52,13 +52,6 @@ try {
     header('Content-Type: application/json; charset=utf-8');
     echo json_encode([
         'error' => 'Database connection failed',
-        'debug' => $e->getMessage(),
-        'host' => $dbHost,
-        'port' => $dbPort,
-        'db' => $dbName,
-        'user' => $dbUser,
-        'pass_len' => strlen($dbPass),
-        'pass_source' => getenv('DB_PASSWORD') !== false ? 'env' : 'fallback',
     ], JSON_UNESCAPED_UNICODE);
     exit;
 }
