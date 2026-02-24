@@ -398,6 +398,32 @@
     box-shadow: none;
 }
 
+/* === Mobile Icon & Footer === */
+
+.mobileIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #1557b0 0%, #1a73e8 100%);
+    color: #f8f9fa;
+    margin-bottom: 12px;
+}
+
+.mobileFooter {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    margin-top: 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    color: #9aa0a6;
+    text-align: center;
+}
+
 /* === Responsive === */
 
 @media (max-width: 768px) {

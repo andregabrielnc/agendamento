@@ -180,7 +180,12 @@ export function Sidebar() {
                                 >
                                     {calendar.visible && <Check size={12} weight="bold" color="#fff" />}
                                 </span>
-                                <span className={styles.calendarName}>{calendar.name}</span>
+                                <div className={styles.calendarTextWrapper}>
+                                    <span className={styles.calendarName}>{calendar.name}</span>
+                                    {calendar.description && (
+                                        <span className={styles.calendarDescription}>{calendar.description}</span>
+                                    )}
+                                </div>
                             </div>
                             {isAdmin && (
                                 <button

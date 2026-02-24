@@ -89,6 +89,11 @@ export function Login({ onPresenca }: LoginProps) {
                 <div className={styles.formPanel}>
                     <form className={styles.form} onSubmit={handleSubmit}>
                         <div className={styles.formHeader}>
+                            {isMobile && (
+                                <div className={styles.mobileIcon}>
+                                    <GraduationCap size={36} weight="duotone" />
+                                </div>
+                            )}
                             <h2 className={styles.formTitle}>
                                 {isMobile ? 'Agendamento de Salas de Ensino' : 'Entrar'}
                             </h2>
@@ -189,6 +194,13 @@ export function Login({ onPresenca }: LoginProps) {
                         <div className={styles.formLogo}>
                             <img src="/logo_hc.png" alt="EBSERH — Empresa Brasileira de Serviços Hospitalares" />
                         </div>
+
+                        {isMobile && (
+                            <div className={styles.mobileFooter}>
+                                <span>Andre Gabriel N. Carvalho — UES/GEP</span>
+                                <span>Versão 3.1 — Contato: andre.gabriel@ebserh.gov.br</span>
+                            </div>
+                        )}
                     </form>
                 </div>
             </div>
