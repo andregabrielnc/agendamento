@@ -169,16 +169,19 @@
 
 /* ===== Responsive ===== */
 
-@media (max-width: 480px) {
+@media (max-width: 768px) {
     .container {
-        padding: 12px;
         left: 0;
         right: 0;
+        transform: none;
+        padding: 12px;
         align-items: stretch;
     }
 
     .toast {
         min-width: 0;
         max-width: 100%;
+        font-size: 13px;
+        padding: 12px 14px;
     }
 }
