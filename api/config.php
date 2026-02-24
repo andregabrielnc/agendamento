@@ -52,6 +52,13 @@ try {
     header('Content-Type: application/json; charset=utf-8');
     echo json_encode([
         'error' => 'Database connection failed',
+        'debug' => $e->getMessage(),
+        'host' => $dbHost,
+        'port' => $dbPort,
+        'db' => $dbName,
+        'user' => $dbUser,
+        'pass_len' => strlen($dbPass),
+        'pass_source' => getenv('DB_PASSWORD') !== false ? 'env' : 'fallback',
     ], JSON_UNESCAPED_UNICODE);
     exit;
 }
