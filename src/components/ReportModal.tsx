@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { X, PaperPlaneRight, Trash, CheckCircle, CaretLeft, CaretRight } from '@phosphor-icons/react';
 import { useAuth } from '../context/AuthContext';
-
+import { useCalendar } from '../context/CalendarContext';
 import { useToast } from '../context/ToastContext';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -29,12 +29,14 @@ interface ReportModalProps {
 
 export function ReportModal({ isOpen, onClose, onNotificationsChange }: ReportModalProps) {
     const { user, isAdmin } = useAuth();
+    const { calendars } = useCalendar();
     const { showToast } = useToast();
 
     const CATEGORIAS = ['Dúvidas', 'Sugestões', 'Elogios'] as const;
 
     const [reports, setReports] = useState<Report[]>([]);
-    const [categoria, setCategoria] = useState<string>(CATEGORIAS[0]);
+    const [categoria, setCategoria] = useState<string | null>(null);
+    const [salaId, setSalaId] = useState('');
     const [descricao, setDescricao] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const [finalizingId, setFinalizingId] = useState<string | null>(null);
@@ -77,8 +79,8 @@ export function ReportModal({ isOpen, onClose, onNotificationsChange }: ReportMo
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    sala_id: null,
-                    categoria: categoria,
+                    sala_id: salaId || null,
+                    categoria: categoria || null,
                     descricao: descricao.trim(),
                 }),
             });
@@ -93,7 +95,8 @@ export function ReportModal({ isOpen, onClose, onNotificationsChange }: ReportMo
             if (res.ok && !data.error) {
                 showToast('Relato enviado com sucesso', 'success');
                 setDescricao('');
-                setCategoria(CATEGORIAS[0]);
+                setSalaId('');
+                setCategoria(null);
                 fetchReports();
             } else {
                 showToast(data.error || 'Erro ao enviar relato', 'error');
@@ -157,12 +160,28 @@ export function ReportModal({ isOpen, onClose, onNotificationsChange }: ReportMo
                 <div className={styles.formSection}>
                     <div className={styles.formRow}>
                         <div className={styles.formField}>
-                            <label>Categoria</label>
-                            <select value={categoria} onChange={e => setCategoria(e.target.value)}>
-                                {CATEGORIAS.map(cat => (
-                                    <option key={cat} value={cat}>{cat}</option>
+                            <label>Sala / Agenda</label>
+                            <select value={salaId} onChange={e => setSalaId(e.target.value)}>
+                                <option value="">Geral (nenhuma sala)</option>
+                                {calendars.map(c => (
+                                    <option key={c.id} value={c.id}>{c.name}</option>
                                 ))}
                             </select>
+                        </div>
+                        <div className={styles.formField}>
+                            <label>Categoria</label>
+                            <div className={styles.categoriaBtns}>
+                                {CATEGORIAS.map(cat => (
+                                    <button
+                                        key={cat}
+                                        type="button"
+                                        className={`${styles.categoriaBtn} ${categoria === cat ? styles.categoriaBtnActive : ''}`}
+                                        onClick={() => setCategoria(categoria === cat ? null : cat)}
+                                    >
+                                        {cat}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
                     </div>
                     <div className={styles.formFieldFull}>
@@ -199,6 +218,7 @@ export function ReportModal({ isOpen, onClose, onNotificationsChange }: ReportMo
                                     <th>Data/Hora</th>
                                     {isAdmin && <th>Usuário</th>}
                                     <th>Sala</th>
+                                    <th>Categoria</th>
                                     <th>Relato</th>
                                     <th>Status</th>
                                     <th></th>
@@ -211,7 +231,8 @@ export function ReportModal({ isOpen, onClose, onNotificationsChange }: ReportMo
                                             {format(new Date(r.criado_em), "dd/MM/yyyy HH:mm", { locale: ptBR })}
                                         </td>
                                         {isAdmin && <td className={styles.userCell} data-label="Usuário">{r.usuario_nome}</td>}
-                                        <td data-label="Sala">{r.categoria || r.sala_nome || '—'}</td>
+                                        <td data-label="Sala">{r.sala_nome || '—'}</td>
+                                        <td data-label="Categoria">{r.categoria || '—'}</td>
                                         <td className={styles.descCell} title={r.descricao} data-label="Relato">
                                             {finalizingId === r.id ? (
                                                 <div className={styles.finalizeRow}>

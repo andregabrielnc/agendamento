@@ -125,6 +125,43 @@
     pointer-events: none;
 }
 
+/* Category toggle buttons */
+
+.categoriaBtns {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.categoriaBtn {
+    padding: 6px 14px;
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    background: var(--bg-surface);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+}
+
+.categoriaBtn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.categoriaBtnActive {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+}
+
+.categoriaBtnActive:hover {
+    opacity: 0.9;
+    color: white;
+}
+
 .formActions {
     display: flex;
     justify-content: flex-end;
