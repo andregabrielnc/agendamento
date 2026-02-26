@@ -266,7 +266,7 @@ export function Header() {
                     {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
                 </button>
 
-                <button className={`${styles.iconBtn} ${styles.reportToggle}`} onClick={() => setIsReportOpen(true)} title="Informar Problema">
+                <button className={`${styles.iconBtn} ${styles.reportToggle}`} onClick={() => setIsReportOpen(true)} title="Sugestões e Melhorias">
                     <Warning size={22} />
                 </button>
 
@@ -345,7 +345,7 @@ export function Header() {
                                 onClick={() => { setShowUserMenu(false); setIsReportOpen(true); }}
                             >
                                 <Warning size={18} />
-                                Informar Problema
+                                Sugestões e Melhorias
                             </button>
                             <button
                                 className={styles.userMenuItem}

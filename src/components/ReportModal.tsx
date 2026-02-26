@@ -13,6 +13,7 @@ interface Report {
     usuario_nome: string;
     sala_id: string | null;
     sala_nome: string | null;
+    categoria: string | null;
     descricao: string;
     status: string;
     criado_em: string;
@@ -31,7 +32,10 @@ export function ReportModal({ isOpen, onClose, onNotificationsChange }: ReportMo
     const { calendars } = useCalendar();
     const { showToast } = useToast();
 
+    const CATEGORIAS = ['Sala / Agenda', 'Dúvidas', 'Sugestões', 'Elogios'] as const;
+
     const [reports, setReports] = useState<Report[]>([]);
+    const [categoria, setCategoria] = useState<string>(CATEGORIAS[0]);
     const [salaId, setSalaId] = useState('');
     const [descricao, setDescricao] = useState('');
     const [submitting, setSubmitting] = useState(false);
@@ -66,7 +70,7 @@ export function ReportModal({ isOpen, onClose, onNotificationsChange }: ReportMo
 
     const handleSubmit = async () => {
         if (!descricao.trim()) {
-            showToast('Descreva o problema encontrado', 'error');
+            showToast('Preencha a descrição', 'error');
             return;
         }
         setSubmitting(true);
@@ -75,7 +79,8 @@ export function ReportModal({ isOpen, onClose, onNotificationsChange }: ReportMo
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    sala_id: salaId || null,
+                    sala_id: categoria === 'Sala / Agenda' ? (salaId || null) : null,
+                    categoria: categoria,
                     descricao: descricao.trim(),
                 }),
             });
@@ -91,6 +96,7 @@ export function ReportModal({ isOpen, onClose, onNotificationsChange }: ReportMo
                 showToast('Relato enviado com sucesso', 'success');
                 setDescricao('');
                 setSalaId('');
+                setCategoria(CATEGORIAS[0]);
                 fetchReports();
             } else {
                 showToast(data.error || 'Erro ao enviar relato', 'error');
@@ -145,7 +151,7 @@ export function ReportModal({ isOpen, onClose, onNotificationsChange }: ReportMo
         <div className={styles.overlay} onClick={onClose}>
             <div className={styles.modal} onClick={e => e.stopPropagation()}>
                 <div className={styles.header}>
-                    <h2 className={styles.title}>Informar Problema</h2>
+                    <h2 className={styles.title}>Sugestões e Melhorias</h2>
                     <button className={styles.closeBtn} onClick={onClose}>
                         <X size={20} />
                     </button>
@@ -154,22 +160,32 @@ export function ReportModal({ isOpen, onClose, onNotificationsChange }: ReportMo
                 <div className={styles.formSection}>
                     <div className={styles.formRow}>
                         <div className={styles.formField}>
-                            <label>Sala / Agenda</label>
-                            <select value={salaId} onChange={e => setSalaId(e.target.value)}>
-                                <option value="">Geral (nenhuma sala)</option>
-                                {calendars.map(c => (
-                                    <option key={c.id} value={c.id}>{c.name}</option>
+                            <label>Categoria</label>
+                            <select value={categoria} onChange={e => { setCategoria(e.target.value); if (e.target.value !== 'Sala / Agenda') setSalaId(''); }}>
+                                {CATEGORIAS.map(cat => (
+                                    <option key={cat} value={cat}>{cat}</option>
                                 ))}
                             </select>
                         </div>
+                        {categoria === 'Sala / Agenda' && (
+                            <div className={styles.formField}>
+                                <label>Sala / Agenda</label>
+                                <select value={salaId} onChange={e => setSalaId(e.target.value)}>
+                                    <option value="">Geral (nenhuma sala)</option>
+                                    {calendars.map(c => (
+                                        <option key={c.id} value={c.id}>{c.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
                     </div>
                     <div className={styles.formFieldFull}>
-                        <label>Relate o problema</label>
+                        <label>Descrição</label>
                         <div className={styles.textareaWrapper}>
                             <textarea
                                 value={descricao}
                                 onChange={e => setDescricao(e.target.value.slice(0, 500))}
-                                placeholder="Descreva o problema encontrado..."
+                                placeholder="Informe aqui"
                                 maxLength={500}
                             />
                             <span className={styles.charCount}>{descricao.length}/500</span>
@@ -209,7 +225,7 @@ export function ReportModal({ isOpen, onClose, onNotificationsChange }: ReportMo
                                             {format(new Date(r.criado_em), "dd/MM/yyyy HH:mm", { locale: ptBR })}
                                         </td>
                                         {isAdmin && <td className={styles.userCell} data-label="Usuário">{r.usuario_nome}</td>}
-                                        <td data-label="Sala">{r.sala_nome || '—'}</td>
+                                        <td data-label="Sala">{r.categoria && r.categoria !== 'Sala / Agenda' ? r.categoria : (r.sala_nome || '—')}</td>
                                         <td className={styles.descCell} title={r.descricao} data-label="Relato">
                                             {finalizingId === r.id ? (
                                                 <div className={styles.finalizeRow}>

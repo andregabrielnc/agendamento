@@ -242,12 +242,25 @@ function ensureReportTables($pdo) {
             usuario_id VARCHAR(36) NOT NULL,
             usuario_nome VARCHAR(255) NOT NULL,
             sala_id VARCHAR(36),
+            categoria VARCHAR(50),
             descricao TEXT NOT NULL,
             status VARCHAR(20) DEFAULT 'aberto',
             criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             finalizado_em TIMESTAMP,
             finalizado_por VARCHAR(36)
         )
+    ");
+    // Add categoria column if missing (existing tables)
+    $pdo->exec("
+        DO $$
+        BEGIN
+            IF NOT EXISTS (
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name = 'relatos' AND column_name = 'categoria'
+            ) THEN
+                ALTER TABLE relatos ADD COLUMN categoria VARCHAR(50);
+            END IF;
+        END $$
     ");
     $pdo->exec("
         CREATE TABLE IF NOT EXISTS notificacoes (

@@ -30,6 +30,7 @@ function handleReports($method, $id, $pdo) {
                 $user = requireAuth();
                 $input = getJsonInput();
                 $salaId = !empty($input['sala_id']) ? $input['sala_id'] : null;
+                $categoria = !empty($input['categoria']) ? $input['categoria'] : null;
                 $descricao = trim($input['descricao'] ?? '');
 
                 if (!$descricao) {
@@ -38,14 +39,15 @@ function handleReports($method, $id, $pdo) {
 
                 $newId = generateUuid();
                 $stmt = $pdo->prepare("
-                    INSERT INTO relatos (id, usuario_id, usuario_nome, sala_id, descricao)
-                    VALUES (:id, :uid, :uname, :sala, :descricao)
+                    INSERT INTO relatos (id, usuario_id, usuario_nome, sala_id, categoria, descricao)
+                    VALUES (:id, :uid, :uname, :sala, :cat, :descricao)
                 ");
                 $stmt->execute([
                     ':id' => $newId,
                     ':uid' => $user['id'],
                     ':uname' => $user['name'],
                     ':sala' => $salaId,
+                    ':cat' => $categoria,
                     ':descricao' => $descricao,
                 ]);
 

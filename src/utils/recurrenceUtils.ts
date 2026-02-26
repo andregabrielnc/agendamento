@@ -34,7 +34,7 @@ export function getRecurrenceInstances(
 
     if (typeof event.recurrence === 'string') {
         rule = {
-            frequency: event.recurrence as any,
+            frequency: event.recurrence as RecurrenceRule['frequency'],
             interval: 1,
             endType: 'never'
         };
@@ -60,7 +60,8 @@ export function getRecurrenceInstances(
     // - Monthly day 31 stickiness (Jan 31 -> Feb 28 -> Mar 28 instead of Mar 31)
     // - Yearly Feb 29 stickiness (Feb 29 -> Feb 28 in non-leap, then stuck on 28)
     // - DST hour shifts (+/- 1 hour after crossing DST boundary)
-    const originalDay = event.start.getDate();
+    const originalStartDay = event.start.getDate();
+    const originalEndDay = event.end.getDate();
     const originalHours = event.start.getHours();
     const originalMinutes = event.start.getMinutes();
     const originalEndHours = event.end.getHours();
@@ -79,7 +80,7 @@ export function getRecurrenceInstances(
 
         if (isAfter(currentStart, rangeEnd)) break;
 
-        let isValidInstance = true;
+        const isValidInstance = true;
 
         // Simple logic for weekly with specific days handled in separate block below
         if (rule.frequency === 'weekly' && rule.daysOfWeek && rule.daysOfWeek.length > 0) {
@@ -122,10 +123,11 @@ export function getRecurrenceInstances(
 
         // Fix monthly day-31 stickiness and yearly Feb-29 stickiness:
         // Restore the original day-of-month, capped to the last day of the target month.
+        // Use separate originalStartDay/originalEndDay to preserve multi-day event duration.
         if (rule.frequency === 'monthly' || rule.frequency === 'yearly') {
-            const cappedStartDay = Math.min(originalDay, getDaysInMonth(currentStart));
+            const cappedStartDay = Math.min(originalStartDay, getDaysInMonth(currentStart));
             currentStart.setDate(cappedStartDay);
-            const cappedEndDay = Math.min(originalDay, getDaysInMonth(currentEnd));
+            const cappedEndDay = Math.min(originalEndDay, getDaysInMonth(currentEnd));
             currentEnd.setDate(cappedEndDay);
         }
 
