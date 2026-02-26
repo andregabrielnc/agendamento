@@ -2,7 +2,6 @@ import { createContext, useContext, useState, useEffect, useCallback, useMemo } 
 import type { ReactNode } from 'react';
 import type { CalendarEvent, Calendar, RecurrenceEditMode } from '../types';
 import { calendarService } from '../services/calendarService';
-import { useAuth } from './AuthContext';
 
 interface EventOperationResult {
     success: boolean;
@@ -31,8 +30,6 @@ export function EventProvider({ children }: { children: ReactNode }) {
     const [events, setEvents] = useState<CalendarEvent[]>([]);
     const [calendars, setCalendars] = useState<Calendar[]>([]);
     const [searchQuery, setSearchQuery] = useState<string>('');
-    const { isAdmin } = useAuth();
-
     useEffect(() => {
         const loadData = async () => {
             try {
@@ -42,23 +39,19 @@ export function EventProvider({ children }: { children: ReactNode }) {
                 ]);
                 setEvents(loadedEvents);
 
-                // Non-admin: enforce single calendar visibility (default to "10º andar")
-                if (!isAdmin) {
-                    const target = loadedCalendars.find(c => c.name.includes('10'));
-                    const defaultId = target?.id ?? loadedCalendars[0]?.id;
-                    setCalendars(loadedCalendars.map(c => ({
-                        ...c,
-                        visible: c.id === defaultId,
-                    })));
-                } else {
-                    setCalendars(loadedCalendars);
-                }
+                // Default to a single visible calendar for all users (default to "10º andar")
+                const target = loadedCalendars.find(c => c.name.includes('10'));
+                const defaultId = target?.id ?? loadedCalendars[0]?.id;
+                setCalendars(loadedCalendars.map(c => ({
+                    ...c,
+                    visible: c.id === defaultId,
+                })));
             } catch (error) {
                 console.error('Failed to load calendar data:', error);
             }
         };
         loadData();
-    }, [isAdmin]);
+    }, []);
 
     const visibleCalendarIds = useMemo(() => {
         return new Set(calendars.filter(c => c.visible).map(c => c.id));
