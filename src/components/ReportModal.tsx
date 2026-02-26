@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { X, PaperPlaneRight, Trash, CheckCircle, CaretLeft, CaretRight } from '@phosphor-icons/react';
 import { useAuth } from '../context/AuthContext';
-import { useCalendar } from '../context/CalendarContext';
+
 import { useToast } from '../context/ToastContext';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -29,14 +29,12 @@ interface ReportModalProps {
 
 export function ReportModal({ isOpen, onClose, onNotificationsChange }: ReportModalProps) {
     const { user, isAdmin } = useAuth();
-    const { calendars } = useCalendar();
     const { showToast } = useToast();
 
-    const CATEGORIAS = ['Sala / Agenda', 'Dúvidas', 'Sugestões', 'Elogios'] as const;
+    const CATEGORIAS = ['Dúvidas', 'Sugestões', 'Elogios'] as const;
 
     const [reports, setReports] = useState<Report[]>([]);
     const [categoria, setCategoria] = useState<string>(CATEGORIAS[0]);
-    const [salaId, setSalaId] = useState('');
     const [descricao, setDescricao] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const [finalizingId, setFinalizingId] = useState<string | null>(null);
@@ -79,7 +77,7 @@ export function ReportModal({ isOpen, onClose, onNotificationsChange }: ReportMo
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    sala_id: categoria === 'Sala / Agenda' ? (salaId || null) : null,
+                    sala_id: null,
                     categoria: categoria,
                     descricao: descricao.trim(),
                 }),
@@ -95,7 +93,6 @@ export function ReportModal({ isOpen, onClose, onNotificationsChange }: ReportMo
             if (res.ok && !data.error) {
                 showToast('Relato enviado com sucesso', 'success');
                 setDescricao('');
-                setSalaId('');
                 setCategoria(CATEGORIAS[0]);
                 fetchReports();
             } else {
@@ -161,23 +158,12 @@ export function ReportModal({ isOpen, onClose, onNotificationsChange }: ReportMo
                     <div className={styles.formRow}>
                         <div className={styles.formField}>
                             <label>Categoria</label>
-                            <select value={categoria} onChange={e => { setCategoria(e.target.value); if (e.target.value !== 'Sala / Agenda') setSalaId(''); }}>
+                            <select value={categoria} onChange={e => setCategoria(e.target.value)}>
                                 {CATEGORIAS.map(cat => (
                                     <option key={cat} value={cat}>{cat}</option>
                                 ))}
                             </select>
                         </div>
-                        {categoria === 'Sala / Agenda' && (
-                            <div className={styles.formField}>
-                                <label>Sala / Agenda</label>
-                                <select value={salaId} onChange={e => setSalaId(e.target.value)}>
-                                    <option value="">Geral (nenhuma sala)</option>
-                                    {calendars.map(c => (
-                                        <option key={c.id} value={c.id}>{c.name}</option>
-                                    ))}
-                                </select>
-                            </div>
-                        )}
                     </div>
                     <div className={styles.formFieldFull}>
                         <label>Descrição</label>
@@ -225,7 +211,7 @@ export function ReportModal({ isOpen, onClose, onNotificationsChange }: ReportMo
                                             {format(new Date(r.criado_em), "dd/MM/yyyy HH:mm", { locale: ptBR })}
                                         </td>
                                         {isAdmin && <td className={styles.userCell} data-label="Usuário">{r.usuario_nome}</td>}
-                                        <td data-label="Sala">{r.categoria && r.categoria !== 'Sala / Agenda' ? r.categoria : (r.sala_nome || '—')}</td>
+                                        <td data-label="Sala">{r.categoria || r.sala_nome || '—'}</td>
                                         <td className={styles.descCell} title={r.descricao} data-label="Relato">
                                             {finalizingId === r.id ? (
                                                 <div className={styles.finalizeRow}>
