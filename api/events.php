@@ -57,6 +57,12 @@ function createEvent($pdo) {
         }
     }
 
+    // Title is required
+    $titulo = trim($input['title'] ?? '');
+    if ($titulo === '') {
+        jsonResponse(['error' => 'O nome do evento é obrigatório'], 400);
+    }
+
     // Conflict check (safety net — frontend should have caught this already)
     $isAllDay = !empty($input['allDay']);
     $conflict = checkConflictInDb($pdo, $input['calendarId'] ?? null, $input['start'] ?? null, $input['end'] ?? null, null, $isAllDay);

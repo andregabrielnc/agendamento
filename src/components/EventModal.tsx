@@ -128,7 +128,7 @@ export function EventModal() {
         }
 
         return {
-            title: title || '(Sem título)',
+            title: title.trim(),
             start: startDate,
             end: endDate,
             description,
@@ -149,6 +149,11 @@ export function EventModal() {
 
         const startDate = new Date(`${date}T${startTime}`);
         const endDate = new Date(`${endDateStr}T${endTime}`);
+
+        if (!title.trim()) {
+            showToast('O nome do evento é obrigatório.', 'error');
+            return;
+        }
 
         if (startDate >= endDate && !allDay) {
             showToast('A data de término deve ser posterior à data de início.', 'error');
