@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState, useMemo } from 'react';
 import { useCalendar } from '../../context/CalendarContext';
 import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
 import { isToday } from '../../utils/dateUtils';
 import { format, isSameDay, addMinutes, startOfDay, endOfDay, roundToNearestMinutes, differenceInMinutes } from 'date-fns';
 import styles from './DayView.module.css';
@@ -11,6 +12,7 @@ import { computeEventLayout, getEventColumnStyle } from '../../utils/eventLayout
 export function DayView() {
     const { currentDate, filteredEvents: events, openPopover, openCreateModal, updateEvent, modalState } = useCalendar();
     const { canEditEvent } = useAuth();
+    const { showToast } = useToast();
     const day = currentDate;
     const hours = Array.from({ length: 24 }, (_, i) => i);
     const scrollRef = useRef<HTMLDivElement>(null);
@@ -105,7 +107,11 @@ export function DayView() {
                 const originalId = resizeEventId.split('_')[0];
                 const original = events.find(evt => evt.id === originalId);
                 if (original && draftEndTime > original.start) {
-                    updateEvent({ ...original, end: draftEndTime });
+                    updateEvent({ ...original, end: draftEndTime }).then(result => {
+                        if (!result.success && result.error) {
+                            showToast(result.error, 'error');
+                        }
+                    });
                 }
             }
 
@@ -128,7 +134,7 @@ export function DayView() {
             window.removeEventListener('mousemove', handleWindowMouseMove);
             window.removeEventListener('mouseup', handleWindowMouseUp);
         };
-    }, [isDraggingCreate, draftEvent, resizeEventId, draftEndTime, dragEventId, events, openCreateModal, updateEvent]);
+    }, [isDraggingCreate, draftEvent, resizeEventId, draftEndTime, dragEventId, events, openCreateModal, updateEvent, showToast]);
 
     // Clear draft when create modal closes (save or cancel)
     useEffect(() => {
@@ -201,7 +207,7 @@ export function DayView() {
         e.dataTransfer.dropEffect = 'move';
     };
 
-    const handleDrop = (e: React.DragEvent) => {
+    const handleDrop = async (e: React.DragEvent) => {
         e.preventDefault();
         const instanceId = e.dataTransfer.getData('text/plain');
         const originalId = instanceId.split('_')[0];
@@ -222,7 +228,10 @@ export function DayView() {
 
             const cleanNewEnd = addMinutes(cleanNewStart, duration);
 
-            updateEvent({ ...originalEvent, start: cleanNewStart, end: cleanNewEnd });
+            const result = await updateEvent({ ...originalEvent, start: cleanNewStart, end: cleanNewEnd });
+            if (!result.success && result.error) {
+                showToast(result.error, 'error');
+            }
         }
         setDragEventId(null);
     };

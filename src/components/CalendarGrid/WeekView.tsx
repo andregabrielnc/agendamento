@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState, useMemo } from 'react';
 import { useCalendar } from '../../context/CalendarContext'
 import { useAuth } from '../../context/AuthContext'
+import { useToast } from '../../context/ToastContext'
 import { getWeekViewDays, getNDayViewDays, isToday } from '../../utils/dateUtils'
 import { format, isSameDay, addMinutes, startOfDay, roundToNearestMinutes, differenceInMinutes, endOfDay } from 'date-fns'
 import styles from './WeekView.module.css'
@@ -15,6 +16,7 @@ interface WeekViewProps {
 export function WeekView({ dayCount }: WeekViewProps) {
     const { currentDate, filteredEvents: events, openPopover, openCreateModal, updateEvent, modalState } = useCalendar();
     const { canEditEvent } = useAuth();
+    const { showToast } = useToast();
     const days = dayCount ? getNDayViewDays(currentDate, dayCount) : getWeekViewDays(currentDate);
     const hours = Array.from({ length: 24 }, (_, i) => i);
     const scrollRef = useRef<HTMLDivElement>(null);
@@ -125,7 +127,11 @@ export function WeekView({ dayCount }: WeekViewProps) {
                 const originalId = resizeEventId.split('_')[0];
                 const original = events.find(e => e.id === originalId);
                 if (original && draftEndTime > original.start) {
-                    updateEvent({ ...original, end: draftEndTime });
+                    updateEvent({ ...original, end: draftEndTime }).then(result => {
+                        if (!result.success && result.error) {
+                            showToast(result.error, 'error');
+                        }
+                    });
                 }
             }
 
@@ -149,7 +155,7 @@ export function WeekView({ dayCount }: WeekViewProps) {
             window.removeEventListener('mousemove', handleWindowMouseMove);
             window.removeEventListener('mouseup', handleWindowMouseUp);
         };
-    }, [isDraggingCreate, draftEvent, resizeEventId, draftEndTime, dragEventId, events]);
+    }, [isDraggingCreate, draftEvent, resizeEventId, draftEndTime, dragEventId, events, showToast]);
 
     // Clear draft when create modal closes (save or cancel)
     useEffect(() => {
@@ -224,7 +230,7 @@ export function WeekView({ dayCount }: WeekViewProps) {
         e.dataTransfer.dropEffect = 'move';
     };
 
-    const handleDrop = (e: React.DragEvent, date: Date) => {
+    const handleDrop = async (e: React.DragEvent, date: Date) => {
         e.preventDefault();
         const instanceId = e.dataTransfer.getData('text/plain');
         const originalId = instanceId.split('_')[0];
@@ -245,7 +251,10 @@ export function WeekView({ dayCount }: WeekViewProps) {
 
             const cleanNewEnd = addMinutes(cleanNewStart, duration);
 
-            updateEvent({ ...originalEvent, start: cleanNewStart, end: cleanNewEnd });
+            const result = await updateEvent({ ...originalEvent, start: cleanNewStart, end: cleanNewEnd });
+            if (!result.success && result.error) {
+                showToast(result.error, 'error');
+            }
         }
         setDragEventId(null);
     };

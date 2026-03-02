@@ -57,6 +57,15 @@ function createEvent($pdo) {
         }
     }
 
+    // Conflict check (safety net — frontend should have caught this already)
+    $isAllDay = !empty($input['allDay']);
+    $conflict = checkConflictInDb($pdo, $input['calendarId'] ?? null, $input['start'] ?? null, $input['end'] ?? null, null, $isAllDay);
+    if ($conflict) {
+        jsonResponse([
+            'error' => 'Conflito de horário com "' . $conflict['titulo'] . '" nesta sala'
+        ], 409);
+    }
+
     $id = generateUuid();
 
     $pdo->beginTransaction();
@@ -126,6 +135,15 @@ function updateEvent($id, $pdo) {
     }
 
     if ($mode === 'single' && $instanceDate) {
+        // Conflict check for the new standalone event
+        $isAllDay = !empty($input['allDay']);
+        $conflict = checkConflictInDb($pdo, $input['calendarId'] ?? null, $input['start'] ?? null, $input['end'] ?? null, null, $isAllDay);
+        if ($conflict) {
+            jsonResponse([
+                'error' => 'Conflito de horário com "' . $conflict['titulo'] . '" nesta sala'
+            ], 409);
+        }
+
         $newId = generateUuid();
 
         $pdo->beginTransaction();
@@ -213,6 +231,15 @@ function updateEvent($id, $pdo) {
     }
 
     // mode === 'all' — current behavior: update everything
+    // Conflict check for the updated event
+    $isAllDay = !empty($input['allDay']);
+    $conflict = checkConflictInDb($pdo, $input['calendarId'] ?? null, $input['start'] ?? null, $input['end'] ?? null, $id, $isAllDay);
+    if ($conflict) {
+        jsonResponse([
+            'error' => 'Conflito de horário com "' . $conflict['titulo'] . '" nesta sala'
+        ], 409);
+    }
+
     $pdo->beginTransaction();
     try {
         $stmt = $pdo->prepare('
@@ -489,6 +516,41 @@ function mapDbEventToFrontend($row) {
     }
 
     return $event;
+}
+
+function checkConflictInDb($pdo, $salaId, $start, $end, $excludeEventId = null, $allDay = false) {
+    // Normalize allDay events to 07:00-18:00
+    if ($allDay) {
+        $dateOnly = substr($start, 0, 10);
+        $start = $dateOnly . 'T07:00:00';
+        $end = $dateOnly . 'T18:00:00';
+    }
+
+    $sql = '
+        SELECT e.id, e.titulo, e.data_inicio, e.data_fim
+        FROM eventos e
+        LEFT JOIN frequencia f ON f.evento_id = e.id
+        WHERE e.sala_id = :sala_id
+          AND e.data_inicio < :end_time
+          AND e.data_fim > :start_time
+          AND f.evento_id IS NULL
+    ';
+    $params = [
+        ':sala_id' => $salaId,
+        ':end_time' => $end,
+        ':start_time' => $start,
+    ];
+
+    if ($excludeEventId) {
+        $sql .= ' AND e.id != :exclude_id';
+        $params[':exclude_id'] = $excludeEventId;
+    }
+
+    $sql .= ' LIMIT 1';
+
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+    return $stmt->fetch();
 }
 
 function checkPastEventRestriction($pdo, $eventId, $user, $instanceDate = null) {

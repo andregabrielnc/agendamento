@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useCalendar } from '../../context/CalendarContext';
 import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
 import { getMonthViewDays, isToday } from '../../utils/dateUtils';
 import { format, isSameMonth, isSameDay, startOfDay, endOfDay } from 'date-fns';
 import styles from './MonthView.module.css';
@@ -9,6 +10,7 @@ import { getRecurrenceInstances } from '../../utils/recurrenceUtils';
 export function MonthView() {
     const { currentDate, filteredEvents: events, openPopover, updateEvent, openCreateModal } = useCalendar();
     const { canEditEvent } = useAuth();
+    const { showToast } = useToast();
     const days = getMonthViewDays(currentDate);
 
     // Generate expanded events for the visible range
@@ -29,7 +31,7 @@ export function MonthView() {
         e.dataTransfer.effectAllowed = 'move';
     };
 
-    const handleDrop = (e: React.DragEvent, date: Date) => {
+    const handleDrop = async (e: React.DragEvent, date: Date) => {
         e.preventDefault();
         const eventId = e.dataTransfer.getData('text/plain');
         const originalId = eventId.split('_')[0];
@@ -43,7 +45,10 @@ export function MonthView() {
             const duration = event.end.getTime() - event.start.getTime();
             const newEnd = new Date(newStart.getTime() + duration);
 
-            updateEvent({ ...event, start: newStart, end: newEnd });
+            const result = await updateEvent({ ...event, start: newStart, end: newEnd });
+            if (!result.success && result.error) {
+                showToast(result.error, 'error');
+            }
         }
     };
 

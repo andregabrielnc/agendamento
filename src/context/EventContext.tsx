@@ -2,6 +2,12 @@ import { createContext, useContext, useState, useEffect, useCallback, useMemo } 
 import type { ReactNode } from 'react';
 import type { CalendarEvent, Calendar, RecurrenceEditMode } from '../types';
 import { calendarService } from '../services/calendarService';
+import {
+    checkEventConflict,
+    checkRecurringEventConflict,
+    buildConflictMessage,
+    hasRecurrence,
+} from '../utils/conflictDetection';
 
 interface EventOperationResult {
     success: boolean;
@@ -70,6 +76,16 @@ export function EventProvider({ children }: { children: ReactNode }) {
     }, [events, visibleCalendarIds, searchQuery]);
 
     const addEvent = useCallback(async (eventData: Omit<CalendarEvent, 'id'>): Promise<EventOperationResult> => {
+        // Conflict detection before API call
+        const conflictResult = hasRecurrence(eventData)
+            ? checkRecurringEventConflict(eventData, events)
+            : checkEventConflict(eventData, events);
+
+        if (conflictResult.hasConflict) {
+            const message = buildConflictMessage(conflictResult);
+            return { success: false, error: message };
+        }
+
         try {
             const newEvent = await calendarService.createEvent(eventData);
             setEvents(prev => [...prev, newEvent]);
@@ -79,7 +95,7 @@ export function EventProvider({ children }: { children: ReactNode }) {
             console.error('Failed to create event:', error);
             return { success: false, error: message };
         }
-    }, []);
+    }, [events]);
 
     const reloadEvents = useCallback(async () => {
         try {
@@ -93,6 +109,18 @@ export function EventProvider({ children }: { children: ReactNode }) {
     const updateEvent = useCallback(async (updatedEvent: CalendarEvent, mode?: RecurrenceEditMode, instanceDate?: string): Promise<EventOperationResult> => {
         const originalId = updatedEvent.id.split('_')[0];
         const eventToUpdate = { ...updatedEvent, id: originalId };
+
+        // Conflict detection before API call
+        const excludeId = originalId;
+        const isRecurringBulk = hasRecurrence(eventToUpdate) && mode !== 'single';
+        const conflictResult = isRecurringBulk
+            ? checkRecurringEventConflict(eventToUpdate, events, excludeId)
+            : checkEventConflict(eventToUpdate, events, excludeId);
+
+        if (conflictResult.hasConflict) {
+            const message = buildConflictMessage(conflictResult);
+            return { success: false, error: message };
+        }
 
         if (mode && mode !== 'all') {
             try {
