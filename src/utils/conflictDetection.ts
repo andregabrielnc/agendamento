@@ -86,7 +86,8 @@ export function checkEventConflict(
 export function checkRecurringEventConflict(
     proposedEvent: CalendarEvent | Omit<CalendarEvent, 'id'>,
     allEvents: CalendarEvent[],
-    excludeEventId?: string
+    excludeEventId?: string,
+    fromDate?: Date
 ): ConflictResult {
     // Build a temporary event with a fake ID for expansion
     const tempEvent: CalendarEvent = {
@@ -101,8 +102,13 @@ export function checkRecurringEventConflict(
 
     const proposedInstances = getRecurrenceInstances(tempEvent, rangeStart, rangeEnd);
 
+    // For 'thisAndFollowing' mode, only check instances from the given date forward
+    const instancesToCheck = fromDate
+        ? proposedInstances.filter(inst => inst.start >= fromDate)
+        : proposedInstances;
+
     // Check each proposed instance for conflicts
-    for (const proposedInstance of proposedInstances) {
+    for (const proposedInstance of instancesToCheck) {
         const result = checkEventConflict(
             {
                 start: proposedInstance.start,

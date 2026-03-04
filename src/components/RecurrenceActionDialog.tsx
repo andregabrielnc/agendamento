@@ -48,6 +48,7 @@ export function RecurrenceActionDialog({
 
     const handleOverlayClick = useCallback(
         (e: React.MouseEvent<HTMLDivElement>) => {
+            e.stopPropagation();
             if (e.target === e.currentTarget) {
                 onCancel();
             }

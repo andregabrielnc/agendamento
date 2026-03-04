@@ -107,7 +107,14 @@ export function DayView() {
                 const originalId = resizeEventId.split('_')[0];
                 const original = events.find(evt => evt.id === originalId);
                 if (original && draftEndTime > original.start) {
-                    updateEvent({ ...original, end: draftEndTime }).then(result => {
+                    const isRecurring = original.recurrence && original.recurrence !== 'none';
+                    const instance = displayEvents.find(evt => evt.id === resizeEventId);
+                    const instanceDate = isRecurring && instance ? format(instance.start, 'yyyy-MM-dd') : undefined;
+                    updateEvent(
+                        { ...original, end: draftEndTime },
+                        isRecurring ? 'single' : undefined,
+                        instanceDate
+                    ).then(result => {
                         if (!result.success && result.error) {
                             showToast(result.error, 'error');
                         }
@@ -228,7 +235,15 @@ export function DayView() {
 
             const cleanNewEnd = addMinutes(cleanNewStart, duration);
 
-            const result = await updateEvent({ ...originalEvent, start: cleanNewStart, end: cleanNewEnd });
+            const isRecurring = originalEvent.recurrence && originalEvent.recurrence !== 'none';
+            const instance = displayEvents.find(ev => ev.id === instanceId);
+            const instanceDate = isRecurring && instance ? format(instance.start, 'yyyy-MM-dd') : undefined;
+
+            const result = await updateEvent(
+                { ...originalEvent, start: cleanNewStart, end: cleanNewEnd },
+                isRecurring ? 'single' : undefined,
+                instanceDate
+            );
             if (!result.success && result.error) {
                 showToast(result.error, 'error');
             }

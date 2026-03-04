@@ -113,8 +113,11 @@ export function EventProvider({ children }: { children: ReactNode }) {
         // Conflict detection before API call
         const excludeId = originalId;
         const isRecurringBulk = hasRecurrence(eventToUpdate) && mode !== 'single';
+        const fromDate = mode === 'thisAndFollowing' && instanceDate
+            ? new Date(instanceDate + 'T00:00:00')
+            : undefined;
         const conflictResult = isRecurringBulk
-            ? checkRecurringEventConflict(eventToUpdate, events, excludeId)
+            ? checkRecurringEventConflict(eventToUpdate, events, excludeId, fromDate)
             : checkEventConflict(eventToUpdate, events, excludeId);
 
         if (conflictResult.hasConflict) {
