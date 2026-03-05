@@ -190,6 +190,15 @@ function updateEvent($id, $pdo) {
     }
 
     if ($mode === 'thisAndFollowing' && $instanceDate) {
+        // Conflict check for the new event being created
+        $isAllDay = !empty($input['allDay']);
+        $conflict = checkConflictInDb($pdo, $input['calendarId'] ?? null, $input['start'] ?? null, $input['end'] ?? null, $id, $isAllDay);
+        if ($conflict) {
+            jsonResponse([
+                'error' => 'Conflito de horário com "' . $conflict['titulo'] . '" nesta sala'
+            ], 409);
+        }
+
         $newId = generateUuid();
 
         $pdo->beginTransaction();
@@ -532,6 +541,7 @@ function checkConflictInDb($pdo, $salaId, $start, $end, $excludeEventId = null, 
         $end = $dateOnly . 'T18:00:00';
     }
 
+    // 1) Check non-recurring events for direct overlap
     $sql = '
         SELECT e.id, e.titulo, e.data_inicio, e.data_fim
         FROM eventos e
@@ -556,7 +566,151 @@ function checkConflictInDb($pdo, $salaId, $start, $end, $excludeEventId = null, 
 
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
-    return $stmt->fetch();
+    $conflict = $stmt->fetch();
+    if ($conflict) return $conflict;
+
+    // 2) Check recurring events by expanding instances for the proposed date
+    $recurSql = '
+        SELECT e.id, e.titulo, e.data_inicio, e.data_fim,
+               f.tipo AS freq_tipo, f.intervalo AS freq_intervalo, f.dias_semana AS freq_dias_semana,
+               f.data_fim AS freq_data_fim, f.contagem AS freq_contagem, f.tipo_fim AS freq_tipo_fim,
+               f.excecoes AS freq_excecoes
+        FROM eventos e
+        INNER JOIN frequencia f ON f.evento_id = e.id
+        WHERE e.sala_id = :sala_id
+    ';
+    $recurParams = [':sala_id' => $salaId];
+
+    if ($excludeEventId) {
+        $recurSql .= ' AND e.id != :exclude_id';
+        $recurParams[':exclude_id'] = $excludeEventId;
+    }
+
+    $stmt = $pdo->prepare($recurSql);
+    $stmt->execute($recurParams);
+    $recurringEvents = $stmt->fetchAll();
+
+    $proposedStart = strtotime($start);
+    $proposedEnd = strtotime($end);
+    if (!$proposedStart || !$proposedEnd) return false;
+
+    foreach ($recurringEvents as $re) {
+        if (recurringEventOverlaps($re, $proposedStart, $proposedEnd)) {
+            return ['id' => $re['id'], 'titulo' => $re['titulo'], 'data_inicio' => $re['data_inicio'], 'data_fim' => $re['data_fim']];
+        }
+    }
+
+    return false;
+}
+
+/**
+ * Check if a recurring event has an instance that overlaps with the proposed time range.
+ */
+function recurringEventOverlaps($re, $proposedStart, $proposedEnd) {
+    $eventStart = strtotime($re['data_inicio']);
+    $eventEnd = strtotime($re['data_fim']);
+    if (!$eventStart || !$eventEnd) return false;
+
+    $duration = $eventEnd - $eventStart;
+    $frequency = $re['freq_tipo'];
+    $interval = max(1, (int)$re['freq_intervalo']);
+
+    // Parse exception dates
+    $exceptions = [];
+    if (!empty($re['freq_excecoes'])) {
+        $raw = trim($re['freq_excecoes'], '{}');
+        if ($raw !== '') {
+            $exceptions = array_map('trim', explode(',', $raw));
+        }
+    }
+
+    // Parse end conditions
+    $endType = $re['freq_tipo_fim'] ?? 'never';
+    $freqEnd = !empty($re['freq_data_fim']) ? strtotime($re['freq_data_fim']) : null;
+    $maxCount = !empty($re['freq_contagem']) ? (int)$re['freq_contagem'] : 365;
+
+    // Year-end cap
+    $yearEnd = strtotime(max(date('Y', $eventStart), date('Y')) . '-12-31T23:59:59');
+
+    // Parse days of week for weekly recurrence
+    $daysOfWeek = null;
+    if (!empty($re['freq_dias_semana'])) {
+        $daysOfWeek = array_map('intval', explode(',', trim($re['freq_dias_semana'], '{}')));
+    }
+
+    // Expand instances around the proposed time window
+    $checkStart = $proposedStart - 86400;
+    $checkEnd = $proposedEnd + 86400;
+    $count = 0;
+    $current = $eventStart;
+
+    if ($frequency === 'weekly' && $daysOfWeek && count($daysOfWeek) > 0) {
+        // Specialized weekly with specific days
+        $cursor = $eventStart;
+        while ($count < $maxCount && $cursor <= $checkEnd && $cursor <= $yearEnd) {
+            foreach ($daysOfWeek as $dow) {
+                $cursorDow = (int)date('w', $cursor);
+                $diff = $dow - $cursorDow;
+                $target = strtotime(($diff >= 0 ? '+' : '') . $diff . ' days', $cursor);
+
+                if ($target < $eventStart) continue;
+                if ($target > $yearEnd) return false;
+                if ($endType === 'date' && $freqEnd && $target > $freqEnd) return false;
+                if ($endType === 'count' && $count >= $maxCount) return false;
+
+                $dateKey = date('Y-m-d', $target);
+                if (!in_array($dateKey, $exceptions)) {
+                    $instStart = mktime(date('H', $eventStart), date('i', $eventStart), 0, date('n', $target), date('j', $target), date('Y', $target));
+                    $instEnd = $instStart + $duration;
+
+                    if ($instStart < $proposedEnd && $instEnd > $proposedStart) {
+                        return true;
+                    }
+                }
+                $count++;
+            }
+            $cursor = strtotime('+' . $interval . ' weeks', $cursor);
+        }
+        return false;
+    }
+
+    // Standard recurrence (daily, weekly, monthly, yearly)
+    while ($count < $maxCount) {
+        if ($current > $yearEnd) break;
+        if ($endType === 'date' && $freqEnd && $current > $freqEnd) break;
+        if ($endType === 'count' && $count >= $maxCount) break;
+
+        // Only check instances near the proposed window
+        if ($current > $checkEnd) break;
+
+        $dateKey = date('Y-m-d', $current);
+        if (!in_array($dateKey, $exceptions)) {
+            $instEnd = $current + $duration;
+            if ($current < $proposedEnd && $instEnd > $proposedStart) {
+                return true;
+            }
+        }
+
+        $count++;
+        switch ($frequency) {
+            case 'daily':
+                $current = strtotime('+' . $interval . ' days', $current);
+                break;
+            case 'weekly':
+                $current = strtotime('+' . $interval . ' weeks', $current);
+                break;
+            case 'monthly':
+                $current = strtotime('+' . $interval . ' months', $current);
+                break;
+            case 'yearly':
+                $current = strtotime('+' . $interval . ' years', $current);
+                break;
+            default:
+                return false;
+        }
+    }
+
+    return false;
 }
 
 function checkPastEventRestriction($pdo, $eventId, $user, $instanceDate = null) {

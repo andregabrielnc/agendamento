@@ -6,6 +6,7 @@ import { getMonthViewDays, isToday } from '../../utils/dateUtils';
 import { format, isSameMonth, isSameDay, startOfDay, endOfDay } from 'date-fns';
 import styles from './MonthView.module.css';
 import { getRecurrenceInstances } from '../../utils/recurrenceUtils';
+import type { CalendarEvent } from '../../types';
 
 export function MonthView() {
     const { currentDate, filteredEvents: events, openPopover, updateEvent, openCreateModal } = useCalendar();
@@ -45,7 +46,15 @@ export function MonthView() {
             const duration = event.end.getTime() - event.start.getTime();
             const newEnd = new Date(newStart.getTime() + duration);
 
-            const result = await updateEvent({ ...event, start: newStart, end: newEnd });
+            const isRecurring = event.recurrence && event.recurrence !== 'none';
+            const instance = displayEvents.find((ev: CalendarEvent) => ev.id === eventId);
+            const instanceDate = isRecurring && instance ? format(instance.start, 'yyyy-MM-dd') : undefined;
+
+            const result = await updateEvent(
+                { ...event, start: newStart, end: newEnd },
+                isRecurring ? 'single' : undefined,
+                instanceDate
+            );
             if (!result.success && result.error) {
                 showToast(result.error, 'error');
             }
