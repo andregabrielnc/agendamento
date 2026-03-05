@@ -82,7 +82,7 @@ export function EventProvider({ children }: { children: ReactNode }) {
             : checkEventConflict(eventData, events);
 
         if (conflictResult.hasConflict) {
-            const message = buildConflictMessage(conflictResult);
+            const message = buildConflictMessage(conflictResult, calendars);
             return { success: false, error: message };
         }
 
@@ -95,7 +95,7 @@ export function EventProvider({ children }: { children: ReactNode }) {
             console.error('Failed to create event:', error);
             return { success: false, error: message };
         }
-    }, [events]);
+    }, [events, calendars]);
 
     const reloadEvents = useCallback(async () => {
         try {
@@ -121,7 +121,7 @@ export function EventProvider({ children }: { children: ReactNode }) {
             : checkEventConflict(eventToUpdate, events, excludeId);
 
         if (conflictResult.hasConflict) {
-            const message = buildConflictMessage(conflictResult);
+            const message = buildConflictMessage(conflictResult, calendars);
             return { success: false, error: message };
         }
 
@@ -149,7 +149,7 @@ export function EventProvider({ children }: { children: ReactNode }) {
             setEvents(previousEvents);
             return { success: false, error: message };
         }
-    }, [events, reloadEvents]);
+    }, [events, calendars, reloadEvents]);
 
     const deleteEvent = useCallback(async (id: string, mode?: RecurrenceEditMode, instanceDate?: string): Promise<EventOperationResult> => {
         const originalId = id.split('_')[0];

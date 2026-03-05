@@ -1,4 +1,4 @@
-import type { CalendarEvent } from '../types';
+import type { CalendarEvent, Calendar } from '../types';
 import { getRecurrenceInstances } from './recurrenceUtils';
 import { addYears } from 'date-fns';
 
@@ -136,23 +136,26 @@ export function checkRecurringEventConflict(
 /**
  * Build a user-friendly conflict message in Portuguese.
  */
-export function buildConflictMessage(result: ConflictResult): string {
+export function buildConflictMessage(result: ConflictResult, calendars?: Calendar[]): string {
     if (!result.hasConflict || !result.conflictingEvent) {
         return '';
     }
 
     const event = result.conflictingEvent;
     const title = event.title || '(Sem título)';
+    const roomName = calendars?.find(c => c.id === event.calendarId)?.name;
 
     if (result.conflictingInstance) {
         const { start, end } = result.conflictingInstance;
         const dateStr = start.toLocaleDateString('pt-BR');
         const startTime = start.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
         const endTime = end.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-        return `Conflito de horário com "${title}" em ${dateStr} (${startTime}–${endTime})`;
+        const roomInfo = roomName ? ` na sala "${roomName}"` : '';
+        return `Conflito de horário com "${title}"${roomInfo} em ${dateStr} (${startTime}–${endTime})`;
     }
 
-    return `Conflito de horário com "${title}" nesta sala`;
+    const roomInfo = roomName ? ` na sala "${roomName}"` : ' nesta sala';
+    return `Conflito de horário com "${title}"${roomInfo}`;
 }
 
 /**
